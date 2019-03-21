@@ -1,0 +1,16 @@
+name = CFHTLenS_blu
+
+redshift_dist_prefix_foreground = data/CFHTLenS-ISiTGR/blu_sample/nofz_blu
+measurements_file = data/CFHTLenS-ISiTGR/blu_sample/cfhtlens_xipm_6bin_blu.dat
+covmat_file = data/CFHTLenS-ISiTGR/blu_sample/cfhtlens_covariance_matrix_blu.dat
+
+num_tomography_bins = 6
+size_galaxy_zdist = 72
+num_theta = 5
+
+ah_rescale = T
+ah_realizations = 1656
+
+use_IA = T
+
+CFHTLens_paramnames = data/CFHTLenS-ISiTGR/CFHTLenS.paramnames
