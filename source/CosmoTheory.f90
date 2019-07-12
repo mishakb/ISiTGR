@@ -12,6 +12,8 @@
         logical :: islog = .true.
     contains
     procedure :: PowerAt
+    procedure :: PowerAtArr
+    procedure :: InitExtrap => TCosmoTheoryPK_InitExtrap
     end Type TCosmoTheoryPK
 
     Type TSkyPowerSpectrum
@@ -33,10 +35,13 @@
         type(TCosmoTheoryPK), allocatable :: NL_MPK
         type(TCosmoTheoryPK), allocatable :: MPK_WEYL
         type(TCosmoTheoryPK), allocatable :: NL_MPK_WEYL
+		type(TCosmoTheoryPK), allocatable :: MPK_WEYL_CROSS
+        type(TCosmoTheoryPK), allocatable :: NL_MPK_WEYL_CROSS
         type(TCubicSpline),  allocatable :: growth_z !defined as sigma8_vd^2/sigma8
         type(TCubicSpline),  allocatable :: sigma8_z
         type(TCubicSpline),  allocatable :: sigma_R
-        !Arrays for ISiTGR modules
+		!>ISiTGR MOD START
+		!Arrays for ISiTGR modules
         !Weak-lensing modules 
         Type(TCubicSpline), allocatable :: R
         !dz/dR (Hofz)
@@ -53,7 +58,7 @@
         type(TCosmoTheoryPK), allocatable :: P_VV
         !Logarithmic growth rate f(k,z) from CAMB derivatives 
         type(TCosmoTheoryPK), allocatable :: growth_k_z 
-        
+        !<ISiTGR MOD END
     contains
     procedure :: FreePK
     procedure :: ClArray
@@ -91,6 +96,61 @@
     end if
 
     end function PowerAt
+    
+    subroutine PowerAtArr(PK,k,z, n, outpower) 
+    class(TCosmoTheoryPK) PK
+    integer, intent(in) :: n
+    real(mcp), intent(in) :: k(n),z(n)
+    real(mcp) :: logk(n)
+    real(mcp), intent(out) :: outpower(n)
+
+    logk=log(k)
+    if(.not. allocated(PK%x)) then
+        write(*,*) 'ERROR:  PowerAt least one of your PK arrays is not initialized:'
+        write(*,*) '        Make sure you are calling a SetPk and filling your power spectra.'
+        write(*,*) '        This error could also mean you are doing importance sampling'
+        write(*,*) '        and need to turn on redo_pk.'
+        call MPIstop()
+    end if
+
+    call PK%Values(n,logk, z, outpower)
+    if(PK%islog) then
+        outpower = exp(outpower)
+    end if
+
+    end subroutine PowerAtArr
+    
+
+    subroutine TCosmoTheoryPK_InitExtrap(this, x, y, z, extrap_kmax)
+    class(TCosmoTheoryPK):: this
+    REAL(GI), INTENT(IN)      :: x(:) !log k
+    REAL(GI), INTENT(IN)      :: y(:) !redshift
+    REAL(GI), INTENT(IN)      :: z(:,:) !log Pk(k,z)
+    real(GI), INTENT(IN), OPTIONAL :: extrap_kmax
+    REAL(GI), allocatable :: xnew(:), znew(:,:)
+    REAL(GI) logkmax
+    integer nk
+
+    if (present(extrap_kmax)) then
+        logkmax = log(extrap_kmax)
+        nk = size(x)
+        if (logkmax > x(nk)) then
+            !Do log linear exprapolation from kmax to extrap_kmax. Useful for doing tail integrals approximately quickly.
+            nk = nk+1
+            allocate(znew(nk, size(y)))
+            znew(1:nk-1,:) = z
+            znew(nk, :) = z(nk-1,:) +  &
+                (z(nk-1,:) - z(nk-2,:))/(x(nk-1)-x(nk-2))*(logkmax -x(nk-1))
+            allocate(xnew(nk))
+            xnew(1:nk-1) = x
+            xnew(nk) = logkmax
+            call this%TInterpGrid2D%Init(xnew,y,znew)
+            return
+        end if
+    end if
+    call this%TInterpGrid2D%Init(x,y,z)
+
+    end subroutine TCosmoTheoryPK_InitExtrap
 
     subroutine FreePK(this)
     class(TCosmoTheoryPredictions) this
@@ -99,6 +159,9 @@
     if(allocated(this%NL_MPK)) deallocate(this%NL_MPK)
     if(allocated(this%MPK_WEYL)) deallocate(this%MPK_WEYL)
     if(allocated(this%NL_MPK_WEYL)) deallocate(this%NL_MPK_WEYL)
+    if(allocated(this%MPK_WEYL_CROSS)) deallocate(this%MPK_WEYL_CROSS)
+    if(allocated(this%NL_MPK_WEYL_CROSS)) deallocate(this%NL_MPK_WEYL_CROSS)
+	!>ISiTGR MOD START
     if(allocated(this%R)) deallocate(this%R)
     if(allocated(this%dzdR)) deallocate(this%dzdR)
     if(allocated(this%P_GG)) deallocate(this%P_GG)
@@ -107,7 +170,7 @@
     if(allocated(this%P_ISW)) deallocate(this%P_ISW)
     if(allocated(this%P_VV)) deallocate(this%P_VV)
     if(allocated(this%growth_k_z)) deallocate(this%growth_k_z)
-    
+	!<ISiTGR MOD END
 
     end subroutine FreePK
 
@@ -174,17 +237,21 @@
     character(LEN=*), parameter :: fmt = '(1I6,*(E15.5))'
     integer i, j, n, ix
     character(LEN=:), allocatable :: fields
+    character F1, F2
 
     n = count(CosmoSettings%cl_lmax>0)
     allocate(cl(CosmoSettings%lmax,n), source=0._mcp)
     ix=0
     fields = '#    L    '
     do i = 1, size(this%Cls,2)
+        F2 = CMB_CL_Fields(i:i)
         do j=1,i
             if (CosmoSettings%cl_lmax(i,j)>0) then
                 ix=ix+1
                 call this%ClArray(cl(:,ix),i,j)
-                fields = fields // CMB_CL_Fields(j:j)//CMB_CL_Fields(i:i)//'             '
+                !workaround for gcc 7.3+ bug https://gcc.gnu.org/bugzilla/show_bug.cgi?id=85641
+                F1=CMB_CL_Fields(j:j)
+                fields = fields // F1 // F2 //'             '
             end if
         end do
     end do
@@ -235,8 +302,16 @@
         write(F%unit) this%MPK%y
         write(F%unit) this%MPK%z
         if(CosmoSettings%use_nonlinear) write(F%unit) this%NL_MPK%z
-        if(CosmoSettings%use_WeylPower) write(F%unit) this%MPK_WEYL%z
-        if(CosmoSettings%use_nonlinear.and. CosmoSettings%use_WeylPower) write(F%unit) this%NL_MPK_WEYL%z
+!        if(CosmoSettings%use_WeylPower) write(F%unit) this%MPK_WEYL%z
+!        if(CosmoSettings%use_nonlinear.and. CosmoSettings%use_WeylPower) write(F%unit) this%NL_MPK_WEYL%z
+        if(CosmoSettings%use_WeylPower) then
+            write(F%unit) this%MPK_WEYL%z
+            write(F%unit) this%MPK_WEYL_CROSS%z
+        end if
+        if(CosmoSettings%use_nonlinear.and. CosmoSettings%use_WeylPower) then
+            write(F%unit) this%NL_MPK_WEYL%z
+            write(F%unit) this%NL_MPK_WEYL_CROSS%z
+        end if
         if (CosmoSettings%use_sigmaR) call this%sigma_R%SaveState(F)
     end if
 
@@ -324,6 +399,8 @@
         if (CosmoSettings%use_matterpower) then
             if (any(FileSettings%power_redshifts/=CosmoSettings%power_redshifts)) &
                 & call MpiStop('TCosmoTheoryPredictions_ReadTheory: power_redshifts differ - check')
+            if (CosmoSettings%extrap_kmax /= FileSettings%extrap_kmax) &
+                call MpiStop('TCosmoTheoryPredictions_ReadTheory: extrap_kmax differ - check')
         end if
         call this%FreePK()
         allocate(this%MPK)
@@ -334,11 +411,11 @@
         read(F%unit) k
         read(F%unit) z
         read(F%unit) temp
-        call this%MPK%Init(k,z,temp)
+        call this%MPK%InitExtrap(k,z,temp,CosmoSettings%extrap_kmax)
         if(FileSettings%use_nonlinear) then
             allocate(this%NL_MPK)
             read(F%unit)temp
-            call this%NL_MPK%Init(k,z,temp)
+            call this%NL_MPK%InitExtrap(k,z,temp,CosmoSettings%extrap_kmax)
             if(.not. CosmoSettings%use_nonlinear) then
                 write(*,*)"WARNING:  ReadTheory - Your data files have nonlinear power spectra,"
                 write(*,*)"          but you are not using them. Be careful that this"
@@ -347,13 +424,19 @@
         end if
         if(FileSettings%use_WeylPower) then
             allocate(this%MPK_WEYL)
+			allocate(this%MPK_WEYL_CROSS)
             read(F%unit)temp
-            call this%MPK_WEYL%Init(k,z,temp)
+            call this%MPK_WEYL%InitExtrap(k,z,temp,CosmoSettings%extrap_kmax)
+			read(F%unit)temp
+            call this%MPK_WEYL_CROSS%InitExtrap(k,z,temp,CosmoSettings%extrap_kmax)
         end if
         if(FileSettings%use_nonlinear.and. FileSettings%use_WeylPower) then
             allocate(this%NL_MPK_WEYL)
+			allocate(this%NL_MPK_WEYL_CROSS)
             read(F%unit)temp
-            call this%NL_MPK_WEYL%Init(k,z,temp)
+            call this%NL_MPK_WEYL%InitExtrap(k,z,temp,CosmoSettings%extrap_kmax)
+			read(F%unit)temp
+            call this%NL_MPK_WEYL_CROSS%InitExtrap(k,z,temp,CosmoSettings%extrap_kmax)
         end if
 
         if (FileSettings%use_sigmaR) then

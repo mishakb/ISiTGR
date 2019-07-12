@@ -1,4 +1,4 @@
-CC = icc 
+CC = gcc
 default: dndz
 
 clean:

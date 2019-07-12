@@ -22,6 +22,10 @@
 
     character(LEN=4), parameter :: CMB_CL_Fields = 'TEBP'
 
+    integer, parameter :: neutrino_hierarchy_normal = 1, neutrino_hierarchy_inverted = 2, neutrino_hierarchy_degenerate = 3
+    character(LEN=Ini_Enumeration_Len), parameter :: neutrino_types(3) = &
+        [character(Ini_Enumeration_Len)::'normal','inverted','degenerate']
+
     Type TCosmoTheoryParams
         logical :: get_sigma8 = .true.
         logical :: Use_LSS = .false.
@@ -39,7 +43,7 @@
         integer :: lmin_store_all_cmb = 0 !>0 if you want output everything even if not used
 
         !redshifts for output of BAO background parameters
-        real(mcp) :: z_outputs(1) = [0.57_mcp]
+        real(mcp) :: z_outputs(5) = [0.15_mcp, 0.38_mcp, 0.51_mcp, 0.61_mcp, 2.33_mcp]
 
         logical :: CMB_lensing = .true.
         logical :: use_lensing_potential = .false.
@@ -52,19 +56,26 @@
         logical :: use_sigmaR =.false. !sigma_R, e.g. for clusters
         real(mcp) :: power_kmax = 0.8_mcp
         integer :: num_power_redshifts = 0
-        
-        !ISiTGR Parameters
+		
+		!>ISiTGR MOD START
+		!ISiTGR Parameters
         logical :: use_WeakLensing = .false.
         logical :: use_IA = .false.
         logical :: use_ISW = .false.
         logical :: ISiTGR = .false.           !JD for ISiTGR 
-        logical :: ISiTGR_scale_dep= .false.  !JD for ISiTGR 
-        logical :: ISiTGR_Rfunc = .false.     !JD for ISiTGR
-        logical :: ISiTGR_BIN = .false.       !JD use Binning version
-        logical :: ISiTGR_true_bin = .true.   !JD for ISiTGR_BIN
+        logical :: ISiTGR_scale_dep!= .false.  !JD for ISiTGR 
+        logical :: ISiTGR_Rfunc != .false.     !JD for ISiTGR
+        logical :: ISiTGR_BIN != .false.       !JD use Binning version
+        logical :: ISiTGR_true_bin! = .true.   !JD for ISiTGR_BIN
         real(mcp) :: ISiTGR_zdiv              !JD for ISiTGR_BIN
+		logical :: ISiTGR_Use_mueta! = .false. !CGQ for mu-eta parameterization
+		logical :: ISiTGR_Use_muSigma! = .false. !CGQ for mu-Sigma parameterization
+		logical :: ISiTGR_QDR !CGQ for Q-D parameterization
+		logical :: ISiTGR_BIN_mueta !CGQ for mu-eta binning method
+		logical :: ISiTGR_BIN_muSigma !CGQ for mu-Sigma binning method
         logical :: use_Vtot
         logical :: use_growth_kz
+		!<ISiTGR MOD END
 
         !Only used in params_CMB
         real(mcp) :: pivot_k = 0.05_mcp !Point for defining primordial power spectra
@@ -73,7 +84,8 @@
 
         logical :: bbn_consistency = .true. !JH
 
-        integer :: num_massive_neutrinos = -1 !if >0, number of massive degenerate eigenstates
+        integer :: num_massive_neutrinos = -1 !if neutrino_hierarcy_degenerate, number of massive degenerate eigenstates
+        integer :: neutrino_hierarchy = neutrino_hierarchy_normal
 
     end Type TCosmoTheoryParams
 
@@ -85,6 +97,7 @@
         integer, allocatable :: ArraySizes(:)
         !e.g. lmax_cl(1,1) is lmax for TT; zero if CL is not used; order is T, E, B, Phi
         real(mcp), dimension(:), allocatable :: power_redshifts
+        real(mcp) :: extrap_kmax = 700._mcp !Allow extrapolation to this kmax/h in P(k)
     contains
     procedure, private :: Initialize_PKSettings
     procedure, private :: Initialize_CMBSettings
@@ -115,7 +128,7 @@
 
     Type, extends(TTheoryParams) :: CMBParams
         real(mcp) InitPower(max_inipower_params)
-        !These are fast paramters for the initial power spectrum
+        !These are fast parameters for the initial power spectrum
         !Now remaining (non-independent) parameters
         real(mcp) omb, omc, omv, omnu, omk, omdm
         real(mcp) ombh2, omch2, omnuh2, omdmh2
@@ -124,15 +137,26 @@
         real(mcp) w, wa
         real(mcp) YHe, nnu, iso_cdm_correlated, ALens, Alensf, fdm !fdm is dark matter annihilation, eg,. 0910.3663
         real(mcp) :: omnuh2_sterile = 0._mcp  !note omnhu2 is the sum of this + standard neutrinos
-        !JD Begin ISiTGR Parameters
+        real(mcp) :: sum_mnu_standard
+		real(mcp) reserved(5)
+		!>ISiTGR MOD START: Adding variables
+		!JD Begin ISiTGR Parameters
         real(mcp) TGR_Q0, TGR_R0, TGR_Qinf, TGR_Rinf, TGR_D0, TGR_Dinf
         real(mcp) TGR_s, TGR_kc
         real(mcp) TGR_Q1, TGR_Q2, TGR_Q3, TGR_Q4
         real(mcp) TGR_D1, TGR_D2, TGR_D3, TGR_D4
         real(mcp) TGR_R1, TGR_R2, TGR_R3, TGR_R4
         logical TGR_tdep
-        !JD End ISiTGR parameters
-        real(mcp) reserved(5)
+		!CGQ add new ISiTGR parameters
+		real(mcp) TGR_E11, TGR_E22, TGR_mu0, TGR_Sigma0 !CGQ for mu-eta and mu-Sigma parameterizations
+		real(mcp) TGR_c1, TGR_c2, TGR_lambda !CGQ paramaters for scale dependence
+		real(mcp) TGR_mu1, TGR_mu2, TGR_mu3, TGR_mu4 !for binning method
+		real(mcp) TGR_eta1, TGR_eta2, TGR_eta3, TGR_eta4 !for binning method
+		real(mcp) TGR_Sigma1, TGR_Sigma2, TGR_Sigma3, TGR_Sigma4 !for binning method
+		!CGQ for Dark Energy models
+		real(mcp) TGR_w0, TGR_wa, TGR_wp, TGR_a_p
+
+		!<ISiTGR MOD END
     end Type CMBParams
 
     Type, extends(TParameterization) :: TCosmologyParameterization
@@ -199,24 +223,42 @@
 
     call Ini%Read('inflation_consistency',this%inflation_consistency)
     call Ini%Read('bbn_consistency',this%bbn_consistency)
-    call Ini%Read('num_massive_neutrinos',this%num_massive_neutrinos)
+
+    this%neutrino_hierarchy = Ini%Read_Enumeration('neutrino_hierarchy',neutrino_types, neutrino_hierarchy_normal)
+    if (this%neutrino_hierarchy == neutrino_hierarchy_degenerate) then
+        call Ini%Read('num_massive_neutrinos',this%num_massive_neutrinos)
+        if (this%num_massive_neutrinos <1) call MpiStop('num_massive_neutrinos must be set set')
+    else if (Ini%Read_Int('num_massive_neutrinos',0)>0) then
+        write(*,*) 'NOTE: num_massive_neutrinos ignored, using specified hierarchy'
+    end if
     call Ini%Read('lmax_computed_cl',this%lmax_computed_cl)
     call Ini%Read('lmin_computed_cl',this%lmin_computed_cl)
     call Ini%Read('lmin_store_all_cmb',this%lmin_store_all_cmb)
     call Ini%Read('lmax_tensor',this%lmax_tensor)
-    
+	
+	!>ISiTGR MOD START
     !ISiTGR Settings
     !For functional form
-    this%ISiTGR_Rfunc = Ini%Read_logical('Use_R_Function',.false.)
+    CosmoSettings%ISiTGR_Rfunc = Ini%Read_logical('Use_R_Function',.false.)
     this%ISiTGR_scale_dep = Ini%Read_logical('Scale_Dependent',.false.)
+	!CGQ for mu-eta and mu-Sigma parameterizations
+	CosmoSettings%ISiTGR_Use_mueta = Ini%Read_logical('Use_mueta', .false.)
+	CosmoSettings%ISiTGR_Use_muSigma = Ini%Read_logical('Use_muSigma', .false.)
+	!CGQ for functional forms
+	!CosmoSettings%ISiTGR_k_dep = Ini%Read_logical('k-scale_dependence', .false.)
+	CosmoSettings%ISiTGR_QDR = Ini%Read_logical('Use_QD', .false.)
+	!CGQ for binning forms
+	CosmoSettings%ISiTGR_BIN_mueta = Ini%Read_logical('BIN_mueta', .false.)
+	CosmoSettings%ISiTGR_BIN_muSigma = Ini%Read_logical('BIN_muSigma', .false.)
     !For Binning forms
-    this%ISiTGR_true_bin = .not. Ini%Read_Logical('Do_Exponential_Binning',.false.)
-    this%ISiTGR_zdiv = Ini%Read_Double('z_grid_spacing',1.d0)
+    CosmoSettings%ISiTGR_true_bin = .not. Ini%Read_Logical('Do_Exponential_Binning',.false.)
+    CosmoSettings%ISiTGR_zdiv = Ini%Read_Double('z_grid_spacing',1.d0)
     if(this%ISiTGR_BIN) then
     	write(*,*) "Running ISiTGR_BIN"
     else if(this%ISiTGR) then
     	write(*,*) "Running ISiTGR"
     end if
+	!<ISiTGR MOD END
 
     end subroutine TCosmoTheorySettings_ReadParams
 

@@ -216,6 +216,7 @@
             !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
             Cl_temp(:,nl)=Cl_temp(:,nl)+0.5*(Cl_integrand(zix,:)&
             +Cl_integrand(zix-1,:))*(r(zix)-r(zix-1))
+			write(*,*) Cl_temp(:,nl)
         end do
     end do
 

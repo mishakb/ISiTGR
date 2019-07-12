@@ -36,6 +36,7 @@
     class(TCosmologyConfig) :: this
     class(TSettingIni) :: Ini
     character(LEN=:), allocatable :: CalcName
+	!>ISiTGR MOD START
     character(LEN=:), allocatable :: ptxt
 
     CalcName = Ini%Read_String_Default('cosmology_calculator', 'CAMB')
@@ -51,12 +52,13 @@
         call MpiStop('Calculator not supported: ' //CalcName)
     end if
     call this%Calculator%InitWithParams(Ini,this)
-
-    if (Ini%HasKey('parameterization')) then
+	
+	if (Ini%HasKey('parameterization')) then
     	ptxt = Ini%ReadFileName('parameterization')
     	CosmoSettings%ISiTGR = trim(ptxt)=='ISiTGR'
     	CosmoSettings%ISiTGR_BIN = trim(ptxt)=='ISiTGR_BIN'
     end if
+	!<ISiTGR MOD END
 
     call CosmoSettings%ReadParams(Ini)
 
@@ -70,9 +72,12 @@
     logical OK
     Type(ThetaParameterization), pointer :: CMBParameterization
     Type(BackgroundParameterization), pointer :: BackgroundParam
+    Type(AstroParameterization), pointer :: AstParam
+	!>ISiTGR MOD START
     Type(ISiTGRParameterization), pointer :: ISiTGRParam
     Type(ISiTGR_BINParameterization), pointer :: ISiTGR_BINParam
-
+	
+	!CGQ comment: Here you set different parameterization types to be called by CosmoMC
     OK = .true.
     if (nametag =='background') then
         allocate(BackgroundParam)
@@ -82,15 +87,20 @@
         allocate(CMBParameterization)
         this%Parameterization => CMBParameterization
         call CMBParameterization%InitWithSetNames(Ini,Names,this)
-    else if (nametag=='ISiTGR') then
+    else if (nametag=='astro') then
+        allocate(AstParam)
+        this%Parameterization => AstParam
+        call AstParam%InitWithSetNames(Ini,Names,this)
+	else if (nametag=='ISiTGR') then
     	allocate(ISiTGRParam)
     	this%Parameterization => ISiTGRParam
     	call ISiTGRParam%InitWithSetNames (Ini,Names,this)
     else if (nametag=='ISiTGR_BIN') then
     	allocate(ISiTGR_BINParam)
     	this%Parameterization => ISiTGR_BINParam
-    	call ISiTGR_BINParam%InitWithSetNames (Ini,Names,this)        
-    else
+    	call ISiTGR_BINParam%InitWithSetNames (Ini,Names,this)    
+	!<ISiTGR MOD END
+	else
         OK =  this%TGeneralConfig%SetParameterizationName(nametag,Ini,Names)
     end if
 

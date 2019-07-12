@@ -2,6 +2,7 @@
     module Calculator_CAMB
     use CosmologyTypes
     use CosmoTheory
+	!>ISiTGR MOD START
     use CAMB, only : CAMB_GetResults, CAMB_GetAge, CAMBParams, CAMB_SetDefParams, &
         AccuracyBoost,  Cl_scalar, Cl_tensor, Cl_lensed, outNone, w_lam, & !wa_ppf,&
         CAMBParams_Set, MT, CAMBdata, NonLinear_Pk, Nonlinear_lens, Reionization_GetOptDepth, CAMB_GetZreFromTau, &
@@ -10,9 +11,10 @@
         HighAccuracyDefault, highL_unlensed_cl_template, ThermoDerivedParams, nthermo_derived, BackgroundOutputs, &
         Transfer_SortAndIndexRedshifts,  &
         Recombination_Name, reionization_name, power_name, threadnum, version, tensor_param_rpivot, &
-        !JD for ISiTGR
+		!JD for ISiTGR
         DeltaTime
-    use ISiTGR !
+	use ISiTGR 	
+		!<ISiTGR MOD END
     use Errors !CAMB
     use settings
     use likelihood
@@ -46,15 +48,18 @@
     procedure :: InitCAMBParams => CAMBCalc_InitCAMBParams
     procedure :: SetCAMBInitPower => CAMBCalc_SetCAMBInitPower
     procedure :: SetPkFromCAMB => CAMBCalc_SetPkFromCAMB
+	!>ISiTGR MOD START
     procedure :: GetTransfer => CAMBCalc_GetTransfer  !JD Needed for ISiTGR WL module (IA)
     procedure :: GetNLandRatios => CAMBCalc_GetNLandRatios
     !Overridden inherited
     procedure :: ReadParams => CAMBCalc_ReadParams
     procedure :: InitForLikelihoods => CAMBCalc_InitForLikelihoods
     procedure :: f_k => CAMBCalc_f_k   !JD added for ISiTGR weak lensing
+	!<ISiTGR MOD END
     procedure :: BAO_D_v => CAMBCalc_BAO_D_v
-    procedure :: AngularDiameterDistance => CAMBCalc_AngularDiameterDistance
+	procedure :: AngularDiameterDistance => CAMBCalc_AngularDiameterDistance
     procedure :: ComovingRadialDistance => CAMBCalc_ComovingRadialDistance
+    procedure :: ComovingRadialDistanceArr => CAMBCalc_ComovingRadialDistanceArr
     procedure :: AngularDiameterDistance2 => CAMBCalc_AngularDiameterDistance2
     procedure :: LuminosityDistance => CAMBCalc_LuminosityDistance
     procedure :: Hofz => CAMBCalc_Hofz
@@ -80,14 +85,17 @@
 
     subroutine CAMBCalc_CMBToCAMB(this,CMB,P)
     use LambdaGeneral
+    use camb, only: CAMB_SetNeutrinoHierarchy
     use CAMBmain, only : ALens
-    use constants, only : default_nnu
+    use constants, only : default_nnu,delta_mnu21,delta_mnu31,mnu_min_normal
     use lensing, only : ALens_Fiducial
+    use MassiveNu, only : sum_mnu_for_m1
     class(CAMB_Calculator) :: this
     class(CMBParams) CMB
     type(CAMBParams)  P
-    real(dl) neff_massive_standard
-
+    real(dl) neff_massive_standard, mnu, m1, m3, normal_frac
+    real(dl), external :: Newton_raphson
+!>ISiTGR MOD START
     P = this%CAMBP
     P%omegab = CMB%omb
     P%omegan = CMB%omnu
@@ -97,55 +105,10 @@
     P%Reion%redshift= CMB%zre
     P%Reion%delta_redshift = CMB%zre_delta
     w_lam = CMB%w
-    !wa_ppf = CMB%wa
-    ALens = CMB%ALens
-    ALens_Fiducial = CMB%ALensf
-    P%InitialConditionVector(initial_iso_CDM) = &
-        sign(sqrt(abs(CMB%iso_cdm_correlated) /(1-abs(CMB%iso_cdm_correlated))),CMB%iso_cdm_correlated)
-    P%Num_Nu_Massive = 0
-    P%Nu_mass_numbers = 0
-    P%Num_Nu_Massless = CMB%nnu
-    if (CMB%omnuh2>0) then
-        P%Nu_mass_eigenstates=0
-        if (CMB%omnuh2>CMB%omnuh2_sterile) then
-            neff_massive_standard = CosmoSettings%num_massive_neutrinos*default_nnu/3
-            P%Num_Nu_Massive = CosmoSettings%num_massive_neutrinos
-            P%Nu_mass_eigenstates=P%Nu_mass_eigenstates+1
-            if (CMB%nnu > neff_massive_standard) then
-                P%Num_Nu_Massless = CMB%nnu - neff_massive_standard
-            else
-                P%Num_Nu_Massless = 0
-                neff_massive_standard=CMB%nnu
-            end if
-            P%Nu_mass_numbers(P%Nu_mass_eigenstates) = CosmoSettings%num_massive_neutrinos
-            P%Nu_mass_degeneracies(P%Nu_mass_eigenstates) = neff_massive_standard
-            P%Nu_mass_fractions(P%Nu_mass_eigenstates) = (CMB%omnuh2-CMB%omnuh2_sterile)/CMB%omnuh2
-        else
-            neff_massive_standard=0
-        end if
-        if (CMB%omnuh2_sterile>0) then
-            if (CMB%nnu<default_nnu) call MpiStop('nnu < 3.046 with massive sterile')
-            P%Num_Nu_Massless = default_nnu - neff_massive_standard
-            P%Num_Nu_Massive=P%Num_Nu_Massive+1
-            P%Nu_mass_eigenstates=P%Nu_mass_eigenstates+1
-            P%Nu_mass_numbers(P%Nu_mass_eigenstates) = 1
-            P%Nu_mass_degeneracies(P%Nu_mass_eigenstates) = max(1d-6,CMB%nnu - default_nnu)
-            P%Nu_mass_fractions(P%Nu_mass_eigenstates) = CMB%omnuh2_sterile/CMB%omnuh2
-        end if
-    end if
 
-    P%YHe = CMB%YHe
-#ifdef COSMOREC
-    if (P%Recomb%fdm/=0._mcp) P%Recomb%runmode = 3
-    P%Recomb%fdm = CMB%fdm * 1e-23_mcp
-#else
-    if (CMB%fdm/=0._mcp) call MpiStop('Compile with CosmoRec to use fdm')
-#endif
-    call this%SetCAMBInitPower(P,CMB,1)
-
-    !ISiTGR parameters
+	!ISiTGR parameters
     !Functional form evolution parameters
-    if(CosmoSettings%ISiTGR_Rfunc)then
+	if(CosmoSettings%ISiTGR_Rfunc)then
         TGR%DR0 = CMB%TGR_R0
         TGR%DRinf = CMB%TGR_Rinf
     else
@@ -168,17 +131,70 @@
     TGR%Q4 = CMB%TGR_Q4
     TGR%D4 = CMB%TGR_D4
     TGR%z_div = CosmoSettings%ISiTGR_zdiv
-    TGR%z_tw = 0.05_mcp
-    TGR%z_TGR = 2.d0*TGR%z_div
-    TGR%k_tw = TGR%k_c/10.d0
+    TGR%z_tw = 0.05_mcp !hard-coded
+    TGR%z_TGR = 2.d0*TGR%z_div !hard-coded
+    TGR%k_tw = TGR%k_c/10.d0 !hard-coded
     TGR%true_bin = CosmoSettings%ISiTGR_true_bin
     !Select whether using binning or functional forms
     TGR%ISiTGR_BIN=CosmoSettings%ISiTGR_BIN
+	!CGQ for new parameterizations mu-eta and mu-Sigma
+	!parameters for functional form
+	TGR%E11 = CMB%TGR_E11
+	TGR%E22 = CMB%TGR_E22
+	TGR%mu0 = CMB%TGR_mu0
+	TGR%Sigma0 = CMB%TGR_Sigma0
+	TGR%c1 = CMB%TGR_c1
+	TGR%c2 = CMB%TGR_c2
+	TGR%lambda = CMB%TGR_lambda
+	!parameters for binning method
+	TGR%mu1 = CMB%TGR_mu1
+    TGR%mu2 = CMB%TGR_mu2
+    TGR%mu3 = CMB%TGR_mu3
+    TGR%mu4 = CMB%TGR_mu4
+	TGR%eta1 = CMB%TGR_eta1
+    TGR%eta2 = CMB%TGR_eta2
+    TGR%eta3 = CMB%TGR_eta3
+    TGR%eta4 = CMB%TGR_eta4
+	TGR%Sigma1 = CMB%TGR_Sigma1
+    TGR%Sigma2 = CMB%TGR_Sigma2
+    TGR%Sigma3 = CMB%TGR_Sigma3
+    TGR%Sigma4 = CMB%TGR_Sigma4
+	!logical variables to select which parameterization use for functional form
+	TGR%ISiTGR_mueta = CosmoSettings%ISiTGR_Use_mueta
+	TGR%ISiTGR_muSigma = CosmoSettings%ISiTGR_Use_muSigma
+	!logical variables for functional forms
+	TGR%ISiTGR_QDR = CosmoSettings%ISiTGR_QDR
+	!logical variables to select which parameterization use for functional binning method
+	TGR%ISiTGR_BIN_mueta=CosmoSettings%ISiTGR_BIN_mueta 
+	TGR%ISiTGR_BIN_muSigma=CosmoSettings%ISiTGR_BIN_muSigma
+	!Dark Energy parameterizations
+	TGR%w0 = CMB%TGR_w0
+	TGR%wa = CMB%TGR_wa
+	TGR%wp = CMB%TGR_wp
+	TGR%a_p = CMB%TGR_a_p
+	!<ISiTGR MOD END
+	
+    ALens = CMB%ALens
+    ALens_Fiducial = CMB%ALensf
+    P%InitialConditionVector(initial_iso_CDM) = &
+        sign(sqrt(abs(CMB%iso_cdm_correlated) /(1-abs(CMB%iso_cdm_correlated))),CMB%iso_cdm_correlated)
+    P%Num_Nu_Massive = 0
+    P%Nu_mass_numbers = 0
+    P%Num_Nu_Massless = CMB%nnu
+    P%share_delta_neff = .false.
+    if (CMB%omnuh2>0) then
+        call CAMB_SetNeutrinoHierarchy(P, CMB%omnuh2, CMB%omnuh2_sterile, CMB%nnu, &
+            CosmoSettings%neutrino_hierarchy, CosmoSettings%num_massive_neutrinos)
+    end if
 
-
-
-
-
+    P%YHe = CMB%YHe
+#ifdef COSMOREC
+    if (CMB%fdm/=0._mcp) P%Recomb%runmode = 3
+    P%Recomb%fdm = CMB%fdm * 1e-23_mcp
+#else
+    if (CMB%fdm/=0._mcp) call MpiStop('Compile with CosmoRec to use fdm')
+#endif
+    call this%SetCAMBInitPower(P,CMB,1)
 
     end subroutine CAMBCalc_CMBToCAMB
 
@@ -188,16 +204,17 @@
     integer noutputs, i
 
     noutputs = size(BackgroundOutputs%z_outputs)
-    Theory%numderived = nthermo_derived + noutputs*4
+    Theory%numderived = nthermo_derived + noutputs*2
     if (Theory%numderived > max_derived_parameters) &
         call MpiStop('numderived > max_derived_parameters: increase in CosmologyTypes.f90')
     Theory%derived_parameters(1:nthermo_derived) = ThermoDerivedParams(1:nthermo_derived)
     do i=1, noutputs
-        Theory%derived_parameters(nthermo_derived+(i-1)*4+1) = BackgroundOutputs%rs_by_D_v(i)
-        Theory%derived_parameters(nthermo_derived+(i-1)*4+2) = BackgroundOutputs%H(i)*const_c/1e3_mcp
-        Theory%derived_parameters(nthermo_derived+(i-1)*4+3) = BackgroundOutputs%DA(i)
-        Theory%derived_parameters(nthermo_derived+(i-1)*4+4) = (1+BackgroundOutputs%z_outputs(i))* &
-            BackgroundOutputs%DA(i) * BackgroundOutputs%H(i) !F_AP parameter
+        !Theory%derived_parameters(nthermo_derived+(i-1)*3+1) = BackgroundOutputs%rs_by_D_v(i)
+        !now use Hubble paramter in normal units and DM, comoving angular diameter distance
+        Theory%derived_parameters(nthermo_derived+(i-1)*2+1) = BackgroundOutputs%H(i)*const_c/1e3_mcp
+        Theory%derived_parameters(nthermo_derived+(i-1)*2+2) = BackgroundOutputs%DA(i)*(1+BackgroundOutputs%z_outputs(i))
+        !Theory%derived_parameters(nthermo_derived+(i-1)*4+4) = (1+BackgroundOutputs%z_outputs(i))* &
+        !    BackgroundOutputs%DA(i) * BackgroundOutputs%H(i) !F_AP parameter
     end do
     end subroutine CAMBCalc_SetDerived
 
@@ -286,6 +303,7 @@
             error=global_error_flag
             return
         end if
+		
         !JD 08/13 added so we dont have to fill Cls unless using CMB
         if(CosmoSettings%use_CMB)then
             call this%SetPowersFromCAMB(CMB,Theory)
@@ -413,6 +431,7 @@
     integer i,j, lmx, lmaxCL
     integer, save, allocatable :: indicesS(:,:), indicesT(:,:)
 
+
     if (.not. allocated(indicesS)) then
         allocate(indicesS(3,3))
         allocate(indicesT(3,3))
@@ -439,7 +458,11 @@
                         if (CosmoSettings%CMB_Lensing) then
                             CL(2:lmx) = cons*Cl_lensed(2:lmx,1, indicesT(i,j))
                         else
-                            if (indicesS(i,j)/=0) CL(2:lmx) = cons*Cl_Scalar(2:lmx,1, indicesS(i,j))
+                            if (indicesS(i,j)/=0) then
+                                CL(2:lmx) = cons*Cl_Scalar(2:lmx,1, indicesS(i,j))
+                            else
+                                CL=0
+                            end if
                         end if
                         if (CosmoSettings%lmax_computed_cl < lmaxCL) then
                             if (highL_norm ==0) & !normally normalize off TT
@@ -514,10 +537,12 @@
     integer zix,nz,nk, nR
     real(mcp), allocatable :: NL_Ratios(:,:)
     real(mcp) :: dR, R, minR
-    integer i,ik,iz
-    !JD ISiTGR additions
+	!>ISiTGR MOD START
+    integer i, ik, iz
+	!JD ISiTGR additions
     real(mcp), allocatable :: delta(:,:), rtemp(:), dzdr(:)
     real(mcp) CFHTFac
+	!<ISiTGR MOD END
 
     !Free theory arrays as they may resize between samples
     call Theory%FreePK()
@@ -544,33 +569,35 @@
         allocate(k(nk))
 
         k = log(M%TransferData(Transfer_kh,:,1))
-
+		
         call Transfer_GetUnsplinedPower(M, PK,transfer_power_var,transfer_power_var)
         PK = Log(PK)
         if (any(ieee_is_nan(PK))) then
             error = 1
-            do ik=1,nk
-            	do iz = 1,nz
-            		!if(isnan(pk(ik,iz))) write(*,*)ik,exp(k(ik)),z(iz)
-            	end do
-            end do
-            return
-        end if
+        	return
+		end if
         allocate(Theory%MPK)
-        call Theory%MPK%Init(k,z,PK)
+        call Theory%MPK%InitExtrap(k,z,PK, CosmoSettings%extrap_kmax)
     end if
 
-
     if (CosmoSettings%use_Weylpower) then
+		! Weyl potential:
         call Transfer_GetUnsplinedPower(M, PK,transfer_Weyl,transfer_Weyl,hubble_units=.false.)
         PK = Log(PK)
         if (any(ieee_is_nan(PK))) then
             error = 1
+			!>ISiTGR MOD START
             write(*,*)'Weyl'
+			!<ISiTGR MOD END
             return
         end if
         allocate(Theory%MPK_WEYL)
-        call Theory%MPK_WEYL%Init(k,z,PK)
+        call Theory%MPK_WEYL%InitExtrap(k,z,PK,CosmoSettings%extrap_kmax)
+		! Weyl density cross correlation:
+        call Transfer_GetUnsplinedPower(M, PK,transfer_Weyl,transfer_power_var,hubble_units=.false.)
+        allocate(Theory%MPK_WEYL_CROSS)
+        Theory%MPK_WEYL_CROSS%islog = .False.
+		call Theory%MPK_WEYL_CROSS%InitExtrap(k,z,PK,CosmoSettings%extrap_kmax)
     end if
 
     if (CosmoSettings%use_SigmaR) then
@@ -591,7 +618,9 @@
         call this%GetNLandRatios(M,Theory,NL_Ratios,error)
         if(error/=0) return
     end if
-
+	
+	!>ISiTGR MOD START
+	
     if(CosmoSettings%use_WeakLensing .or. CosmoSettings%use_ISW) then
         !Fill interpolator for r(z) and dz/dr
         allocate(rtemp(nz))
@@ -616,7 +645,7 @@
             return
         end if
         allocate(Theory%P_GG)
-        call Theory%P_GG%Init(k,z,PK)
+        call Theory%P_GG%Init(k,z,PK)     
         if(CosmoSettings%use_IA) then
             !Intrinsic Alignment Calibration stuff
             CFHTFac= 100**2*3.d0*MPC*1000**2.d0/(kappa*1.98855d30)*(1-CP%omegak-CP%omegav)*5.d-14
@@ -636,6 +665,7 @@
             call Theory%P_GI%Init(k,z,PK)
             !Get P_II
             PK = CFHTFac**2*dexp(Theory%NL_MPK%z)/delta**2
+        call Transfer_GetUnsplinedPower(M, PK,transfer_vtot,transfer_vtot)
             do zix = 1,nz
                 PK(:,zix) = Log(PK(:,zix)*delta(:,1)**2._mcp)
             end do
@@ -682,11 +712,13 @@
         Theory%growth_k_z%islog = .false.
         call Theory%growth_k_z%Init(k,z,PK)
     end if    
+	
+	!<ISiTGR MOD END
 
     end subroutine CAMBCalc_SetPkFromCAMB
-
-
-    !JD need this function for ISiTGR lensing module for IA calibration
+	
+	!>ISiTGR MOD START
+	!JD need this function for ISiTGR lensing module for IA calibration
     subroutine CAMBCalc_GetTransfer(this,M,PK,t1)
     use Transfer
     use camb, only : CP
@@ -707,6 +739,7 @@
     end do
 
     end subroutine CAMBCalc_GetTransfer
+	!<ISiTGR MOD END
 
 
     subroutine CAMBCalc_GetNLandRatios(this,M,Theory,Ratios,error)
@@ -742,8 +775,6 @@
     !need splines to get nonlinear ratios
     call MatterPowerdata_getsplines(CPK)
     call NonLinear_GetRatios(CPK)
-    error = global_error_flag
-    if(error/=0) return    
     Ratios = CPK%nonlin_ratio
     call MatterPowerdata_Free(CPK)
 
@@ -752,14 +783,22 @@
         error = 1
         return
     end if
-    call Theory%NL_MPK%Init(Theory%MPK%x,Theory%MPK%y,PK)
+    call Theory%NL_MPK%InitExtrap(Theory%MPK%x,Theory%MPK%y,PK,CosmoSettings%extrap_kmax)
 
     if (allocated(Theory%MPK_WEYL)) then
         !Assume Weyl scales the same way under non-linear correction
         allocate(Theory%NL_MPK_WEYL)
         PK = Theory%MPK_WEYL%z + 2*log(Ratios)
-        call Theory%NL_MPK_WEYL%Init(Theory%MPK%x,Theory%MPK%y,PK)
+        call Theory%NL_MPK_WEYL%InitExtrap(Theory%MPK%x,Theory%MPK%y,PK,CosmoSettings%extrap_kmax)
     end if
+	
+    if (allocated(Theory%MPK_WEYL_CROSS)) then
+        !Assume Weyl scales the same way under non-linear correction
+        allocate(Theory%NL_MPK_WEYL_CROSS)
+        PK = Theory%MPK_WEYL_CROSS%z*Ratios**2
+        Theory%NL_MPK_WEYL_CROSS%islog = .False.
+        call Theory%NL_MPK_WEYL_CROSS%InitExtrap(Theory%MPK%x,Theory%MPK%y,PK,CosmoSettings%extrap_kmax)
+	end if
 
     end subroutine CAMBCalc_GetNLandRatios
 
@@ -823,7 +862,8 @@
 
     end function CAMBCalc_CMBToTheta
 
-    !JD Added for ISiTGR weak lensing module
+	!>ISiTGR MOD START
+	!JD Added for ISiTGR weak lensing module
     real(mcp) function CAMBCalc_f_k(this, x)
     use CAMB, only : f_K
     class(CAMB_Calculator) :: this
@@ -832,7 +872,7 @@
     CAMBCalc_f_k = f_K(x)
 
     end function CAMBCalc_f_k
-
+	!<ISiTGR MOD END
 
     real(mcp) function CAMBCalc_BAO_D_v(this, z)
     use CAMB, only : BAO_D_v
@@ -861,6 +901,18 @@
     CAMBCalc_ComovingRadialDistance = ComovingRadialDistance(z)
 
     end function CAMBCalc_ComovingRadialDistance
+
+    subroutine CAMBCalc_ComovingRadialDistanceArr(this, z, arr, n)
+    use CAMB, only : ComovingRadialDistanceArr  !!comoving radial distance also in Mpc no h units
+    class(CAMB_Calculator) :: this
+    integer, intent(in) :: n
+    real(mcp), intent(IN) :: z(n)
+    real(mcp), intent(out) :: arr(n)
+    !Note redshifts must be monotonically increasing    
+
+    call ComovingRadialDistanceArr(arr, z, n, 1d-4)
+
+    end subroutine CAMBCalc_ComovingRadialDistanceArr
 
     real(mcp) function CAMBCalc_AngularDiameterDistance2(this, z1, z2)
     use CAMB, only : AngularDiameterDistance2  !!angular diam distance also in Mpc no h units
@@ -901,7 +953,9 @@
     !for nonlinear lensing of CMB + LSS compatibility
     Threadnum =num_threads
     w_lam = -1
+	!>ISiTGR MOD START
     !wa_ppf = 0._dl
+	!<ISiTGR MOD END
     call CAMB_SetDefParams(P)
 
     HighAccuracyDefault = .true.

@@ -218,7 +218,7 @@
             write (F%unit,'(E20.10)') CMB%TGR_kc
         end if
         write (F%unit,'(E20.10)') CMB%TGR_s
-        write (F%unit,'(I9)') CMB%TGR_tdep
+  !      write (F%unit,'(I9)') CMB%TGR_tdep
         write (F%unit,'(I9)') rfunc
     end if
 	call F%close()

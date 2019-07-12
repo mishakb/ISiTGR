@@ -6,7 +6,7 @@
     !parameter 3 is 100*theta, parameter 4 is tau, others same as params_H except A->log(A)
     !Theta is much better constrained than H_0
     !
-    !Also a background-only parameterization, e.g. for use with just supernoave etc
+    !Also a background (late-time) parameterization, e.g. for use with just supernoave etc
 
     module CosmologyParameterizations
     use CosmologyTypes
@@ -16,11 +16,13 @@
     implicit none
     private
 
+	!>ISiTGR MOD START
     Type, extends(TCosmologyParameterization) :: SetForHParameterization
     contains
     procedure :: SetForH
     procedure :: SetISiTGRParams
     end type SetForHParameterization
+	!<ISiTGR MOD END
 
     Type, extends(SetForHParameterization) :: ThetaParameterization
         real(mcp) :: H0_min = 40, H0_max = 100
@@ -36,6 +38,7 @@
     procedure :: InitWithSetNames => TP_Init
     end type ThetaParameterization
 
+    !Background parameters only, H0, omegam...
     Type, extends(TCosmologyParameterization) :: BackgroundParameterization
     contains
     procedure :: ParamArrayToTheoryParams => BK_ParamArrayToTheoryParams
@@ -43,9 +46,21 @@
     procedure :: InitWithSetNames => BK_Init
     end type BackgroundParameterization
 
-    Type, extends(ThetaParameterization) :: ISiTGRParameterization
+    !Late-time parameterization using more astro parameter, H0, omegab, omegam
+    Type, extends(TCosmologyParameterization) :: AstroParameterization
+        real(mcp) :: ombh2_prior_mean = 0._mcp, ombh2_prior_std = 0._mcp
+    contains
+    procedure :: ParamArrayToTheoryParams => AP_ParamArrayToTheoryParams
+    procedure :: NonBaseParameterPriors => AP_NonBaseParameterPriors
+    procedure :: CalcDerivedParams => AP_CalcDerivedParams
+    procedure :: InitWithSetNames => AP_Init
+    end type AstroParameterization
+	
+	!>ISiTGR MOD START
+	Type, extends(ThetaParameterization) :: ISiTGRParameterization
     contains
     procedure :: SetISiTGRParams => ISiTGRP_SetISiTGRParams
+    procedure :: ParamArrayToTheoryParams => ISiTGRP_ParamArrayToTheoryParams
     procedure :: NonBaseParameterPriors => ISiTGRP_NonBaseParameterPriors
     procedure :: CalcDerivedParams => ISiTGRP_CalcDerivedParams
     procedure :: InitWithSetNames => ISiTGRP_Init
@@ -59,12 +74,16 @@
     procedure :: InitWithSetNames => ISiTGRBP_Init
     end type ISiTGR_BINParameterization
 
-    public BackgroundParameterization,ThetaParameterization,ISiTGRParameterization,&
-    ISiTGR_BINParameterization
+    public BackgroundParameterization,ThetaParameterization,AstroParameterization, &
+	ISiTGRParameterization, ISiTGR_BINParameterization
+	!<ISiTGR MOD END
+	
     contains
-
+	
+!>ISiTGR MOD START
     subroutine SetForH(this,Params,CMB,H0, firsttime,error)
     use bbn
+    use settings
     class(SetForHParameterization) this
     real(mcp) Params(num_Params)
     logical, intent(in) :: firsttime
@@ -82,7 +101,12 @@
         CMB%wa = Params(9)
         CMB%nnu = Params(10) !3.046
         !Params(6) is now mnu, where mnu is physical standard neutrino mass and we assume standard heating
-        CMB%omnuh2=Params(6)/neutrino_mass_fac*(standard_neutrino_neff/3)**0.75_mcp
+        CMB%sum_mnu_standard = Params(6)
+        if (CMB%nnu > standard_neutrino_neff .or. CosmoSettings%neutrino_hierarchy /= neutrino_hierarchy_degenerate) then
+            CMB%omnuh2=Params(6)/neutrino_mass_fac*(standard_neutrino_neff/3)**0.75_mcp
+        else
+            CMB%omnuh2=Params(6)/neutrino_mass_fac*(CMB%nnu/3)**0.75_mcp
+        end if
         !Params(7) is mass_sterile*Neff_sterile
         CMB%omnuh2_sterile = Params(7)/neutrino_mass_fac
         !we are using interpretation where there are degeneracy_factor neutrinos, each exactly thermal
@@ -149,8 +173,36 @@
     CMB%TGR_D2 = 1.d0
     CMB%TGR_D3 = 1.d0
     CMB%TGR_D4 = 1.d0
+	!CGQ ISiTGR Parameters
+	!binning
+    CMB%TGR_mu1 = 1.d0
+    CMB%TGR_mu2 = 1.d0
+    CMB%TGR_mu3 = 1.d0
+    CMB%TGR_mu4 = 1.d0
+    CMB%TGR_eta1 = 1.d0
+    CMB%TGR_eta2 = 1.d0
+    CMB%TGR_eta3 = 1.d0
+    CMB%TGR_eta4 = 1.d0
+    CMB%TGR_Sigma1 = 1.d0
+    CMB%TGR_Sigma2 = 1.d0
+    CMB%TGR_Sigma3 = 1.d0
+    CMB%TGR_Sigma4 = 1.d0
+	!functional
+	CMB%TGR_E11 = 1.d0
+	CMB%TGR_E22 = 1.d0
+	CMB%TGR_mu0 = 1.d0
+	CMB%TGR_Sigma0 = 1.d0
+	CMB%TGR_c1 = 1.d0
+	CMB%TGR_c2 = 1.d0
+	CMB%TGR_lambda = 0.d0
+	!CGQ for Dark Energy models
+	CMB%TGR_w0 = 1.d0
+	CMB%TGR_wa = 1.d0
+	CMB%TGR_wp = 1.d0
+	CMB%TGR_a_p = 1.d0
 
     end subroutine SetISiTGRParams
+	!<ISiTGR MOD END
 
     subroutine TP_Init(this, Ini, Names, Config)
     class(ThetaParameterization) :: this
@@ -177,6 +229,9 @@
     call Names%Add('paramnames/derived_theory.paramnames')
     if (CosmoSettings%use_LSS) call Names%Add('paramnames/derived_LSS.paramnames')
     if (CosmoSettings%compute_tensors) call Names%Add('paramnames/derived_tensors.paramnames')
+    !Add output ranges to match priors
+    call Names%AddDerivedRange('zrei', mn=this%use_min_zre)
+    call Names%AddDerivedRange('H0', this%H0_min, this%H0_max)
     this%num_derived = Names%num_derived
     !set number of hard parameters, number of initial power spectrum parameters
     call this%SetTheoryParameterNumbers(16,last_power_index)
@@ -235,7 +290,7 @@
                 end if
             end do
             call this%TCosmologyParameterization%ParamArrayToTheoryParams(Params, CMB)
-
+			!>ISiTGR MOD START: changing to this%SetForH
             error = 0   !JD to prevent stops when using bbn_consistency or m_sterile
             DA = Params(3)/100
             try_b = this%H0_min
@@ -264,7 +319,7 @@
                     if (abs(D_try - lasttry)< 1e-7) exit
                     lasttry = D_try
                 end do
-
+			!<ISiTGR MOD END
                 !!call InitCAMB(CMB,error)
                 if (CMB%tau==0._mcp) then
                     CMB%zre=0
@@ -281,19 +336,6 @@
     end select
 
     end subroutine TP_ParamArrayToTheoryParams
-
-    function GetYPBBN(Yhe)
-    !Convert yhe defined as mass fraction (CMB codes), to nucleon ratio definition
-    real(mcp), intent(in) :: Yhe
-    real(mcp) GetYPBBN
-    real(mcp), parameter :: m_proton = 1.672621637e-27
-    real(mcp), parameter :: m_H = 1.673575e-27
-    real(mcp), parameter :: not4 = 3.9715
-    real(mcp), parameter :: m_He = m_H * not4
-
-    GetYPBBN =  4 * m_H * Yhe / (m_He - Yhe * (m_He - 4*m_H))
-
-    end function GetYPBBN
 
     subroutine TP_CalcDerivedParams(this, P, Theory, derived)
     class(ThetaParameterization) :: this
@@ -321,13 +363,14 @@
         derived(6) = (CMB%omdmh2 + CMB%ombh2)*CMB%h
 
         derived(7) = Theory%Sigma_8
-        derived(8) = Theory%Sigma_8*((CMB%omdm+CMB%omb))**0.5_mcp
-        derived(9) = Theory%Sigma_8*((CMB%omdm+CMB%omb))**0.25_mcp
-        derived(10)= Theory%Sigma_8/CMB%h**0.5_mcp
-
-        derived(11) = Theory%Lensing_rms_deflect
-        derived(12) = CMB%zre
-        ix=13
+        derived(8) = Theory%Sigma_8*((CMB%omdm+CMB%omb)/0.3)**0.5_mcp
+        derived(9) = Theory%Sigma_8*((CMB%omdm+CMB%omb))**0.5_mcp
+        derived(10)= Theory%Sigma_8*((CMB%omdm+CMB%omb))**0.25_mcp
+        derived(11)= Theory%Sigma_8/CMB%h**0.5_mcp
+        derived(12) = Theory%derived_parameters( derived_rdrag )*CMB%H0/100
+        derived(13) = Theory%Lensing_rms_deflect
+        derived(14) = CMB%zre
+        ix=15
         derived(ix) = cl_norm*CMB%InitPower(As_index)*1e9
         derived(ix+1) = derived(ix)*exp(-2*CMB%tau)  !A e^{-2 tau}
         ix = ix+2
@@ -366,7 +409,7 @@
         end if
 
         if (CosmoSettings%Compute_tensors) then
-            derived(ix:ix+5) = [Theory%tensor_ratio_02, Theory%tensor_ratio_BB, log(Theory%tensor_AT*1e10), &
+            derived(ix:ix+5) = [Theory%tensor_ratio_02, Theory%tensor_ratio_BB, log(max(1e-15_mcp,Theory%tensor_AT)*1e10_mcp), &
                 Theory%tensor_ratio_C10, Theory%tensor_AT*1e9, Theory%tensor_AT*1e9*exp(-2*CMB%tau) ]
             ix=ix+6
         end if
@@ -454,27 +497,194 @@
 
     end subroutine BK_CalcDerivedParams
 
+    !Astro parameterization using H0, omegam, omegab...
+    subroutine AP_Init(this, Ini, Names, Config)
+    class(AstroParameterization) :: this
+    class(TSettingIni) :: Ini
+    class(TParamNames) :: Names
+    class(TGeneralConfig), target :: Config
+    character(LEN=:), pointer :: prior
 
-    subroutine ISiTGRP_SetISiTGRParams(this,Params,CMB)
+    prior => Ini%Read_String('prior[omegabh2]',NotFoundFail=.false.)
+    if (prior/='') then
+        read(prior,*) this%ombh2_prior_mean, this%ombh2_prior_std
+    end if
+
+    call this%Initialize(Ini,Names, 'paramnames/params_astro.paramnames', Config)
+    call this%SetTheoryParameterNumbers(9,last_power_index)
+
+    end subroutine AP_Init
+
+    function AP_NonBaseParameterPriors(this,CMB)
+    class(AstroParameterization) :: this
+    class(TTheoryParams) :: CMB
+    real(mcp):: AP_NonBaseParameterPriors
+
+    select type (CMB)
+    class is (CMBParams)
+        AP_NonBaseParameterPriors = 0
+        if (this%ombh2_prior_mean/=0._mcp) then
+            AP_NonBaseParameterPriors = ((CMB%ombh2 - this%ombh2_prior_mean)/this%ombh2_prior_std)**2/2
+        end if
+    end select
+    end function AP_NonBaseParameterPriors
+
+    subroutine AP_ParamArrayToTheoryParams(this, Params, CMB)
+    class(AstroParameterization) :: this
+    real(mcp) Params(:)
+    class(TTheoryParams), target :: CMB
+    real(mcp) omegam, h2
+    integer error
+
+    select type (CMB)
+    class is (CMBParams)
+        omegam = Params(1)
+        CMB%omb= Params(2)
+        CMB%H0 = Params(3)
+        CMB%omk = Params(4)
+        CMB%sum_mnu_standard = Params(5)
+        CMB%omnuh2=Params(5)/neutrino_mass_fac*(standard_neutrino_neff/3)**0.75_mcp
+
+        CMB%h=CMB%H0/100
+        h2 = CMB%h**2
+
+        CMB%omnu = CMB%omnuh2/h2
+        CMB%ombh2 = CMB%omb*h2
+        CMB%omc= omegam - CMB%omb - CMB%omnu
+        CMB%omch2 = CMB%omc*h2
+
+        CMB%w =    Params(6)
+        CMB%wa =   Params(7)
+        CMB%nnu =  Params(8)
+        if (CosmoSettings%bbn_consistency) then
+            CMB%YHe = BBN_YHe%Value(CMB%ombh2,CMB%nnu - standard_neutrino_neff,error)
+        else
+            CMB%YHe = Params(9)
+        end if
+
+        CMB%InitPower(1:num_initpower) = Params(index_initpower:index_initpower+num_initpower-1)
+        !CMB%InitPower(As_index) = exp(CMB%InitPower(As_index))
+        CMB%InitPower(As_index) = CMB%InitPower(As_index) *10 !input is 10^9 As, cl_norm = 1e-10
+
+        CMB%zre=0
+        CMB%zre_delta = 1.5
+        CMB%tau=0
+        CMB%omdmh2 = CMB%omch2+ CMB%omnuh2
+        CMB%omdm = CMB%omdmh2/h2
+        CMB%omv = 1- CMB%omk - CMB%omb - CMB%omdm
+        CMB%nufrac=CMB%omnuh2/CMB%omdmh2
+        CMB%reserved=0
+        CMB%fdm=0
+        CMB%ALensf = 1
+        CMB%iso_cdm_correlated=0
+        CMB%Alens=1
+        CMB%omnuh2_sterile = 0
+    end select
+    end subroutine AP_ParamArrayToTheoryParams
+
+
+    subroutine AP_CalcDerivedParams(this, P, Theory, derived)
+    class(AstroParameterization) :: this
+    real(mcp), allocatable :: derived(:)
+    class(TTheoryPredictions), allocatable :: Theory
+    real(mcp) :: P(:)
+    Type(CMBParams) CMB
+
+    allocate(Derived(9))
+
+    call this%ParamArrayToTheoryParams(P,CMB)
+
+    if (.not. allocated(Theory)) call MpiStop('Not allocated theory!!!')
+    select type (Theory)
+    class is (TCosmoTheoryPredictions)
+        derived(1) = CMB%ombh2
+        derived(2) = CMB%omch2
+        derived(3) = CMB%omv
+        derived(4) = CMB%omnuh2
+        derived(5) = log(CMB%InitPower(As_index))
+        derived(6) = Theory%Sigma_8
+        derived(7) = Theory%Sigma_8*((CMB%omdm+CMB%omb)/0.3)**0.5_mcp
+        derived(8) = Theory%Sigma_8*((CMB%omdm+CMB%omb))**0.5_mcp
+        derived(9) = Theory%Sigma_8*((CMB%omdm+CMB%omb))**0.25_mcp
+    end select
+
+    end subroutine AP_CalcDerivedParams
+
+!<ISiTGR MOD START
+	subroutine ISiTGRP_SetISiTGRParams(this,Params,CMB)
+	!use CosmologyTypes !CGQ 
+	use ISiTGR !CGQ
     class(ISiTGRParameterization) this
     real(mcp) Params(num_Params)
     Type(CMBParams) CMB
-
     call this%SetForHParameterization%SetISiTGRParams(Params,CMB)
-
-    CMB%TGR_Q0 = Params(17)
-    CMB%TGR_Qinf = Params(18)
-    CMB%TGR_D0 = Params(19)
-    CMB%TGR_Dinf = Params(20)
-    if(CosmoSettings%ISiTGR_scale_dep) CMB%TGR_kc = Params(21)
-    CMB%TGR_s = Params(22)
-    if(CMB%TGR_s>0.0001) CMB%TGR_tdep=.true.
-    CMB%TGR_R0 = 2.d0*CMB%TGR_D0/CMB%TGR_Q0-1.d0
-    CMB%TGR_Rinf = 2.d0*CMB%TGR_Dinf/CMB%TGR_Qinf-1.d0
-
+	TGR%GR = 1	!Using equations for MG and not GR
+	!CGQ for New Parameters
+	if (CosmoSettings%ISiTGR_Use_mueta .eqv. .true.) then
+		CMB%TGR_E11 = Params(17)
+		CMB%TGR_E22 = Params(18)
+		CMB%TGR_c1 = Params(19)
+		CMB%TGR_c2 = Params(20)
+		CMB%TGR_lambda = Params(21)
+		!Dark Energy model Params
+		CMB%TGR_w0 = Params(22)
+		CMB%TGR_wa = Params(23)
+		CMB%TGR_wp = Params(24)
+		CMB%TGR_a_p = Params(25)
+	else if (CosmoSettings%ISiTGR_Use_muSigma .eqv. .true.) then
+		CMB%TGR_mu0 = Params(17)
+		CMB%TGR_Sigma0 = Params(18)
+		CMB%TGR_c1 = Params(19)
+		CMB%TGR_c2 = Params(20)
+		CMB%TGR_lambda = Params(21)
+		!Dark Energy model Params
+		CMB%TGR_w0 = Params(22)
+		CMB%TGR_wa = Params(23)
+		CMB%TGR_wp = Params(24)
+		CMB%TGR_a_p = Params(25)
+	else if ((CosmoSettings%ISiTGR_QDR .eqv. .true.) .and. (CosmoSettings%ISiTGR_Rfunc .eqv. .false.)) then
+		CMB%TGR_Q0 = Params(17)
+		CMB%TGR_D0 = Params(18)
+		CMB%TGR_c1 = Params(19)
+		CMB%TGR_c2 = Params(20)
+		CMB%TGR_lambda = Params(21)
+		!Dark Energy model Params
+		CMB%TGR_w0 = Params(22)
+		CMB%TGR_wa = Params(23)
+		CMB%TGR_wp = Params(24)
+		CMB%TGR_a_p = Params(25)
+	else if ((CosmoSettings%ISiTGR_QDR .eqv. .true.) .and. (CosmoSettings%ISiTGR_Rfunc .eqv. .true.)) then
+		CMB%TGR_Q0 = Params(17)
+		CMB%TGR_R0 = Params(18)
+		CMB%TGR_c1 = Params(19)
+		CMB%TGR_c2 = Params(20)
+		CMB%TGR_lambda = Params(21)
+		!Dark Energy model Params
+		CMB%TGR_w0 = Params(22)
+		CMB%TGR_wa = Params(23)
+		CMB%TGR_wp = Params(24)
+		CMB%TGR_a_p = Params(25)
+	else
+	    CMB%TGR_Q0 = Params(17)
+	    CMB%TGR_Qinf = Params(18)
+	    CMB%TGR_D0 = Params(19)
+	    CMB%TGR_Dinf = Params(20)
+	    if(CosmoSettings%ISiTGR_scale_dep) CMB%TGR_kc = Params(21)
+	    CMB%TGR_s = Params(22)
+	    if(CMB%TGR_s>0.0001) CMB%TGR_tdep=.true.
+	    CMB%TGR_R0 = 2.d0*CMB%TGR_D0/CMB%TGR_Q0-1.d0
+	    CMB%TGR_Rinf = 2.d0*CMB%TGR_Dinf/CMB%TGR_Qinf-1.d0
+		!Dark Energy model Params
+		CMB%TGR_w0 = Params(23)
+		CMB%TGR_wa = Params(24)
+		CMB%TGR_wp = Params(25)
+		CMB%TGR_a_p = Params(26)
+	end if
+	
     end subroutine ISiTGRP_SetISiTGRParams
 
     subroutine ISiTGRP_Init(this, Ini, Names, Config)
+!	use CosmologyTypes !CGQ 
     class(ISiTGRParameterization) :: this
     class(TSettingIni) :: Ini
     class(TParamNames) :: Names
@@ -493,34 +703,154 @@
     if (prior/='') then
         read(prior,*) this%zre_prior_mean, this%zre_prior_std
     end if
-
-    call this%Initialize(Ini,Names, 'paramnames/params_ISiTGR.paramnames', Config)
+	if (CosmoSettings%ISiTGR_Use_mueta .eqv. .true.) call this%Initialize(Ini,Names, 'paramnames/Functional/mueta/params_ISiTGR_mueta.paramnames', Config)
+	if (CosmoSettings%ISiTGR_Use_muSigma .eqv. .true.) call this%Initialize(Ini,Names, 'paramnames/Functional/muSigma/params_ISiTGR_muSigma.paramnames', Config)
+	if ((CosmoSettings%ISiTGR_QDR .eqv. .true.) .and. (CosmoSettings%ISiTGR_Rfunc .eqv. .false.)) call &
+	this%Initialize(Ini,Names, 'paramnames/Functional/QD/params_ISiTGR_QD.paramnames', Config)
+	if ((CosmoSettings%ISiTGR_QDR .eqv. .true.) .and. (CosmoSettings%ISiTGR_Rfunc .eqv. .true.)) call &
+	this%Initialize(Ini,Names, 'paramnames/Functional/QR/params_ISiTGR_QR.paramnames', Config)
+	if ((CosmoSettings%ISiTGR_Use_mueta .eqv. .false.) .and. (CosmoSettings%ISiTGR_Use_muSigma .eqv. .false.) .and. &
+	(CosmoSettings%ISiTGR_QDR .eqv. .false.)) call this%Initialize(Ini,Names, 'paramnames/Functional/params_ISiTGR.paramnames', Config)
     if (CosmoSettings%bbn_consistency) call Names%Add('paramnames/derived_bbn.paramnames')
     call Names%Add('paramnames/derived_theory.paramnames')
     if (CosmoSettings%use_LSS) call Names%Add('paramnames/derived_LSS.paramnames')
     if (CosmoSettings%compute_tensors) call Names%Add('paramnames/derived_tensors.paramnames')
+	!Add output ranges to match priors
+    call Names%AddDerivedRange('zrei', mn=this%use_min_zre)
+    call Names%AddDerivedRange('H0', this%H0_min, this%H0_max)
     this%num_derived = Names%num_derived
     !set number of hard parameters, number of initial power spectrum parameters
-    call this%SetTheoryParameterNumbers(22,last_power_index)
-
+	if ((CosmoSettings%ISiTGR_Use_mueta .eqv. .true.) .or. (CosmoSettings%ISiTGR_Use_muSigma .eqv. .true.) .or. &
+	(CosmoSettings%ISiTGR_QDR .eqv. .true.)) then
+		call this%SetTheoryParameterNumbers(25,last_power_index) !CGQ for new parameterizations
+	else
+		call this%SetTheoryParameterNumbers(26,last_power_index) !for original ISiTGR parameters
+	end if
+	
+	if (((CosmoSettings%ISiTGR_Use_mueta .eqv. .true.) .and. (CosmoSettings%ISiTGR_Use_muSigma .eqv. .true.)) .or. &
+		((CosmoSettings%ISiTGR_Use_mueta .eqv. .true.) .and. (CosmoSettings%ISiTGR_QDR .eqv. .true.)) .or. &
+		((CosmoSettings%ISiTGR_QDR .eqv. .true.) .and. (CosmoSettings%ISiTGR_Use_muSigma .eqv. .true.)) ) then
+	write(*,*) "------------------------------------------------------------------"
+	write(*,*) "error: ISiTGR calling two different MG parameterizations at the same time"
+	write(*,*) "------------------------------------------------------------------"
+	stop
+	end if
     end subroutine ISiTGRP_Init
 
     function ISiTGRP_NonBaseParameterPriors(this,CMB)
     class(ISiTGRParameterization) :: this
     class(TTheoryParams) :: CMB
     real(mcp):: ISiTGRP_NonBaseParameterPriors
-
+	real(mcp):: HardPrior, HardPrior2
+	
     select type (CMB)
     class is (CMBParams)
         ISiTGRP_NonBaseParameterPriors = logZero
-         !JD priors on ISiTGR parameter R
-        if (CMB%TGR_R0 <-1 .or. CMB%TGR_R0 >10) return
-        if (CMB%TGR_Rinf<-1 .or. CMB%TGR_Rinf >10) return
-        ISiTGRP_NonBaseParameterPriors = this%ThetaParameterization%NonBaseParameterPriors(CMB)
+		!CGQ Hard prior as in DES paper
+		if (CosmoSettings%ISiTGR_Use_muSigma .eqv. .true.) then
+			HardPrior = 1.d0 + 2.d0*CMB%TGR_Sigma0 !CGQ for HardPrior
+			if (CMB%TGR_mu0 > HardPrior) return
+            HardPrior2 = CMB%TGR_wa + CMB%TGR_w0
+            if (HardPrior2 > 0) return
+		else
+		    !JD priors on ISiTGR parameter R
+ 	    	if (CMB%TGR_R0 <-1 .or. CMB%TGR_R0 >10) return
+    	    if (CMB%TGR_Rinf<-1 .or. CMB%TGR_Rinf >10) return
+		end if
+     !   ISiTGRP_NonBaseParameterPriors = this%ThetaParameterization%NonBaseParameterPriors(CMB)
+        if (CMB%H0 < this%H0_min .or. CMB%H0 > this%H0_max) return
+        if (CMB%zre < this%Use_min_zre) return
+        if (CMB%omnuh2_sterile > 0 .and. CMB%nnu > standard_neutrino_neff) then
+            !Check if physical mass of thermal massive sterile too big (look like CDM, so don't need to model separately)
+            if (CMB%omnuh2_sterile*neutrino_mass_fac/(CMB%nnu-standard_neutrino_neff)**0.75_mcp > this%sterile_mphys_max) return
+        end if
+        ISiTGRP_NonBaseParameterPriors = 0
+        if (this%H0_prior_mean/=0._mcp) then
+            ISiTGRP_NonBaseParameterPriors = ((CMB%H0 - this%H0_prior_mean)/this%H0_prior_std)**2/2
+        end if
+        if (this%zre_prior_mean/=0._mcp) then
+            ISiTGRP_NonBaseParameterPriors = ISiTGRP_NonBaseParameterPriors + ((CMB%zre - this%zre_prior_mean)/this%zre_prior_std)**2/2
+        end if
     end select
     end function ISiTGRP_NonBaseParameterPriors
+	
+    subroutine ISiTGRP_ParamArrayToTheoryParams(this, Params, CMB)
+    class(ISiTGRParameterization) :: this
+    real(mcp) Params(:)
+    integer, parameter :: ncache =2
+    Class(TTheoryParams), target :: CMB
+    Type(CMBParams), save :: LastCMB(ncache)
+    real(mcp) DA
+    real(mcp)  D_b,D_t,D_try,try_b,try_t, lasttry
+    integer, save :: cache=1
+    integer i
+    Type(CMBParams), pointer :: CP2
+    integer error
+
+    select type(CosmoCalc=>this%Config%Calculator)
+    class is (TCosmologyCalculator)
+        select type (CMB)
+        class is (CMBParams)
+            do i=1, ncache
+                !want to save two slow positions for some fast-slow methods
+                if (all(Params(1:num_hard) == LastCMB(i)%BaseParams(1:num_hard))) then
+                    CP2 => CMB !needed to make next line work for some odd reason CMB=LastCMB(i) does not work
+                    CP2 = LastCMB(i)
+                    call this%TCosmologyParameterization%ParamArrayToTheoryParams(Params, CMB)
+                    call SetFast(Params,CMB)
+                    return
+                end if
+            end do
+            call this%TCosmologyParameterization%ParamArrayToTheoryParams(Params, CMB)
+			!>ISiTGR MOD START: changing to this%SetForH
+            error = 0   !JD to prevent stops when using bbn_consistency or m_sterile
+            DA = Params(3)/100
+            try_b = this%H0_min
+            call this%SetForH(Params,CMB,try_b, .true.,error)  !JD for bbn related errors
+            if(error/=0)then
+                cmb%H0=0
+                return
+            end if
+            D_b = CosmoCalc%CMBToTheta(CMB)
+            try_t = this%H0_max
+            call this%SetForH(Params,CMB,try_t, .false.)
+            D_t = CosmoCalc%CMBToTheta(CMB)
+            if (DA < D_b .or. DA > D_t) then
+                if (Feedback>1) write(*,*) instance, 'Out of range finding H0: ', real(Params(3))
+                cmb%H0=0 !Reject it
+            else
+                lasttry = -1
+                do
+                    call this%SetForH(Params,CMB,(try_b+try_t)/2, .false.)
+                    D_try = CosmoCalc%CMBToTheta(CMB)
+                    if (D_try < DA) then
+                        try_b = (try_b+try_t)/2
+                    else
+                        try_t = (try_b+try_t)/2
+                    end if
+                    if (abs(D_try - lasttry)< 1e-7) exit
+                    lasttry = D_try
+                end do
+			!<ISiTGR MOD END
+                !!call InitCAMB(CMB,error)
+                if (CMB%tau==0._mcp) then
+                    CMB%zre=0
+                else
+                    CMB%zre = CosmoCalc%GetZreFromTau(CMB, CMB%tau)
+                end if
+
+                LastCMB(cache) = CMB
+                cache = mod(cache,ncache)+1
+            end if
+        end select
+        class default
+        call MpiStop('CosmologyParameterizations: Calculator is not TCosmologyCalculator')
+    end select
+
+    end subroutine ISiTGRP_ParamArrayToTheoryParams
 
     subroutine ISiTGRP_CalcDerivedParams(this, P, Theory, derived)
+	use CosmologyTypes !CGQ 
     class(ISiTGRParameterization) :: this
     real(mcp), allocatable :: derived(:)
     class(TTheoryPredictions), allocatable :: Theory
@@ -531,7 +861,7 @@
     real(mcp) z
     integer, parameter :: derivedCL(5) = [40, 220, 810, 1420, 2000]
 
-    if (.not. allocated(Theory)) call MpiStop('Not allocated theory!!!')
+    if (.not. allocated(Theory)) call MpiStop(' Not allocated theory!!!')
     select type (Theory)
     class is (TCosmoTheoryPredictions)
         allocate(Derived(this%num_derived), source=0._mcp)
@@ -546,20 +876,36 @@
         derived(6) = (CMB%omdmh2 + CMB%ombh2)*CMB%h
 
         derived(7) = Theory%Sigma_8
-        derived(8) = Theory%Sigma_8*((CMB%omdm+CMB%omb))**0.5_mcp
-        derived(9) = Theory%Sigma_8*((CMB%omdm+CMB%omb))**0.25_mcp
-        derived(10)= Theory%Sigma_8/CMB%h**0.5_mcp
-
-        derived(11) = Theory%Lensing_rms_deflect
-        derived(12) = CMB%zre
-        ix=13
+        derived(8) = Theory%Sigma_8*((CMB%omdm+CMB%omb)/0.3)**0.5_mcp
+        derived(9) = Theory%Sigma_8*((CMB%omdm+CMB%omb))**0.5_mcp
+        derived(10)= Theory%Sigma_8*((CMB%omdm+CMB%omb))**0.25_mcp
+        derived(11)= Theory%Sigma_8/CMB%h**0.5_mcp
+        derived(12) = Theory%derived_parameters( derived_rdrag )*CMB%H0/100
+        derived(13) = Theory%Lensing_rms_deflect
+        derived(14) = CMB%zre
+        ix=15
         derived(ix) = cl_norm*CMB%InitPower(As_index)*1e9
         derived(ix+1) = derived(ix)*exp(-2*CMB%tau)  !A e^{-2 tau}
-        derived(ix+2) = CMB%TGR_R0
-        derived(ix+3) = CMB%TGR_Rinf
-        derived(ix+4) = 2.d0*CMB%TGR_D0 - CMB%TGR_Q0  !JD  TGR V_0
-        derived(ix+5) = 2.d0*CMB%TGR_Dinf - CMB%TGR_Qinf  !JD  TGR V_\inf
-        ix = ix+6
+		if (CosmoSettings%ISiTGR_Use_mueta .eqv. .true.) then !CGQ for mu-eta derive parameters
+			derived(ix+2) = CMB%TGR_E11*CMB%omv !CGQ for \mu_0-1 (mu-eta Parameterization only)
+			derived(ix+3) = CMB%TGR_E22*CMB%omv !CGQ for \eta_0-1 (mu-eta Parameterization only)
+			derived(ix+4) = -1.d0+(CMB%TGR_E11*CMB%omv+1.d0)*(CMB%TGR_E22*CMB%omv+2.d0)/(2.d0) !CGQ 
+			derived(ix+5) = CMB%TGR_E11 * CMB%omv * (1.d0 + CMB%TGR_c1 * (CMB%TGR_lambda * (CMB%H0*1000.d0/2.99792458e8) / 10.0e-10)**2.d0)/ &
+			(1.d0 + (CMB%TGR_lambda * (CMB%H0*1000.d0/2.99792458e8) / 10.0e-10)**2.d0)
+			derived(ix+6) = CMB%TGR_E22 * CMB%omv * (1.d0 + CMB%TGR_c2 * (CMB%TGR_lambda * (CMB%H0*1000.d0/2.99792458e8) / 10.0e-10)**2.d0)/ &
+			(1.d0 + (CMB%TGR_lambda * (CMB%H0*1000.d0/2.99792458e8) / 10.0e-10)**2.d0)     ! 10^-10 Mpc^1 !!!
+			ix = ix+7
+		else if (CosmoSettings%ISiTGR_Use_muSigma .eqv. .true.) then
+			ix = ix + 2
+		else if (CosmoSettings%ISiTGR_QDR .eqv. .true.) then
+			ix = ix + 2
+		else 
+	        derived(ix+2) = CMB%TGR_R0
+    	    derived(ix+3) = CMB%TGR_Rinf
+	        derived(ix+4) = 2.d0*CMB%TGR_D0 - CMB%TGR_Q0  !JD  TGR V_0
+    	    derived(ix+5) = 2.d0*CMB%TGR_Dinf - CMB%TGR_Qinf  !JD  TGR V_\inf
+	        ix = ix+6
+		end if
 
         if(CosmoSettings%use_CMB .and. allocated(Theory%Cls(1,1)%CL)) then
             !L(L+1)C_L/2pi at various places
@@ -595,7 +941,7 @@
         end if
 
         if (CosmoSettings%Compute_tensors) then
-            derived(ix:ix+5) = [Theory%tensor_ratio_02, Theory%tensor_ratio_BB, log(Theory%tensor_AT*1e10), &
+            derived(ix:ix+5) = [Theory%tensor_ratio_02, Theory%tensor_ratio_BB, log(max(1e-15_mcp,Theory%tensor_AT)*1e10_mcp), &
                 Theory%tensor_ratio_C10, Theory%tensor_AT*1e9, Theory%tensor_AT*1e9*exp(-2*CMB%tau) ]
             ix=ix+6
         end if
@@ -610,25 +956,60 @@
 
 
     subroutine ISiTGRBP_SetISiTGRParams(this,Params,CMB)
+	use ISiTGR !CGQ
     class(ISiTGR_BINParameterization) this
     real(mcp) Params(num_Params)
     Type(CMBParams) CMB
-
+	TGR%GR = 1	!Using equations for MG and not GR
     call this%SetForHParameterization%SetISiTGRParams(Params,CMB)
 
-    CMB%TGR_Q1 = Params(17)
-    CMB%TGR_Q2 = Params(18)
-    CMB%TGR_Q3 = Params(19)
-    CMB%TGR_Q4 = Params(20)
-    CMB%TGR_D1 = Params(21)
-    CMB%TGR_D2 = Params(22)
-    CMB%TGR_D3 = Params(23)
-    CMB%TGR_D4 = Params(24)
+	!CGQ for New Parameters begin
+	if (CosmoSettings%ISiTGR_BIN_mueta .eqv. .true.) then
+		CMB%TGR_mu1 = Params(17)
+    	CMB%TGR_mu2 = Params(18)
+    	CMB%TGR_mu3 = Params(19)
+	    CMB%TGR_mu4 = Params(20)
+	    CMB%TGR_eta1 = Params(21)
+	    CMB%TGR_eta2 = Params(22)
+	    CMB%TGR_eta3 = Params(23)
+	    CMB%TGR_eta4 = Params(24)
+	else if (CosmoSettings%ISiTGR_BIN_muSigma .eqv. .true.) then
+		CMB%TGR_mu1 = Params(17)
+    	CMB%TGR_mu2 = Params(18)
+    	CMB%TGR_mu3 = Params(19)
+	    CMB%TGR_mu4 = Params(20)
+	    CMB%TGR_Sigma1 = Params(21)
+	    CMB%TGR_Sigma2 = Params(22)
+	    CMB%TGR_Sigma3 = Params(23)
+	    CMB%TGR_Sigma4 = Params(24)
+	else 
+	    CMB%TGR_Q1 = Params(17)
+	    CMB%TGR_Q2 = Params(18)
+    	CMB%TGR_Q3 = Params(19)
+    	CMB%TGR_Q4 = Params(20)
+	   	CMB%TGR_D1 = Params(21)
+	    CMB%TGR_D2 = Params(22)
+	    CMB%TGR_D3 = Params(23)
+	    CMB%TGR_D4 = Params(24)
+		CMB%TGR_R1 = 2.d0*CMB%TGR_D1/CMB%TGR_Q1-1.d0
+	    CMB%TGR_R2 = 2.d0*CMB%TGR_D2/CMB%TGR_Q2-1.d0
+	    CMB%TGR_R3 = 2.d0*CMB%TGR_D3/CMB%TGR_Q3-1.d0
+	    CMB%TGR_R4 = 2.d0*CMB%TGR_D4/CMB%TGR_Q4-1.d0
+	end if
+	!CGQ for New Parameters end
     CMB%TGR_kc = Params(25)
-    CMB%TGR_R1 = 2.d0*CMB%TGR_D1/CMB%TGR_Q1-1.d0
-    CMB%TGR_R2 = 2.d0*CMB%TGR_D2/CMB%TGR_Q2-1.d0
-    CMB%TGR_R3 = 2.d0*CMB%TGR_D3/CMB%TGR_Q3-1.d0
-    CMB%TGR_R4 = 2.d0*CMB%TGR_D4/CMB%TGR_Q4-1.d0
+	!Dark Energy model Params
+	CMB%TGR_w0 = Params(26)
+	CMB%TGR_wa = Params(27)
+	CMB%TGR_wp = Params(28)
+	CMB%TGR_a_p = Params(29)
+	
+	if ((CosmoSettings%ISiTGR_BIN_mueta .eqv. .true.) .and. (CosmoSettings%ISiTGR_BIN_muSigma .eqv. .true.)) then
+	write(*,*) "------------------------------------------------------------------"
+	write(*,*) "error: ISiTGR_BIN calling two different MG parameterizations at the same time"
+	write(*,*) "------------------------------------------------------------------"
+	stop
+	end if
 
     end subroutine ISiTGRBP_SetISiTGRParams
 
@@ -651,15 +1032,19 @@
     if (prior/='') then
         read(prior,*) this%zre_prior_mean, this%zre_prior_std
     end if
-
-    call this%Initialize(Ini,Names, 'paramnames/params_ISiTGR_BIN.paramnames', Config)
+	
+	if (CosmoSettings%ISiTGR_BIN_mueta .eqv. .true.) call this%Initialize(Ini,Names, 'paramnames/Binning/mueta/params_ISiTGR_BIN_mueta.paramnames', Config)
+	if (CosmoSettings%ISiTGR_BIN_muSigma .eqv. .true.) call this%Initialize(Ini,Names, 'paramnames/Binning/muSigma/params_ISiTGR_BIN_muSigma.paramnames', Config)
+	if ((CosmoSettings%ISiTGR_BIN_muSigma .eqv. .false.) .and. (CosmoSettings%ISiTGR_BIN_mueta .eqv. .false.)) then
+	    call this%Initialize(Ini,Names, 'paramnames/params_ISiTGR_BIN.paramnames', Config)
+	end if
     if (CosmoSettings%bbn_consistency) call Names%Add('paramnames/derived_bbn.paramnames')
     call Names%Add('paramnames/derived_theory.paramnames')
     if (CosmoSettings%use_LSS) call Names%Add('paramnames/derived_LSS.paramnames')
     if (CosmoSettings%compute_tensors) call Names%Add('paramnames/derived_tensors.paramnames')
     this%num_derived = Names%num_derived
     !set number of hard parameters, number of initial power spectrum parameters
-    call this%SetTheoryParameterNumbers(25,last_power_index)
+    call this%SetTheoryParameterNumbers(29,last_power_index)
 
     end subroutine ISiTGRBP_Init
 
@@ -706,15 +1091,19 @@
         derived(6) = (CMB%omdmh2 + CMB%ombh2)*CMB%h
 
         derived(7) = Theory%Sigma_8
-        derived(8) = Theory%Sigma_8*((CMB%omdm+CMB%omb))**0.5_mcp
-        derived(9) = Theory%Sigma_8*((CMB%omdm+CMB%omb))**0.25_mcp
-        derived(10)= Theory%Sigma_8/CMB%h**0.5_mcp
-
-        derived(11) = Theory%Lensing_rms_deflect
-        derived(12) = CMB%zre
-        ix=13
+        derived(8) = Theory%Sigma_8*((CMB%omdm+CMB%omb)/0.3)**0.5_mcp
+        derived(9) = Theory%Sigma_8*((CMB%omdm+CMB%omb))**0.5_mcp
+        derived(10)= Theory%Sigma_8*((CMB%omdm+CMB%omb))**0.25_mcp
+        derived(11)= Theory%Sigma_8/CMB%h**0.5_mcp
+        derived(12) = Theory%derived_parameters( derived_rdrag )*CMB%H0/100
+        derived(13) = Theory%Lensing_rms_deflect
+        derived(14) = CMB%zre
+        ix=15
         derived(ix) = cl_norm*CMB%InitPower(As_index)*1e9
         derived(ix+1) = derived(ix)*exp(-2*CMB%tau)  !A e^{-2 tau}
+		if ((CosmoSettings%ISiTGR_BIN_mueta .eqv. .true.) .or. (CosmoSettings%ISiTGR_BIN_muSigma .eqv. .true.)) then
+		ix = ix+2
+		else
         derived(ix+2) = CMB%TGR_R1
         derived(ix+3) = CMB%TGR_R2
         derived(ix+4) = CMB%TGR_R3
@@ -725,6 +1114,7 @@
         derived(ix+8) = 2.d0*CMB%TGR_D3 - CMB%TGR_Q3
         derived(ix+9) = 2.d0*CMB%TGR_D4 - CMB%TGR_Q4
         ix = ix+10
+		end if
 
         if(CosmoSettings%use_CMB .and. allocated(Theory%Cls(1,1)%CL)) then
             !L(L+1)C_L/2pi at various places
@@ -760,7 +1150,7 @@
         end if
 
         if (CosmoSettings%Compute_tensors) then
-            derived(ix:ix+5) = [Theory%tensor_ratio_02, Theory%tensor_ratio_BB, log(Theory%tensor_AT*1e10), &
+            derived(ix:ix+5) = [Theory%tensor_ratio_02, Theory%tensor_ratio_BB, log(max(1e-15_mcp,Theory%tensor_AT)*1e10_mcp), &
                 Theory%tensor_ratio_C10, Theory%tensor_AT*1e9, Theory%tensor_AT*1e9*exp(-2*CMB%tau) ]
             ix=ix+6
         end if
@@ -772,6 +1162,6 @@
     end select
 
     end subroutine ISiTGRBP_CalcDerivedParams
-
+!>ISiTGR MOD END
 
     end module CosmologyParameterizations

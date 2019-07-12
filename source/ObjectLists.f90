@@ -38,6 +38,7 @@
         Type(Object_pointer), allocatable :: Items(:)
     contains
     procedure :: AddArray
+    procedure :: AddArrayPointer
     procedure :: AddItem
     procedure :: AddItemPointer
     procedure :: AddCopy
@@ -96,8 +97,9 @@
     procedure :: RealArrItem => TRealArrayList_Item
     generic :: Item => Value, RealArrItem
     end Type TRealArrayList
-
-    Type, extends(TOwnedIntrinsicList):: TIntegerCompareList
+	
+	!>ISiTGR MOD START
+	Type, extends(TOwnedIntrinsicList):: TIntegerCompareList
     contains
     procedure :: Compare => CompareInteger
     end Type TIntegerCompareList
@@ -119,7 +121,7 @@
     end Type TIntegerArrayList
 
     Type, extends(TOwnedIntrinsicList) :: TStringList
-    contains
+	contains
     procedure :: CharAt => TStringList_CharAt
     procedure :: Compare => TStringList_Compare
     procedure :: StringItem  => TStringList_Item
@@ -127,12 +129,15 @@
     procedure :: ReadColumnsGetArray => TStringList_ReadColumnsGetArray
     procedure :: IndexOf => TStringList_IndexOf
     procedure :: ValueOf => TStringList_ValueOf
+    procedure :: AddItems
     procedure :: WriteItems
+    procedure :: AddFromFile => TStringList_AddFromFile
     generic :: Item => StringItem
     end Type TStringList
 
 
     public list_prec, TSaveLoadStateObject, TObjectList, TRealArrayList, TRealList, TIntegerList, TIntegerArrayList, TStringList
+	!<ISiTGR MOD END
     contains
 
     subroutine LoadState(this,F)
@@ -334,14 +339,33 @@
     allocate(object_array_pointer::Pt)
     call this%AddItemPointer(Pt)
     select type (Pt)
-    class is (object_array_pointer)
+    type is (object_array_pointer)
+        if (this%ownsObjects) then
+            allocate(Pt%P, source= P)
+        else
+            !This would work on ifort, but may not be standard and does not with gfortran
+            !Pt%P => P
+            call this%Error('Use AddArrayPointer to add array when ownsObjects if false')
+        end if
+    end select
+    end subroutine AddArray
+
+    subroutine AddArrayPointer(this, P)
+    Class (TObjectList) :: this
+    class(*), pointer, intent(in) :: P(:)
+    class(*), pointer :: Pt
+
+    allocate(object_array_pointer::Pt)
+    call this%AddItemPointer(Pt)
+    select type (Pt)
+    type is (object_array_pointer)
         if (this%ownsObjects) then
             allocate(Pt%P, source= P)
         else
             Pt%P => P
         end if
     end select
-    end subroutine AddArray
+    end subroutine AddArrayPointer
 
     subroutine CheckIndex(this,i)
     Class(TObjectList) :: this
@@ -452,7 +476,7 @@
     double precision, pointer :: ArrD(:)
     integer, pointer :: ArrI(:)
     logical, pointer :: ArrL(:)
-    class(*), pointer :: St
+    class(*), pointer :: St, P(:)
 
     call this%Clear()
     this%OwnsObjects = .false.
@@ -463,21 +487,25 @@
         if (k==1) then
             allocate(ArrR(sz))
             read(fid) ArrR
-            call this%AddArray(ArrR)
+            P => arrR
+            call this%AddArrayPointer(P)
         else if (k==2) then
             allocate(ArrD(sz))
             read(fid) ArrD
-            call this%AddArray(ArrD)
+            P => arrD
+            call this%AddArrayPointer(P)
         else if (k==3) then
             allocate(ArrI(sz))
             read(fid) ArrI
-            call this%AddArray(ArrI)
+            P => arrI
+            call this%AddArrayPointer(P)
         else if (k==4) then
             allocate(ArrL(sz))
             read(fid) ArrL
-            call this%AddArray(ArrL)
+            P => arrL
+            call this%AddArrayPointer(P)
         else if (k==5) then
-            allocate(character(sz)::St) !Ifort required class(*) pointer
+            allocate(character(sz)::St)
             select type (St)
             type is (character(LEN=*))
                 read(fid) St
@@ -785,10 +813,13 @@
     select type (Arr=> C)
     Type is (real(list_prec))
         P = Arr
+        class default
+        call this%Error('TRealArrayList_Value: object of wrong type (eg. ifort 2017.0.4 bug)')
     end select
 
     end function TRealArrayList_Value
-    
+	
+	!>ISiTGR MOD START
     integer function CompareInteger(this, R1, R2) result(comp)
     Class(TIntegerCompareList) :: this
     class(*) R1,R2
@@ -851,8 +882,9 @@
     end do
 
     end function TIntegerList_AsArray
+	!<ISiTGR MOD END
 
-    !TIntegerArrayList: List of arrays of integers
+    !TIntegerArrayList: List of arrays of reals
 
     function TIntegerArrayList_Item(this, i) result(P)
     Class(TIntegerArrayList) :: this
@@ -1032,5 +1064,41 @@
     end do
 
     end subroutine WriteItems
+
+    subroutine AddItems(this, List, nodups)
+    Class(TStringList) :: this, List
+    logical, intent(in) :: nodups
+    integer i
+
+    do i = 1, List%Count
+        if (nodups) then
+            if (this%IndexOf(List%Item(i)) /= -1) cycle
+        end if
+        if (associated(List%Items(i)%Object)) then
+            call this%Add(List%Items(i)%P,List%Items(i)%Object)
+        else
+            call this%Add(List%Items(i)%P)
+        end if
+    end do
+
+    end subroutine AddItems
+
+    subroutine TStringList_AddFromFile(this, fname, nodups)
+    Class(TStringList) :: this
+    character(LEN=*), intent(in) :: fname
+    character(LEN=:), allocatable :: InLine
+    logical, intent(in) :: nodups
+    Type(TTextFile) :: F
+
+    call F%Open(fname)
+    do while (F%ReadLineSkipEmptyAndComments(InLine))
+        if (nodups) then
+            if (this%IndexOf(InLine) /= -1) cycle
+        end if
+        call this%Add(InLine)
+    end do
+    call F%close()
+
+    end subroutine TStringList_AddFromFile
 
     end module ObjectLists

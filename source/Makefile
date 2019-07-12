@@ -4,10 +4,8 @@ OUTPUT_DIR ?= Release
 BUILD ?= MPI
 #set BUILD to MPI to force MPI, should be set in ../Makefile
 
-MPIF90C ?= mpiifort
-
 #For ISiTGR CC = c compiler
-CC = icc   
+CC = icc
 
 ifortErr = $(shell which ifort >/dev/null; echo $$?)
 
@@ -16,31 +14,48 @@ ifeq "$(ifortErr)" "0"
 #ifort; Can remove -xHost if your cluster is not uniform, or specify specific processor optimizations -x...
 
 F90C     = ifort
+#Can use this if mpif90 not picking up ifort:
+#MPIF90C ?= mpif90 -f90=ifort
+
 #use this if mpif90 is trying to use gfortran: MPIF90C = mpif90 -f90=ifort
 
-FFLAGS = -mkl -openmp -O3 -no-prec-div -fpp
-DEBUGFLAGS = -mkl -openmp -g -check all -check noarg_temp_created -traceback -fpp -fpe0
+FFLAGS = -mkl -O3 -no-prec-div -fpp
+DEBUGFLAGS = -mkl -g -check all -check noarg_temp_created -traceback -fpp -fpe0
 #add -fpe0 to check for floating point errors (think lowLike also throws these harmlessly)
 MODOUT = -module $(OUTPUT_DIR)
 LAPACKL =
 
+ifortVer_major = $(shell ifort -v 2>&1 | cut -d " " -f 3 | cut -d. -f 1)
+ifeq ($(shell test $(ifortVer_major) -gt 15; echo $$?),0)
+FFLAGS+= -qopenmp
+DEBUGFLAGS+= -qopenmp
+else
+FFLAGS+= -openmp
+DEBUGFLAGS+= -openmp
+endif
+
+ifneq ($(NERSC_HOST),)
+#setting for Edison/Cori on NERSC
+MPIF90C = ftn
+FFLAGS = -fpp -qopenmp -dynamic -axMIC-AVX512,CORE-AVX2  
+else
 ifeq ($(STATIC),YES)
 #so you can re-distribute the binary to another machine
 #static link details from https://software.intel.com/en-us/articles/intel-mkl-link-line-advisor
 LAPACKL =  -Wl,--start-group $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_core.a $(MKLROOT)/lib/intel64/libmkl_intel_thread.a -Wl,--end-group -lpthread -lm
 FFLAGS+=  -axAVX,SEE4.2 -static-intel
 else
+ifneq ($(HOSTNAME),apollo-login)
+#Remove this if your cluster is not uniform (different CPUs)
 FFLAGS += -xHost
 endif
-
-ifneq ($(NERSC_HOST),)
-#setting for Edison/Hopper on NERSC
-MPIF90C = ftn
+endif
 endif
 
 else
-#gfortran 5.0 and earlier will not work (many F2003 bugs)
-#gfortran 6 trunk should work, and perhaps GCC 5.2 when available; see virtual machines for up-to-date environments
+#gfortran 5.x and earlier will not work (many F2003 bugs)
+#gfortran 6 should work
+#see CosmoBox virtual machines for stable environments
 F90C = gfortran
 FFLAGS = -cpp -O3 -ffast-math -ffree-line-length-none -fopenmp -fmax-errors=4
 DEBUGFLAGS = -cpp -g -fbounds-check -fbacktrace -ffree-line-length-none -fopenmp -fmax-errors=4 -ffpe-trap=invalid,overflow,zero
@@ -56,6 +71,9 @@ FFLAGS+=-march=native
 endif
 
 endif
+
+MPIF90C ?= mpif90
+
 
 #use "make RECOMBINATION=cosmorec" to build with CosmoRec rather than RECFAST default
 RECOMBINATION ?=recfast
@@ -111,9 +129,11 @@ F90FLAGS = $(FFLAGS) $(IFLAG)../camb/$(OUTPUT_DIR) $(INCLUDE)
 LINKFLAGS = -L../camb/$(OUTPUT_DIR) -lcamb_$(RECOMBINATION) $(LAPACKL) $(F90CRLINK) $(CLIKL)
 
 ifneq ($(PICO),)
+ifneq ($(PICO),NO)
 CALCFILES += $(OUTPUT_DIR)/fpico_interface.o $(OUTPUT_DIR)/Calculator_PICO.o
 LINKFLAGS +=  $(shell python -c "import pypico; print pypico.get_link()")
 F90FLAGS += -DPICO $(shell python -c "import pypico; print pypico.get_include()")
+endif
 endif
 
 
@@ -192,7 +212,7 @@ $(OUTPUT_DIR)/ObjectLists.o: $(OUTPUT_DIR)/FileUtils.o
 $(OUTPUT_DIR)/IniObjects.o: $(OUTPUT_DIR)/FileUtils.o
 $(OUTPUT_DIR)/Interpolation.o: $(OUTPUT_DIR)/ObjectLists.o
 $(OUTPUT_DIR)/Matrix_utils_new.o: $(OUTPUT_DIR)/FileUtils.o
-$(OUTPUT_DIR)/ObjectParamNames.o: $(UTILS)
+$(OUTPUT_DIR)/ObjectParamNames.o: $(UTILS) $(OUTPUT_DIR)/ObjectLists.o
 $(OUTPUT_DIR)/settings.o:  $(OUTPUT_DIR)/IniObjects.o $(OUTPUT_DIR)/ObjectParamNames.o
 $(OUTPUT_DIR)/propose.o: $(OUTPUT_DIR)/settings.o $(OUTPUT_DIR)/Matrix_utils_new.o  $(OUTPUT_DIR)/GeneralTypes.o
 $(OUTPUT_DIR)/IO.o: $(OUTPUT_DIR)/settings.o
@@ -307,7 +327,7 @@ camb:
 	cd ../camb && \
 	$(MAKE) --file=Makefile_main libcamb OUTPUT_DIR=$(OUTPUT_DIR) \
 	RECOMBINATION=$(RECOMBINATION) EQUATIONS=equations NONLINEAR=halofit_ppf
-
+	
 isitgr: cosmomc dndz
 
 dndz:

@@ -17,12 +17,15 @@
     Type, extends(TTheoryCalculator) :: TCosmologyCalculator
         Type(TCosmologyImportanceOptions) :: ImportanceOptions
     contains
-    procedure :: f_k  !JD added for ISiTGR weak lensing module
+	!>ISiTGR MOD START
+	procedure :: f_k  !JD added for ISiTGR weak lensing module
+	!ISiTGR MOD END
     procedure :: BAO_D_v
     procedure :: Hofz
     procedure :: Hofz_Hunit
     procedure :: AngularDiameterDistance
-    procedure :: ComovingRadialDistance
+    procedure :: ComovingRadialDistance    
+    procedure :: ComovingRadialDistanceArr
     procedure :: AngularDiameterDistance2
     procedure :: LuminosityDistance
     procedure :: CMBToTheta
@@ -170,8 +173,9 @@
     CMBToTheta=0
 
     end function CMBToTheta
-
-    !JD added for ISiTGR weak lensing module
+	
+	!>ISiTGR MOD START
+	!JD added for ISiTGR weak lensing module
     real(mcp) function f_k(this, x)
     class(TCosmologyCalculator) :: this
     real(mcp), intent(IN) :: x
@@ -180,6 +184,7 @@
     f_k = 0
 
     end function f_k
+	!<ISiTGR MOD START
 
     real(mcp) function BAO_D_v(this, z)
     class(TCosmologyCalculator) :: this
@@ -207,6 +212,18 @@
     ComovingRadialDistance = 0
 
     end function ComovingRadialDistance
+    
+    subroutine ComovingRadialDistanceArr(this, z, arr, n)
+    class(TCosmologyCalculator) :: this
+    integer, intent(in) :: n
+    real(mcp), intent(IN) :: z(n)
+    real(mcp), intent(out) :: arr(n)
+    
+    call this%ErrorNotImplemented('ComovingRadialDistanceArr')
+    arr= 0
+
+    end subroutine ComovingRadialDistanceArr
+    
 
     real(mcp) function AngularDiameterDistance2(this, z1, z2)
     class(TCosmologyCalculator) :: this

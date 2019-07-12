@@ -31,13 +31,15 @@
     real, parameter :: pi_r = 3.141592653, twopi_r = 2*pi_r, fourpi_r = twopi_r*2
 
     real(mcp), parameter :: const_c = 2.99792458e8_mcp
+	!>ISiTGR MOD START
     real(mcp), parameter :: Mpc = 3.085678e22_mcp !seem to be different definitions of this?
     real(mcp), parameter :: const_G = 6.6738e-11_mcp !data book 2012, last digit +/-8
     real(mcp), parameter :: kappa=8._mcp*pi*const_G
+	!<ISiTGR MOD END
 
     logical :: use_fast_slow = .false.
 
-    character(LEN=*), parameter :: CosmoMC_Version = 'July2015'
+    character(LEN=*), parameter :: CosmoMC_Version = 'July2018'
 
     character(LEN=:), allocatable :: chisq_label
 
@@ -69,7 +71,7 @@
     integer, parameter :: max_likelihood_functions = 50
 
     integer, parameter :: max_data_params = 200
-    integer, parameter :: max_theory_params = 50
+    integer, parameter :: max_theory_params = 65
     integer, parameter :: max_num_params = max_theory_params + max_data_params
 
     !Set to false if using a slow likelihood function so no there's point is treating

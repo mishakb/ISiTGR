@@ -35,9 +35,12 @@
     implicit none
     public
 
-    character(LEN=*), parameter :: version = 'Feb15'
+    character(LEN=*), parameter :: version = 'Aug18'
 
     integer :: FeedbackLevel = 0 !if >0 print out useful information about the model
+
+    logical :: output_file_headers = .true.
+
 
     logical, parameter :: DebugMsgs=.false. !Set to true to view progress and timing
 
@@ -72,6 +75,7 @@
 
     type TransferParams
         logical     ::  high_precision
+        logical     ::  accurate_massive_neutrinos
         integer     ::  num_redshifts
         real(dl)    ::  kmax         !these are acutally q values, but same as k for flat
         integer     ::  k_per_logint ! ..
@@ -191,7 +195,7 @@
     !Parameters for checking/changing overall accuracy
     !If HighAccuracyDefault=.false., the other parameters equal to 1 corresponds to ~0.3% scalar C_l accuracy
     !If HighAccuracyDefault=.true., the other parameters equal to 1 corresponds to ~0.1% scalar C_l accuracy (at L>600)
-    logical :: HighAccuracyDefault = .false.
+    logical :: HighAccuracyDefault = .true.
 
     real(dl) :: lSampleBoost=1._dl
     !Increase lSampleBoost to increase sampling in lSamp%l for Cl interpolation
@@ -209,6 +213,8 @@
     integer :: limber_phiphi = 0 !for l>limber_phiphi use limber approx for lensing potential
     integer :: num_redshiftwindows = 0
     integer :: num_extra_redshiftwindows = 0
+    integer :: num_custom_sources = 0
+    integer, allocatable :: custom_source_ell_scales(:)
 
     integer, parameter :: lmin = 2
     !must be either 1 or 2
@@ -293,7 +299,7 @@
     end if
 
     if (CP%Num_Nu_Massive /= sum(CP%Nu_mass_numbers(1:CP%Nu_mass_eigenstates))) then
-        if (sum(CP%Nu_mass_numbers(1:CP%Nu_mass_eigenstates))/=0) stop 'Num_Nu_Massive is not sum of Nu_mass_numbers'
+        if (sum(CP%Nu_mass_numbers(1:CP%Nu_mass_eigenstates))/=0) call MpiStop('Num_Nu_Massive is not sum of Nu_mass_numbers')
     end if
     if (CP%Omegan == 0 .and. CP%Num_Nu_Massive /=0) then
         if (CP%share_delta_neff) then
@@ -307,7 +313,7 @@
 
     nu_massless_degeneracy = CP%Num_Nu_massless !N_eff for massless neutrinos
     if (CP%Num_nu_massive > 0) then
-        if (CP%Nu_mass_eigenstates==0) stop 'Have Num_nu_massive>0 but no nu_mass_eigenstates'
+        if (CP%Nu_mass_eigenstates==0) call MpiStop('Have Num_nu_massive>0 but no nu_mass_eigenstates')
         if (CP%Nu_mass_eigenstates==1 .and. CP%Nu_mass_numbers(1)==0) CP%Nu_mass_numbers(1) = CP%Num_Nu_Massive
         if (all(CP%Nu_mass_numbers(1:CP%Nu_mass_eigenstates)==0)) CP%Nu_mass_numbers=1 !just assume one for all
         if (CP%share_delta_neff) then
@@ -319,7 +325,7 @@
             CP%Nu_mass_degeneracies(1:CP%Nu_mass_eigenstates) = CP%Nu_mass_numbers(1:CP%Nu_mass_eigenstates)*neff_i
         end if
         if (abs(sum(CP%Nu_mass_fractions(1:CP%Nu_mass_eigenstates))-1) > 1e-4) &
-            stop 'Nu_mass_fractions do not add up to 1'
+            call MpiStop('Nu_mass_fractions do not add up to 1')
     else
         CP%Nu_mass_eigenstates = 0
     end if
@@ -515,7 +521,7 @@
     real(dl) DeltaTime, atol
     real(dl), intent(IN) :: a1,a2
     real(dl), optional, intent(in) :: in_tol
-    real(dl) dtauda, rombint !diff of tau w.CP%r.t a and integration
+    real(dl) dtauda, rombint !diff of tau w.r.t a and integration
     external dtauda, rombint
 
     if (present(in_tol)) then
@@ -534,6 +540,21 @@
 
     TimeOfz=DeltaTime(0._dl,1._dl/(z+1._dl))
     end function TimeOfz
+
+    subroutine TimeOfzArr(nz, redshifts, outputs)
+    integer, intent(in) :: nz
+    real(dl), intent(in) :: redshifts(nz)
+    real(dl), intent(out) :: outputs(nz)
+    integer i
+
+    !Dumb slow version
+    !$OMP PARALLEL DO DEFAUlT(SHARED)
+    do i=1, nz
+        outputs(i) = timeOfZ(redshifts(i))
+    end do
+    !$OMP END PARALLEL DO
+
+    end subroutine TimeOfzArr
 
     function DeltaPhysicalTimeGyr(a1,a2, in_tol)
     use constants
@@ -558,6 +579,26 @@
     AngularDiameterDistance = CP%r/(1+z)*rofchi(ComovingRadialDistance(z) /CP%r)
 
     end function AngularDiameterDistance
+
+    subroutine AngularDiameterDistanceArr(arr, z, n)
+    !This is the physical (non-comoving) angular diameter distance in Mpc for array of z
+    !z array must be monotonically increasing
+    integer,intent(in) :: n
+    real(dl), intent(out) :: arr(n)
+    real(dl), intent(in) :: z(n)
+    integer i
+
+    call ComovingRadialDistanceArr(arr, z, n, 1e-4_dl)
+    if (CP%flat) then
+        arr = arr/(1+z)
+    else
+        do i=1, n
+            arr(i) =  CP%r/(1+z(i))*rofchi(arr(i)/CP%r)
+        end do
+    end if
+
+    end subroutine AngularDiameterDistanceArr
+
 
     function AngularDiameterDistance2(z1, z2) ! z1 < z2
     !From http://www.slac.stanford.edu/~amantz/work/fgas14/#cosmomc
@@ -584,8 +625,37 @@
 
     end function ComovingRadialDistance
 
+    subroutine ComovingRadialDistanceArr(arr, z, n, tol)
+    !z array must be monotonically increasing
+    integer, intent(in) :: n
+    real(dl), intent(out) :: arr(n)
+    real(dl), intent(in) :: z(n)
+    real(dl), intent(in) :: tol
+    integer i
+
+    !$OMP PARALLEL DO DEFAULT(SHARED),SCHEDULE(STATIC)
+    do i = 1, n
+        if (i==1) then
+            if (z(i) < 1e-6_dl) then
+                arr(i) = 0
+            else
+                arr(i) = DeltaTime(1/(1+z(i)),1._dl, tol)
+            end if
+        else
+            if (z(i) < z(i-1)) error stop 'ComovingRadialDistanceArr redshifts out of order'
+            arr(i) = DeltaTime(1/(1+z(i)),1/(1+z(i-1)),tol)
+        end if
+    end do
+    !$OMP END PARALLEL DO
+    do i = 2, n
+        arr(i) = arr(i)  + arr(i-1)
+    end do
+
+    end subroutine ComovingRadialDistanceArr
+
     function Hofz(z)
-    !!non-comoving Hubble in MPC units, divide by MPC_in_sec to get in SI units
+    !non-comoving Hubble in MPC units, divide by MPC_in_sec to get in SI units
+    !multiply by c/1e3 to get in km/s/Mpc units
     real(dl) Hofz, dtauda,a
     real(dl), intent(in) :: z
     external dtauda
@@ -594,6 +664,20 @@
     Hofz = 1/(a**2*dtauda(a))
 
     end function Hofz
+
+    subroutine HofzArr(arr, z, n)
+    !non-comoving Hubble in MPC units, divide by MPC_in_sec to get in SI units
+    !multiply by c/1e3 to get in km/s/Mpc units
+    integer,intent(in) :: n
+    real(dl), intent(out) :: arr(n)
+    real(dl), intent(in) :: z(n)
+    integer i
+
+    do i=1, n
+        arr(i) = Hofz(z(i))
+    end do
+
+    end subroutine HofzArr
 
     real(dl) function BAO_D_v_from_DA_H(z, DA, Hz)
     real(dl), intent(in) :: z, DA, Hz
@@ -877,7 +961,7 @@
     real(dl) a0,b0,ho
     real(dl), parameter :: cllo=1.e30_dl,clhi=1.e30_dl
 
-    if (max_ind > lSet%l0) stop 'Wrong max_ind in InterpolateClArr'
+    if (max_ind > lSet%l0) call MpiStop('Wrong max_ind in InterpolateClArr')
 
     xl = real(lSet%l(1:lSet%l0),dl)
     call spline(xl,iCL(1),max_ind,cllo,clhi,ddCl(1))
@@ -909,7 +993,7 @@
     real(dl) DeltaCL(lSet%l0)
     real(dl), allocatable :: tmpall(:)
 
-    if (max_ind > lSet%l0) stop 'Wrong max_ind in InterpolateClArrTemplated'
+    if (max_ind > lSet%l0) call MpiStop('Wrong max_ind in InterpolateClArrTemplated')
 
     if (use_spline_template .and. present(template_index)) then
         if (template_index<=3) then
@@ -928,7 +1012,7 @@
             end do
 
             if (maxdelta < max_ind) then
-                !directly interpolate high L where no template (doesn't effect lensing spectrum much anyway)
+                !directly interpolate high L where no t  emplate (doesn't effect lensing spectrum much anyway)
                 allocate(tmpall(lmin:lSet%l(max_ind)))
                 call InterpolateClArr(lSet,iCl, tmpall, max_ind)
                 !overlap to reduce interpolation artefacts
@@ -961,8 +1045,8 @@
 
     Type LimberRec
         integer n1,n2 !corresponding time step array indices
-        real(dl), dimension(:), pointer :: k
-        real(dl), dimension(:), pointer :: Source
+        real(dl), dimension(:), pointer :: k  => NULL()
+        real(dl), dimension(:), pointer :: Source  => NULL()
     end Type LimberRec
 
     Type ClTransferData
@@ -994,6 +1078,11 @@
     integer, parameter :: C_Temp = 1, C_E = 2, C_Cross =3, C_Phi = 4, C_PhiTemp = 5, C_PhiE=6
     integer :: C_last = C_PhiE
     integer, parameter :: CT_Temp =1, CT_E = 2, CT_B = 3, CT_Cross=  4
+    integer, parameter :: name_tag_len = 12
+    character(LEN=name_tag_len), dimension(C_PhiE), parameter :: C_name_tags = ['TT','EE','TE','PP','TP','EP']
+    character(LEN=name_tag_len), dimension(CT_Cross), parameter :: CT_name_tags = ['TT','EE','BB','TE']
+    character(LEN=name_tag_len), dimension(7), parameter :: lens_pot_name_tags = ['TT','EE','BB','TE','PP','TP','EP']
+
 
     logical :: has_cl_2D_array = .false.
 
@@ -1022,7 +1111,7 @@
 
     allocate(CTrans%Delta_p_l_k(CTrans%NumSources,&
         min(CTrans%max_index_nonlimber,CTrans%ls%l0), CTrans%q%npoints),  STAT = st)
-    if (st /= 0) stop 'Init_ClTransfer: Error allocating memory for transfer functions'
+    if (st /= 0) call MpiStop('Init_ClTransfer: Error allocating memory for transfer functions')
     CTrans%Delta_p_l_k = 0
 
     end subroutine Init_ClTransfer
@@ -1076,7 +1165,9 @@
 
     if (.not. allocated(highL_CL_template)) then
         allocate(highL_CL_template(lmin:lmax_extrap_highl, C_Temp:C_Phi))
+
         call OpenTxtFile(highL_unlensed_cl_template,fileio_unit)
+
         if (lmin==1) highL_CL_template(lmin,:)=0
         do
             read(fileio_unit,*, end=500) L , array
@@ -1086,9 +1177,8 @@
             highL_CL_template(L, C_Cross) =array(4)
             highL_CL_template(L, C_Phi) =array(5)
         end do
-
 500     if (L< lmax_extrap_highl) &
-            stop 'CheckLoadedHighLTemplate: template file does not go up to lmax_extrap_highl'
+            call MpiStop('CheckLoadedHighLTemplate: template file does not go up to lmax_extrap_highl')
         close(fileio_unit)
     end if
 
@@ -1104,7 +1194,8 @@
         Cl_scalar = 0
         if (has_cl_2D_array) then
             if (allocated(Cl_scalar_array)) deallocate(Cl_scalar_array)
-            allocate(Cl_scalar_Array(lmin:CP%Max_l, CP%InitPower%nn, 3+num_redshiftwindows,3+num_redshiftwindows))
+            allocate(Cl_scalar_Array(lmin:CP%Max_l, CP%InitPower%nn, &
+                3+num_redshiftwindows+num_custom_sources,3+num_redshiftwindows+num_custom_sources))
             Cl_scalar_array = 0
         end if
     end if
@@ -1124,14 +1215,48 @@
 
     end subroutine Init_Cls
 
+    function open_file_header(filename, Col1, Columns, n) result(unit)
+    character(LEN=*), intent(in) :: filename
+    character(LEN=*), intent(in) :: col1
+    character(LEN=name_tag_len), intent(in) :: Columns(:)
+    integer, intent(in), optional :: n
+    integer :: unit, nn
+
+    if (present(n)) then
+        nn = n
+    else
+        nn = 6
+    end if
+    open(newunit=unit,file=filename,form='formatted',status='replace')
+    if (output_file_headers) then
+        write(unit,'("#",1A'//Trim(IntToStr(nn-1))//'," ",*(A15))') Col1,Columns
+    end if
+
+    end function open_file_header
+
+    function scalar_fieldname(i)
+    integer, intent(in) :: i
+    character(LEN=5) :: scalar_fieldname
+    character(LEN=3), parameter :: scalar_fieldnames = 'TEP'
+
+    if (i<=3) then
+        scalar_fieldname = scalar_fieldnames(i:i)
+    else
+        scalar_fieldname = 'W'//trim(IntToStr(i-3))
+    end if
+
+    end function scalar_fieldname
+
     subroutine output_cl_files(ScalFile,ScalCovFile,TensFile, TotFile, LensFile, LensTotFile, factor)
     implicit none
-    integer in,il
+    integer in,il, i, j
     character(LEN=*) ScalFile, TensFile, TotFile, LensFile, LensTotFile,ScalCovfile
     real(dl), intent(in), optional :: factor
     real(dl) fact
     integer last_C
     real(dl), allocatable :: outarr(:,:)
+    integer unit
+    character(LEN=name_tag_len) :: cov_names((3+num_redshiftwindows)**2)
 
 
     if (present(factor)) then
@@ -1142,85 +1267,92 @@
 
     if (CP%WantScalars .and. ScalFile /= '') then
         last_C=min(C_PhiTemp,C_last)
-        open(unit=fileio_unit,file=ScalFile,form='formatted',status='replace')
+        unit = open_file_header(ScalFile, 'L', C_name_tags(:last_C))
         do in=1,CP%InitPower%nn
             do il=lmin,min(10000,CP%Max_l)
-                write(fileio_unit,trim(numcat('(1I6,',last_C))//'E15.5)')il ,fact*Cl_scalar(il,in,C_Temp:last_C)
+                write(unit,trim(numcat('(1I6,',last_C))//'E15.6)')il ,fact*Cl_scalar(il,in,C_Temp:last_C)
             end do
             do il=10100,CP%Max_l, 100
-                write(fileio_unit,trim(numcat('(1E15.5,',last_C))//'E15.5)') real(il),&
+                write(unit,trim(numcat('(1E15.6,',last_C))//'E15.6)') real(il),&
                     fact*Cl_scalar(il,in,C_Temp:last_C)
             end do
         end do
-        close(fileio_unit)
+        close(unit)
     end if
 
     if (CP%WantScalars .and. has_cl_2D_array .and. ScalCovFile /= '' .and. CTransScal%NumSources>2) then
         allocate(outarr(1:3+num_redshiftwindows,1:3+num_redshiftwindows))
-        open(unit=fileio_unit,file=ScalCovFile,form='formatted',status='replace')
+        do i=1, 3+num_redshiftwindows
+            do j=1, 3+num_redshiftwindows
+                cov_names(j + (i-1)*(3+num_redshiftwindows)) = trim(scalar_fieldname(i))//'x'//trim(scalar_fieldname(j))
+            end do
+        end do
+        unit = open_file_header(ScalCovFile, 'L', cov_names)
+
         do in=1,CP%InitPower%nn
             do il=lmin,min(10000,CP%Max_l)
                 outarr=Cl_scalar_array(il,in,1:3+num_redshiftwindows,1:3+num_redshiftwindows)
                 outarr(1:2,:)=sqrt(fact)*outarr(1:2,:)
                 outarr(:,1:2)=sqrt(fact)*outarr(:,1:2)
-                write(fileio_unit,trim(numcat('(1I6,',(3+num_redshiftwindows)**2))//'E15.5)') il, outarr
+                write(unit,trim(numcat('(1I6,',(3+num_redshiftwindows)**2))//'E15.6)') il, outarr
             end do
             do il=10100,CP%Max_l, 100
                 outarr=Cl_scalar_array(il,in,1:3+num_redshiftwindows,1:3+num_redshiftwindows)
                 outarr(1:2,:)=sqrt(fact)*outarr(1:2,:)
                 outarr(:,1:2)=sqrt(fact)*outarr(:,1:2)
-                write(fileio_unit,trim(numcat('(1E15.5,',(3+num_redshiftwindows)**2))//'E15.5)') real(il), outarr
+                write(unit,trim(numcat('(1E15.6,',(3+num_redshiftwindows)**2))//'E15.6)') real(il), outarr
             end do
         end do
-        close(fileio_unit)
+        close(unit)
         deallocate(outarr)
     end if
 
     if (CP%WantTensors .and. TensFile /= '') then
-        open(unit=fileio_unit,file=TensFile,form='formatted',status='replace')
+        unit = open_file_header(TensFile, 'L', CT_name_tags)
         do in=1,CP%InitPower%nn
             do il=lmin,CP%Max_l_tensor
-                write(fileio_unit,'(1I6,4E15.5)')il, fact*Cl_tensor(il, in, CT_Temp:CT_Cross)
+                write(unit,'(1I6,4E15.6)')il, fact*Cl_tensor(il, in, CT_Temp:CT_Cross)
             end do
         end do
-        close(fileio_unit)
+        close(unit)
     end if
 
     if (CP%WantTensors .and. CP%WantScalars .and. TotFile /= '') then
-        open(unit=fileio_unit,file=TotFile,form='formatted',status='replace')
+        unit = open_file_header(TotFile, 'L', CT_name_tags)
         do in=1,CP%InitPower%nn
             do il=lmin,CP%Max_l_tensor
-                write(fileio_unit,'(1I6,4E15.5)')il, fact*(Cl_scalar(il, in, C_Temp:C_E)+ Cl_tensor(il,in, C_Temp:C_E)), &
+                write(unit,'(1I6,4E15.6)')il, fact*(Cl_scalar(il, in, C_Temp:C_E)+ Cl_tensor(il,in, C_Temp:C_E)), &
                     fact*Cl_tensor(il,in, CT_B), fact*(Cl_scalar(il, in, C_Cross) + Cl_tensor(il, in, CT_Cross))
             end do
             do il=CP%Max_l_tensor+1,CP%Max_l
-                write(fileio_unit,'(1I6,4E15.5)')il ,fact*Cl_scalar(il,in,C_Temp:C_E), 0._dl, fact*Cl_scalar(il,in,C_Cross)
+                write(unit,'(1I6,4E15.6)')il ,fact*Cl_scalar(il,in,C_Temp:C_E), 0._dl, fact*Cl_scalar(il,in,C_Cross)
             end do
         end do
-        close(fileio_unit)
+        close(unit)
     end if
 
     if (CP%WantScalars .and. CP%DoLensing .and. LensFile /= '') then
-        open(unit=fileio_unit,file=LensFile,form='formatted',status='replace')
+        unit = open_file_header(LensFile, 'L', CT_name_tags)
         do in=1,CP%InitPower%nn
             do il=lmin, lmax_lensed
-                write(fileio_unit,'(1I6,4E15.5)')il, fact*Cl_lensed(il, in, CT_Temp:CT_Cross)
+                write(unit,'(1I6,4E15.6)')il, fact*Cl_lensed(il, in, CT_Temp:CT_Cross)
             end do
         end do
-        close(fileio_unit)
+        close(unit)
     end if
 
 
     if (CP%WantScalars .and. CP%WantTensors .and. CP%DoLensing .and. LensTotFile /= '') then
-        open(unit=fileio_unit,file=LensTotFile,form='formatted',status='replace')
+        unit = open_file_header(LensTotFile, 'L', CT_name_tags)
         do in=1,CP%InitPower%nn
             do il=lmin,min(CP%Max_l_tensor,lmax_lensed)
-                write(fileio_unit,'(1I6,4E15.5)')il, fact*(Cl_lensed(il, in, CT_Temp:CT_Cross)+ Cl_tensor(il,in, CT_Temp:CT_Cross))
+                write(unit,'(1I6,4E15.6)')il, fact*(Cl_lensed(il, in, CT_Temp:CT_Cross)+ Cl_tensor(il,in, CT_Temp:CT_Cross))
             end do
             do il=min(CP%Max_l_tensor,lmax_lensed)+1,lmax_lensed
-                write(fileio_unit,'(1I6,4E15.5)')il, fact*Cl_lensed(il, in, CT_Temp:CT_Cross)
+                write(unit,'(1I6,4E15.6)')il, fact*Cl_lensed(il, in, CT_Temp:CT_Cross)
             end do
         end do
+        close(unit)
     end if
     end subroutine output_cl_files
 
@@ -1232,6 +1364,7 @@
     real(dl), intent(in), optional :: factor
     real(dl) fact, scale, BB, TT, TE, EE
     character(LEN=*) LensPotFile
+    integer unit
     !output file of dimensionless [l(l+1)]^2 C_phi_phi/2pi and [l(l+1)]^(3/2) C_phi_T/2pi
     !This is the format used by Planck_like but original LensPix uses scalar_output_file.
 
@@ -1245,7 +1378,7 @@
     end if
 
     if (CP%WantScalars .and. CP%DoLensing .and. LensPotFile/='') then
-        open(unit=fileio_unit,file=LensPotFile,form='formatted',status='replace')
+        unit =  open_file_header(LensPotFile, 'L', lens_pot_name_tags)
         do in=1,CP%InitPower%nn
             do il=lmin,min(10000,CP%Max_l)
                 TT = Cl_scalar(il, in, C_Temp)
@@ -1261,17 +1394,17 @@
                 end if
                 scale = (real(il+1)/il)**2/OutputDenominator !Factor to go from old l^4 factor to new
 
-                write(fileio_unit,'(1I6,7E15.5)') il , fact*TT, fact*EE, fact*BB, fact*TE, scale*Cl_scalar(il,in,C_Phi),&
+                write(unit,'(1I6,7E15.6)') il , fact*TT, fact*EE, fact*BB, fact*TE, scale*Cl_scalar(il,in,C_Phi),&
                     (real(il+1)/il)**1.5/OutputDenominator*sqrt(fact)*Cl_scalar(il,in,C_PhiTemp:C_PhiE)
             end do
             do il=10100,CP%Max_l, 100
                 scale = (real(il+1)/il)**2/OutputDenominator
-                write(fileio_unit,'(1E15.5,7E15.5)') real(il), fact*Cl_scalar(il,in,C_Temp:C_E),0.,fact*Cl_scalar(il,in,C_Cross), &
+                write(unit,'(1E15.6,7E15.6)') real(il), fact*Cl_scalar(il,in,C_Temp:C_E),0.,fact*Cl_scalar(il,in,C_Cross), &
                     scale*Cl_scalar(il,in,C_Phi),&
                     (real(il+1)/il)**1.5/OutputDenominator*sqrt(fact)*Cl_scalar(il,in,C_PhiTemp:C_PhiE)
             end do
         end do
-        close(fileio_unit)
+        close(unit)
     end if
     end subroutine output_lens_pot_files
 
@@ -1282,7 +1415,7 @@
     character(LEN=*) VecFile
     real(dl), intent(in), optional :: factor
     real(dl) fact
-
+    integer unit
 
     if (present(factor)) then
         fact = factor
@@ -1292,14 +1425,13 @@
 
 
     if (CP%WantVectors .and. VecFile /= '') then
-        open(unit=fileio_unit,file=VecFile,form='formatted',status='replace')
+        unit =  open_file_header(VecFile, 'L', CT_name_tags)
         do in=1,CP%InitPower%nn
             do il=lmin,CP%Max_l
-                write(fileio_unit,'(1I5,4E15.5)')il, fact*Cl_vector(il, in, CT_Temp:CT_Cross)
+                write(unit,'(1I6,4E15.6)')il, fact*Cl_vector(il, in, CT_Temp:CT_Cross)
             end do
         end do
-
-        close(fileio_unit)
+        close(unit)
     end if
 
     end subroutine output_veccl_files
@@ -1356,6 +1488,9 @@
     real(dl), parameter  :: zeta5  = 1.0369277551433699263313_dl
     real(dl), parameter  :: zeta7  = 1.0083492773819228268397_dl
 
+    ! zeta3*3/2/pi^2*4/11*((k_B*COBE_CMBTemp/hbar/c)^3* 8*pi*G/3/(100*km/s/megaparsec)^2/(c^2/eV)
+    real(dl), parameter :: neutrino_mass_fac= 94.07_dl !converts omnuh2 into sum m_nu in eV
+
     integer, parameter  :: nrhopn=2000
     real(dl), parameter :: am_min = 0.01_dl  !0.02_dl
     !smallest a*m_nu to integrate distribution function rather than using series
@@ -1377,15 +1512,26 @@
     integer nqmax !actual number of q modes evolves
 
     public const,Nu_Init,Nu_background, Nu_rho, Nu_drho,  nqmax0, nqmax, &
-        nu_int_kernel, nu_q
+        nu_int_kernel, nu_q, sum_mnu_for_m1, neutrino_mass_fac
     contains
     !cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
 
-    subroutine Nu_init
+    subroutine sum_mnu_for_m1(summnu,dsummnu, m1, targ, sgn)
+    use constants
+    real(dl), intent(in) :: m1, targ, sgn
+    real(dl), intent(out) :: summnu, dsummnu
+    real(dl) :: m2,m3
 
+    m2 = sqrt(m1**2 + delta_mnu21)
+    m3 = sqrt(m1**2 + sgn*delta_mnu31)
+    summnu = m1 + m2 + m3 - targ
+    dsummnu = m1/m2+m1/m3 + 1
+
+    end subroutine sum_mnu_for_m1
+
+    subroutine Nu_init
     !  Initialize interpolation tables for massive neutrinos.
     !  Use cubic splines interpolation of log rhonu and pnu vs. log a*m.
-
     integer i
     real(dl) dq,dlfdlq, q, am, rhonu,pnu
     real(dl) spline_data(nrhopn)
@@ -1446,10 +1592,10 @@
     !$OMP PARALLEL DO DEFAULT(SHARED),SCHEDULE(STATIC) &
     !$OMP & PRIVATE(am, rhonu,pnu)
     do i=1,nrhopn
-    am=am_min*exp((i-1)*dlnam)
-    call nuRhoPres(am,rhonu,pnu)
-    r1(i)=log(rhonu)
-    p1(i)=log(pnu)
+        am=am_min*exp((i-1)*dlnam)
+        call nuRhoPres(am,rhonu,pnu)
+        r1(i)=log(rhonu)
+        p1(i)=log(pnu)
     end do
     !$OMP END PARALLEL DO
 
@@ -1626,18 +1772,24 @@
     public
     integer, parameter :: Transfer_kh =1, Transfer_cdm=2,Transfer_b=3,Transfer_g=4, &
         Transfer_r=5, Transfer_nu = 6,  & !massless and massive neutrino
-    Transfer_tot=7, Transfer_nonu=8, Transfer_tot_de=9,  &
+        Transfer_tot=7, Transfer_nonu=8, Transfer_tot_de=9,  &
         ! total perturbations with and without neutrinos, with neutrinos+dark energy in the numerator
         Transfer_Weyl = 10, & ! the Weyl potential, for lensing and ISW
-    Transfer_Newt_vel_cdm=11, Transfer_Newt_vel_baryon=12,   & ! -k v_Newtonian/H
-    Transfer_vel_baryon_cdm = 13, & !relative velocity of baryons and CDM
-    !ISiTGR
-    Transfer_ISW = 14, &  !derivative of Weyl potential for ISW
-    Transfer_f = 15, &  !Logarithmic growth rate
-    Transfer_vtot = 16   !Mass averaged velocity perturbation (conformal Newtonian Gauge, MPT Breeze Units)
+        Transfer_Newt_vel_cdm=11, Transfer_Newt_vel_baryon=12,   & ! -k v_Newtonian/H
+        Transfer_vel_baryon_cdm = 13, &!relative velocity of baryons and CDM
+		!>ISiTGR MOD START: adding variables
+    	Transfer_ISW = 14, &  !derivative of Weyl potential for ISW
+    	Transfer_f = 15, &  !Logarithmic growth rate
+    	Transfer_vtot = 16   !Mass averaged velocity perturbation (conformal Newtonian Gauge, MPT Breeze Units)
 
-    integer, parameter :: Transfer_max = Transfer_vtot
-
+!   integer, parameter :: Transfer_max = Transfer_vel_baryon_cdm
+	integer, parameter :: Transfer_max = Transfer_vtot
+    character(LEN=name_tag_len) :: Transfer_name_tags(Transfer_max-1) = &
+        ['CDM     ', 'baryon  ', 'photon  ', 'nu      ', 'mass_nu ', 'total   ', &
+        'no_nu   ', 'total_de', 'Weyl    ', 'v_CDM   ', 'v_b     ', 'v_b-v_c ', &
+		'ISW     ', 'log_grow', 'pert_vel']
+		!<ISiTGR MOD END: adding variables
+		
     logical :: transfer_interp_matterpower  = .true. !output regular grid in log k
     !set to false to output calculated values for later interpolation
 
@@ -1699,7 +1851,7 @@
 
     nk=M%num_q_trans
     nz=CP%Transfer%PK_num_redshifts
-    if (nk/= size(PK,1) .or. nz/=size(PK,2)) stop 'Trasfer_GetUnsplinedPower wrong size'
+    if (nk/= size(PK,1) .or. nz/=size(PK,2)) call MpiStop('Trasfer_GetUnsplinedPower wrong size')
 
     h = CP%H0/100
 
@@ -1714,12 +1866,33 @@
 
     end subroutine Transfer_GetUnsplinedPower
 
+    subroutine Transfer_GetUnsplinedNonlinearPower(M,PK,var1,var2, hubble_units)
+    !Get 2pi^2/k^3 T_1 T_2 P_R(k) after re-scaling for non-linear evolution (if turned on)
+    Type(MatterTransferData), intent(in) :: M
+    real(dl), intent(inout):: PK(:,:)
+    integer, optional, intent(in) :: var1
+    integer, optional, intent(in) :: var2
+    logical, optional, intent(in) :: hubble_units
+    Type(MatterPowerData) :: PKdata
+    integer zix
+
+    call Transfer_GetUnsplinedPower(M,PK,var1,var2, hubble_units)
+    do zix=1, CP%Transfer%PK_num_redshifts
+        call Transfer_GetMatterPowerData(M, PKdata, 1, &
+            CP%Transfer%PK_redshifts_index(CP%Transfer%PK_num_redshifts-zix+1))
+        call NonLinear_GetRatios(PKdata)
+        PK(:,zix) =  PK(:,zix) *PKdata%nonlin_ratio(:,1)**2
+        call MatterPowerdata_Free(PKdata)
+    end do
+
+    end subroutine Transfer_GetUnsplinedNonlinearPower
+
     subroutine Transfer_GetMatterPowerData(MTrans, PK_data, power_ix, itf_only, var1, var2)
     !Does *NOT* include non-linear corrections
     !Get total matter power spectrum in units of (h Mpc^{-1})^3 ready for interpolation.
     !Here there definition is < Delta^2(x) > = 1/(2 pi)^3 int d^3k P_k(k)
     !We are assuming that Cls are generated so any baryonic wiggles are well sampled and that matter power
-    !sepctrum is generated to beyond the CMB k_max
+    !spectrum is generated to beyond the CMB k_max
     Type(MatterTransferData), intent(in) :: MTrans
     Type(MatterPowerData) :: PK_data
     integer, intent(in), optional :: power_ix
@@ -1904,7 +2077,7 @@
             +(b0**3-b0)*PK%ddmat(lhi,itf))*ho**2/6
     end if
 
-    outpower = exp(max(-30._dl,outpower))
+    outpower = exp(outpower)
 
     end function MatterPowerData_k
 
@@ -1959,7 +2132,7 @@
 
     itf = CP%Transfer%PK_redshifts_index(itf_PK)
 
-    if (npoints < 2) stop 'Need at least 2 points in Transfer_GetMatterPower'
+    if (npoints < 2) call MpiStop('Need at least 2 points in Transfer_GetMatterPower')
 
     !         if (minkh < MTrans%TransferData(Transfer_kh,1,itf)) then
     !            stop 'Transfer_GetMatterPower: kh out of computed region'
@@ -1970,7 +2143,7 @@
 
 
     if (CP%NonLinear/=NonLinear_none .and. CP%NonLinear/=NonLinear_Lens) then
-        call Transfer_GetMatterPowerData(MTrans, PK, in, itf, s1,s2)
+        call Transfer_GetMatterPowerData(MTrans, PK, in, itf) ! Mar 16, changed to use default variable
         call NonLinear_GetRatios(PK)
     end if
 
@@ -2107,7 +2280,7 @@
     real(dl), intent(in) :: R(:)
     real(dl), intent(out) :: SigmaR(:)
     integer, intent(in), optional :: redshift_ix, var1, var2, power_ix
-    integer i, red_ix, ik, subk
+    integer red_ix, ik, subk
     real(dl) kh, k, h, dkh
     real(dl) lnk, dlnk, lnko, minR
     real(dl), dimension(size(R)) ::  x, win, dsig8, dsig8o, sig8, sig8o
@@ -2125,7 +2298,7 @@
     dsig8o=0
     sig8=0
     sig8o=0
-    if (MTrans%TransferData(Transfer_kh,1,1)==0) stop 'Transfer_GetSigmaRArray kh zero'
+    if (MTrans%TransferData(Transfer_kh,1,1)==0) call MpiStop('Transfer_GetSigmaRArray kh zero')
     do ik=1, MTrans%num_q_trans + 2
         if (ik < MTrans%num_q_trans) then
             dkh = (MTrans%TransferData(Transfer_kh,ik+1,1)- MTrans%TransferData(Transfer_kh,ik,1))/nsub
@@ -2242,6 +2415,17 @@
 
     end  subroutine Transfer_Allocate
 
+    subroutine Transfer_Nullify(Mtrans)
+    Type(MatterTransferData):: MTrans
+
+    Mtrans%num_q_trans = 0
+    nullify(MTrans%q_trans)
+    nullify(MTrans%TransferData)
+    nullify(MTrans%sigma_8)
+    nullify(MTrans%sigma2_vdelta_8)
+
+    end subroutine Transfer_Nullify
+
     subroutine Transfer_Free(MTrans)
     Type(MatterTransferData):: MTrans
     integer st
@@ -2250,10 +2434,7 @@
     deallocate(MTrans%TransferData, STAT = st)
     deallocate(MTrans%sigma_8, STAT = st)
     if (get_growth_sigma8) deallocate(MTrans%sigma2_vdelta_8, STAT = st)
-    nullify(MTrans%q_trans)
-    nullify(MTrans%TransferData)
-    nullify(MTrans%sigma_8)
-    nullify(MTrans%sigma2_vdelta_8)
+    call Transfer_Nullify(MTrans)
 
     end subroutine Transfer_Free
 
@@ -2273,7 +2454,7 @@
         maxRedshift =15
     end if
     if (P%NLL_num_redshifts > max_transfer_redshifts) &
-        stop 'Transfer_SetForNonlinearLensing: Too many redshifts'
+        call MpiStop('Transfer_SetForNonlinearLensing: Too many redshifts')
     do i=1,P%NLL_num_redshifts
         P%NLL_redshifts(i) = real(P%NLL_num_redshifts-i)/(P%NLL_num_redshifts/maxRedshift)
     end do
@@ -2289,22 +2470,18 @@
     character(LEN=Ini_max_string_len), intent(IN) :: FileNames(*)
     !JD 08/13 Changes in here to PK arrays and variables
     integer i_PK
-    character(len=20) fmt
-
-
-    write (fmt,*) Transfer_max
-    fmt = '('//trim(adjustl(fmt))//'E14.6)'
+    integer unit
 
     do i_PK=1, CP%Transfer%PK_num_redshifts
         if (FileNames(i_PK) /= '') then
             i = CP%Transfer%PK_redshifts_index(i_PK)
-            open(unit=fileio_unit,file=FileNames(i_PK),form='formatted',status='replace')
+            unit = open_file_header(FileNames(i_PK), 'k/h', transfer_name_tags, 14)
             do ik=1,MTrans%num_q_trans
                 if (MTrans%TransferData(Transfer_kh,ik,i)/=0) then
-                    write(fileio_unit,fmt) MTrans%TransferData(Transfer_kh:Transfer_max,ik,i)
+                    write(unit,'(*(E15.6))') MTrans%TransferData(Transfer_kh:Transfer_max,ik,i)
                 end if
             end do
-            close(fileio_unit)
+            close(unit)
         end if
     end do
 
@@ -2318,17 +2495,17 @@
     integer itf,in,i
     integer points
     real, dimension(:,:,:), allocatable :: outpower
-    character(LEN=80) fmt
     real minkh,dlnkh
     Type(MatterPowerData) :: PK_data
     integer ncol
     !JD 08/13 Changes in here to PK arrays and variables
     integer itf_PK
+    integer unit
+    character(name_tag_len) :: columns(3)
 
     ncol=1
+    if (CP%InitPower%nn>1 .and. output_file_headers) error stop 'InitPower%nn>1 deprecated'
 
-    write (fmt,*) CP%InitPower%nn+1
-    fmt = '('//trim(adjustl(fmt))//'E15.5)'
     do itf=1, CP%Transfer%PK_num_redshifts
         if (FileNames(itf) /= '') then
             if (.not. transfer_interp_matterpower ) then
@@ -2347,12 +2524,14 @@
                     outpower(:,in,1) = exp(PK_data%matpower(:,1))
                     call MatterPowerdata_Free(PK_Data)
                 end do
-
-                open(unit=fileio_unit,file=FileNames(itf),form='formatted',status='replace')
+                columns = ['P   ', 'P_vd','P_vv']
+                unit = open_file_header(FileNames(itf), 'k/h', columns(:ncol), 15)
+				!>ISiTGR MOD START
                 do i=1,points
-                    write (fileio_unit, fmt) MTrans%TransferData(Transfer_kh,i,1),outpower(i,1:CP%InitPower%nn,:)
+                    !write (unit, '(*(E15.6))') MTrans%TransferData(Transfer_kh,i,1),outpower(i,1:CP%InitPower%nn,:)
+					write (unit, '(*(E15.8))') MTrans%TransferData(Transfer_kh,i,1),outpower(i,1:CP%InitPower%nn,:)
                 end do
-                close(fileio_unit)
+                close(unit)
             else
                 minkh = 1e-4
                 dlnkh = 0.02
@@ -2363,13 +2542,16 @@
                     call Transfer_GetMatterPowerS(MTrans,outpower(1,in,1), itf, in, minkh,dlnkh, points)
                 end do
 
-                open(unit=fileio_unit,file=FileNames(itf),form='formatted',status='replace')
-                do i=1,points
-                    write (fileio_unit, fmt) minkh*exp((i-1)*dlnkh),outpower(i,1:CP%InitPower%nn,1)
-                end do
-                close(fileio_unit)
-            end if
+                columns(1) = 'P'
+                unit = open_file_header(FileNames(itf), 'k/h', columns(:1), 15)
 
+                do i=1,points
+                    !write (unit, '(*(E15.6))') minkh*exp((i-1)*dlnkh),outpower(i,1:CP%InitPower%nn,1)
+					write (unit, '(*(E15.8))') minkh*exp((i-1)*dlnkh),outpower(i,1:CP%InitPower%nn,1)
+                end do
+                close(unit)
+            end if
+				!ISiTGR MOD END
             deallocate(outpower)
         end if
     end do
@@ -2437,7 +2619,6 @@
     real(dl) dddotmu(nthermo),ddddotmu(nthermo)
     real(dl) winlens(nthermo),dwinlens(nthermo), scalefactor(nthermo)
     real(dl) tauminn,dlntau,Maxtau
-    real(dl), dimension(:), allocatable :: vis,dvis,ddvis,expmmu,dopac, opac, lenswin
     logical, parameter :: dowinlens = .false.
 
     real(dl) :: tight_tau, actual_opt_depth
@@ -2445,9 +2626,9 @@
     real(dl) :: matter_verydom_tau
     real(dl) :: r_drag0, z_star, z_drag  !!JH for updated BAO likelihood.
 
-    public thermo,inithermo,vis,opac,expmmu,dvis,dopac,ddvis,lenswin, tight_tau,&
+    public thermo,inithermo, tight_tau, IonizationFunctionsAtTime, &
         Thermo_OpacityToTime,matter_verydom_tau, ThermoData_Free,&
-        z_star, z_drag  !!JH for updated BAO likelihood.
+        z_star, z_drag, GetBackgroundEvolution
     contains
 
     subroutine thermo(tau,cs2b,opacity, dopacity)
@@ -2468,13 +2649,13 @@
         !Linear interpolation if out of bounds (should not occur).
         cs2b=cs2(1)+(d+i-1)*dcs2(1)
         opacity=dotmu(1)+(d-1)*ddotmu(1)
-        stop 'thermo out of bounds'
+        call MpiStop('thermo out of bounds')
     else if (i >= nthermo) then
         cs2b=cs2(nthermo)+(d+i-nthermo)*dcs2(nthermo)
         opacity=dotmu(nthermo)+(d-nthermo)*ddotmu(nthermo)
         if (present(dopacity)) then
             dopacity = 0
-            stop 'thermo: shouldn''t happen'
+            call MpiStop('thermo: shouldn''t happen')
         end if
     else
         !Cubic spline interpolation.
@@ -2492,7 +2673,6 @@
         end if
     end if
     end subroutine thermo
-
 
     function Thermo_OpacityToTime(opacity)
     real(dl), intent(in) :: opacity
@@ -2524,7 +2704,7 @@
     real(dl) xe0,tau,a,a2
     real(dl) adot,tg0,ahalf,adothalf,fe,thomc,thomc0,etc,a2t
     real(dl) dtbdla,vfi,cf1,maxvis, vis
-    integer ncount,i,j1,j2,iv,ns
+    integer ncount,i,j1,iv,ns
     real(dl) spline_data(nthermo)
     real(dl) last_dotmu
     real(dl) dtauda  !diff of tau w.CP%r.t a and integration
@@ -2652,7 +2832,7 @@
 
     if (CP%Reion%Reionization .and. (xe(nthermo) < 0.999d0)) then
         write(*,*)'Warning: xe at redshift zero is < 1'
-        write(*,*) 'Check input parameters an Reionization_xe'
+        write(*,*) 'Check input parameters and Reionization_xe'
         write(*,*) 'function in the Reionization module'
     end if
 
@@ -2663,7 +2843,7 @@
             emmu(j1)=exp(sdotmu(j1)-sdotmu(nthermo))
             if (.not. CP%AccurateReionization .and. &
                 actual_opt_depth==0 .and. xe(j1) < 1e-3) then
-            actual_opt_depth = -sdotmu(j1)+sdotmu(nthermo)
+                actual_opt_depth = -sdotmu(j1)+sdotmu(nthermo)
             end if
             if (CP%AccurateReionization .and. CP%DerivedParameters .and. z_star==0.d0) then
                 if (sdotmu(nthermo)-sdotmu(j1) - actual_opt_depth < 1) then
@@ -2760,13 +2940,6 @@
 
     call SetTimeSteps
 
-    !$OMP PARALLEL DO DEFAULT(SHARED),SCHEDULE(STATIC)
-    do j2=1,TimeSteps%npoints
-        call DoThermoSpline(j2,TimeSteps%points(j2))
-    end do
-    !$OMP END PARALLEL DO
-
-
     if ((CP%want_zstar .or. CP%DerivedParameters) .and. z_star==0.d0) call find_z(optdepth,z_star)
     if (CP%want_zdrag .or. CP%DerivedParameters) call find_z(dragoptdepth,z_drag)
 
@@ -2859,72 +3032,65 @@
     call Ranges_GetArray(TimeSteps)
     nstep = TimeSteps%npoints
 
-    if (allocated(vis)) then
-        deallocate(vis,dvis,ddvis,expmmu,dopac, opac)
-        if (dowinlens) deallocate(lenswin)
-    end if
-    allocate(vis(nstep),dvis(nstep),ddvis(nstep),expmmu(nstep),dopac(nstep),opac(nstep))
-    if (dowinlens) allocate(lenswin(nstep))
-
     if (DebugMsgs .and. FeedbackLevel > 0) write(*,*) 'Set ',nstep, ' time steps'
 
     end subroutine SetTimeSteps
 
 
     subroutine ThermoData_Free
-    if (allocated(vis)) then
-        deallocate(vis,dvis,ddvis,expmmu,dopac, opac)
-        if (dowinlens) deallocate(lenswin)
-    end if
+
     call Ranges_Free(TimeSteps)
 
     end subroutine ThermoData_Free
 
-    !cccccccccccccc
-    subroutine DoThermoSpline(j2,tau)
-    integer j2,i
-    real(dl) d,ddopac,tau
 
-    !     Cubic-spline interpolation.
+    subroutine IonizationFunctionsAtTime(tau, opac, dopac, ddopac, &
+        vis, dvis, ddvis, expmmu, lenswin)
+    real(dl), intent(in) :: tau
+    real(dl), intent(out):: opac, dopac, ddopac, vis, dvis, ddvis, expmmu, lenswin
+    real(dl) d
+    integer i
+
     d=log(tau/tauminn)/dlntau+1._dl
     i=int(d)
-
     d=d-i
+
     if (i < nthermo) then
-        opac(j2)=dotmu(i)+d*(ddotmu(i)+d*(3._dl*(dotmu(i+1)-dotmu(i)) &
+        opac=dotmu(i)+d*(ddotmu(i)+d*(3._dl*(dotmu(i+1)-dotmu(i)) &
             -2._dl*ddotmu(i)-ddotmu(i+1)+d*(ddotmu(i)+ddotmu(i+1) &
             +2._dl*(dotmu(i)-dotmu(i+1)))))
-        dopac(j2)=(ddotmu(i)+d*(dddotmu(i)+d*(3._dl*(ddotmu(i+1)  &
+        dopac=(ddotmu(i)+d*(dddotmu(i)+d*(3._dl*(ddotmu(i+1)  &
             -ddotmu(i))-2._dl*dddotmu(i)-dddotmu(i+1)+d*(dddotmu(i) &
             +dddotmu(i+1)+2._dl*(ddotmu(i)-ddotmu(i+1))))))/(tau &
             *dlntau)
         ddopac=(dddotmu(i)+d*(ddddotmu(i)+d*(3._dl*(dddotmu(i+1) &
             -dddotmu(i))-2._dl*ddddotmu(i)-ddddotmu(i+1)  &
             +d*(ddddotmu(i)+ddddotmu(i+1)+2._dl*(dddotmu(i) &
-            -dddotmu(i+1)))))-(dlntau**2)*tau*dopac(j2)) &
+            -dddotmu(i+1)))))-(dlntau**2)*tau*dopac) &
             /(tau*dlntau)**2
-        expmmu(j2)=emmu(i)+d*(demmu(i)+d*(3._dl*(emmu(i+1)-emmu(i)) &
+        expmmu=emmu(i)+d*(demmu(i)+d*(3._dl*(emmu(i+1)-emmu(i)) &
             -2._dl*demmu(i)-demmu(i+1)+d*(demmu(i)+demmu(i+1) &
             +2._dl*(emmu(i)-emmu(i+1)))))
 
         if (dowinlens) then
-            lenswin(j2)=winlens(i)+d*(dwinlens(i)+d*(3._dl*(winlens(i+1)-winlens(i)) &
+            lenswin=winlens(i)+d*(dwinlens(i)+d*(3._dl*(winlens(i+1)-winlens(i)) &
                 -2._dl*dwinlens(i)-dwinlens(i+1)+d*(dwinlens(i)+dwinlens(i+1) &
                 +2._dl*(winlens(i)-winlens(i+1)))))
         end if
-        vis(j2)=opac(j2)*expmmu(j2)
-        dvis(j2)=expmmu(j2)*(opac(j2)**2+dopac(j2))
-        ddvis(j2)=expmmu(j2)*(opac(j2)**3+3*opac(j2)*dopac(j2)+ddopac)
+        vis=opac*expmmu
+        dvis=expmmu*(opac**2+dopac)
+        ddvis=expmmu*(opac**3+3*opac*dopac+ddopac)
     else
-        opac(j2)=dotmu(nthermo)
-        dopac(j2)=ddotmu(nthermo)
+        opac=dotmu(nthermo)
+        dopac=ddotmu(nthermo)
         ddopac=dddotmu(nthermo)
-        expmmu(j2)=emmu(nthermo)
-        vis(j2)=opac(j2)*expmmu(j2)
-        dvis(j2)=expmmu(j2)*(opac(j2)**2+dopac(j2))
-        ddvis(j2)=expmmu(j2)*(opac(j2)**3+3._dl*opac(j2)*dopac(j2)+ddopac)
+        expmmu=emmu(nthermo)
+        vis=opac*expmmu
+        dvis=expmmu*(opac**2+dopac)
+        ddvis=expmmu*(opac**3+3._dl*opac*dopac+ddopac)
     end if
-    end subroutine DoThermoSpline
+
+    end subroutine IonizationFunctionsAtTime
 
 
     function ddamping_da(a)
@@ -3026,5 +3192,50 @@
     end subroutine find_z
 
     !!!!!!!!!!!!!!!!!!! end JH
+
+    subroutine GetBackgroundEvolution(ntimes, times, outputs)
+    integer, intent(in) :: ntimes
+    real(dl), intent(in) :: times(ntimes)
+    real(dl) :: outputs(5, ntimes)
+    real(dl) spline_data(nthermo), ddxe(nthermo), ddTb(nthermo)
+    real(dl) :: d, tau, cs2b, opacity, vis, Tbaryon
+    integer i, ix
+
+    call splini(spline_data,nthermo)
+    call splder(xe,ddxe,nthermo,spline_data)
+    call splder(Tb,ddTb,nthermo,spline_data)
+
+    outputs = 0
+    do ix = 1, ntimes
+        tau = times(ix)
+        if (tau < tauminn) cycle
+        d=log(tau/tauminn)/dlntau+1._dl
+        i=int(d)
+        d=d-i
+        call thermo(tau,cs2b, opacity)
+
+        if (i < nthermo) then
+            outputs(1,ix)=xe(i)+d*(ddxe(i)+d*(3._dl*(xe(i+1)-xe(i)) &
+                -2._dl*ddxe(i)-ddxe(i+1)+d*(ddxe(i)+ddxe(i+1) &
+                +2._dl*(xe(i)-xe(i+1)))))
+            vis=emmu(i)+d*(demmu(i)+d*(3._dl*(emmu(i+1)-emmu(i)) &
+                -2._dl*demmu(i)-demmu(i+1)+d*(demmu(i)+demmu(i+1) &
+                +2._dl*(emmu(i)-emmu(i+1)))))
+            Tbaryon = tb(i)+d*(ddtb(i)+d*(3._dl*(tb(i+1)-tb(i)) &
+                -2._dl*ddtb(i)-ddtb(i+1)+d*(ddtb(i)+ddtb(i+1) &
+                +2._dl*(tb(i)-tb(i+1)))))
+        else
+            outputs(1,ix)=xe(nthermo)
+            vis = emmu(nthermo)
+            Tbaryon = Tb(nthermo)
+        end if
+
+        outputs(2, ix) = opacity
+        outputs(3, ix) = opacity*vis
+        outputs(4, ix) = cs2b
+        outputs(5, ix) = Tbaryon
+    end do
+
+    end subroutine GetBackgroundEvolution
 
     end module ThermoData

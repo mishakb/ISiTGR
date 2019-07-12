@@ -28,22 +28,32 @@
     type(CAMBparams) :: Params
     type (CAMBdata)  :: OutData
     integer :: error !Zero if OK
+    Type(MatterTransferData) :: emptyMT
+    Type(ClTransferData) :: emptyCl
 
     !Set internal types from OutData so it always 'owns' the memory, prevent leaks
 
+    call Transfer_Free(MT)
     MT =  OutData%MTrans
 
+    call Free_ClTransfer(CTransScal)
+    call Free_ClTransfer(CTransVec)
+    call Free_ClTransfer(CTransTens)
     CTransScal = OutData%ClTransScal
     CTransVec  = OutData%ClTransVec
     CTransTens = OutData%ClTransTens
 
-
     call CAMB_GetResults(Params, error)
+
     OutData%Params = Params
     OutData%MTrans = MT
+    MT = emptyMT
     OutData%ClTransScal = CTransScal
     OutData%ClTransVec  = CTransVec
     OutData%ClTransTens = CTransTens
+    CTransScal = emptyCl
+    CTransVec  = emptyCl
+    CTransTens = emptyCl
 
     end subroutine CAMB_GetTransfers
 
@@ -120,6 +130,7 @@
         if (separate) then
             P%WantTransfer = .false.
             P%Transfer%high_precision = .false.
+            P%Transfer%accurate_massive_neutrinos = .false.
         end if
         P%WantTensors = .false.
         P%WantVectors = .false.
@@ -132,6 +143,7 @@
         call_again = .true.
         !Need to store CP%flat etc, but must keep original P_k settings
         CP%Transfer%high_precision = Params%Transfer%high_precision
+        CP%Transfer%accurate_massive_neutrinos = Params%Transfer%accurate_massive_neutrinos
         CP%WantTransfer = Params%WantTransfer
         CP%WantTensors = Params%WantTensors
         CP%WantVectors = Params%WantVectors
@@ -191,7 +203,7 @@
     end if
 
     if (Params%WantTransfer .and. &
-    .not. (Params%WantCls .and. Params%WantScalars .and. .not. separate)) then
+        .not. (Params%WantCls .and. Params%WantScalars .and. .not. separate)) then
         P=Params
         P%WantCls = .false.
         P%WantScalars = .false.
@@ -222,9 +234,11 @@
         if (do_bispectrum .and. global_error_flag==0) call GetBispectrum(CTransScal)
     end if
 
-    if (global_error_flag/=0) then  !JD added it justin in case error comes from lensCLs
-        if (present(error)) error =global_error_flag
+	!<ISiTGR MOD START: handling possible error of lensCls
+	if (global_error_flag/=0) then  !JD added it justin in case error comes from lensCLs
+    if (present(error)) error =global_error_flag
     end if
+	!>ISiTGR MOD END: handling possible error of lensCls
 
     end subroutine CAMB_GetResults
 
@@ -285,8 +299,11 @@
     P%Reion%use_optical_depth = .true.
     P%Reion%optical_depth = tau
     call CAMBParams_Set(P,error)
-
-    CAMB_GetZreFromTau = CP%Reion%redshift
+    if (error/=0)  then
+        CAMB_GetZreFromTau = -1
+    else
+        CAMB_GetZreFromTau = CP%Reion%redshift
+    end if
 
     end function CAMB_GetZreFromTau
 
@@ -324,6 +341,7 @@
     call Reionization_SetDefParams(P%Reion)
 
     P%Transfer%high_precision=.false.
+    P%Transfer%accurate_massive_neutrinos = .false.
 
     P%OutputNormalization = outNone
 
@@ -333,10 +351,10 @@
     P%want_zstar = .false.  !!JH
     P%want_zdrag = .false.  !!JH
 
-    P%Max_l=1500
-    P%Max_eta_k=3000
-    P%Max_l_tensor=400
-    P%Max_eta_k_tensor=800
+    P%Max_l=2500
+    P%Max_eta_k=5000
+    P%Max_l_tensor=600
+    P%Max_eta_k_tensor=1200
     !Set up transfer just enough to get sigma_8 OK
     P%Transfer%kmax=0.9
     P%Transfer%k_per_logint=0
@@ -353,7 +371,7 @@
     P%AccurateReionization = .false.
     P%AccurateBB = .false.
 
-    P%DoLensing = .false.
+    P%DoLensing = .true.
 
     P%MassiveNuMethod = Nu_best
     P%OnlyTransfers = .false.
@@ -361,6 +379,95 @@
     P%DerivedParameters = .true.
 
     end subroutine CAMB_SetDefParams
+
+    subroutine CAMB_SetNeutrinoHierarchy(P, omnuh2, omnuh2_sterile, nnu, neutrino_hierarchy, num_massive_neutrinos)
+    use constants
+    type(CAMBparams), intent(inout) :: P
+    real(dl), intent(in) :: omnuh2, omnuh2_sterile, nnu
+    integer, intent(in) :: neutrino_hierarchy
+    integer, intent(in), optional :: num_massive_neutrinos  !for degenerate hierarchy
+    integer, parameter :: neutrino_hierarchy_normal = 1, neutrino_hierarchy_inverted = 2, neutrino_hierarchy_degenerate = 3
+    real(dl) normal_frac, m3, neff_massive_standard, mnu, m1
+    real(dl), external :: Newton_Raphson
+
+    if (omnuh2==0) return
+    P%Nu_mass_eigenstates=0
+    if ( omnuh2 > omnuh2_sterile) then
+        normal_frac =  (omnuh2-omnuh2_sterile)/omnuh2
+        if (neutrino_hierarchy == neutrino_hierarchy_degenerate) then
+            neff_massive_standard = num_massive_neutrinos*default_nnu/3
+            P%Num_Nu_Massive = num_massive_neutrinos
+            P%Nu_mass_eigenstates=P%Nu_mass_eigenstates+1
+            if (nnu > neff_massive_standard) then
+                P%Num_Nu_Massless = nnu - neff_massive_standard
+            else
+                P%Num_Nu_Massless = 0
+                neff_massive_standard=nnu
+            end if
+            P%Nu_mass_numbers(P%Nu_mass_eigenstates) = num_massive_neutrinos
+            P%Nu_mass_degeneracies(P%Nu_mass_eigenstates) = neff_massive_standard
+            P%Nu_mass_fractions(P%Nu_mass_eigenstates) = normal_frac
+        else
+            !Use normal or inverted hierarchy, approximated as two eigenstates in physical regime, 1 at minimum an below
+            mnu = (omnuh2 - omnuh2_sterile)*neutrino_mass_fac / (default_nnu / 3) ** 0.75_dl
+            if (neutrino_hierarchy == neutrino_hierarchy_normal) then
+                if (mnu > mnu_min_normal + 1e-4_dl) then
+                    !Two eigenstate approximation.
+                    m1=Newton_Raphson(0._dl, mnu, sum_mnu_for_m1, mnu, 1._dl)
+                    P%Num_Nu_Massive = 3
+                else
+                    !One eigenstate
+                    P%Num_Nu_Massive = 1
+                end if
+            else if (neutrino_hierarchy == neutrino_hierarchy_inverted) then
+                if (mnu > sqrt(delta_mnu31)+sqrt(delta_mnu31+delta_mnu21) + 1e-4_dl ) then
+                    !Valid case, two eigenstates
+                    m1=Newton_Raphson(sqrt(delta_mnu31), mnu, sum_mnu_for_m1, mnu, -1._dl)
+                    P%Num_Nu_Massive = 3
+                else
+                    !Unphysical low mass case: take one (2-degenerate) eigenstate
+                    P%Num_Nu_Massive = 2
+                end if
+            else
+                error stop 'Unknown neutrino_hierarchy setting'
+            end if
+            neff_massive_standard = P%Num_Nu_Massive *default_nnu/3
+            if (nnu > neff_massive_standard) then
+                P%Num_Nu_Massless = nnu - neff_massive_standard
+            else
+                P%Num_Nu_Massless = 0
+                neff_massive_standard=nnu
+            end if
+            if (P%Num_Nu_Massive==3) then
+                !two with mass m1, one with m3
+                P%Nu_mass_eigenstates = 2
+                P%Nu_mass_degeneracies(1) = neff_massive_standard*2/3._dl
+                P%Nu_mass_degeneracies(2) = neff_massive_standard*1/3._dl
+                m3 = mnu - 2*m1
+                P%Nu_mass_fractions(1) = 2*m1/mnu*normal_frac
+                P%Nu_mass_fractions(2) = m3/mnu*normal_frac
+                P%Nu_mass_numbers(1) = 2
+                P%Nu_mass_numbers(2) = 1
+            else
+                P%Nu_mass_degeneracies(1) = neff_massive_standard
+                P%Nu_mass_numbers(1) = P%Num_Nu_Massive
+                P%Nu_mass_eigenstates = 1
+                P%Nu_mass_fractions(1) = normal_frac
+            end if
+        end if
+    else
+        neff_massive_standard=0
+    end if
+    if (omnuh2_sterile>0) then
+        if (nnu<default_nnu) call MpiStop('nnu < 3.046 with massive sterile')
+        P%Num_Nu_Massless = default_nnu - neff_massive_standard
+        P%Num_Nu_Massive=P%Num_Nu_Massive+1
+        P%Nu_mass_eigenstates=P%Nu_mass_eigenstates+1
+        P%Nu_mass_numbers(P%Nu_mass_eigenstates) = 1
+        P%Nu_mass_degeneracies(P%Nu_mass_eigenstates) = max(1d-6,nnu - default_nnu)
+        P%Nu_mass_fractions(P%Nu_mass_eigenstates) = omnuh2_sterile/omnuh2
+    end if
+    end subroutine CAMB_SetNeutrinoHierarchy
 
 
     !Stop with error is not good
@@ -385,23 +492,23 @@
     if (P%yhe < 0.2d0.or.P%yhe > 0.8d0) then
         OK = .false.
         write(*,*) &
-        '  Warning: YHe is the Helium fraction of baryons.', &
-        '  Your have:', P%yhe
+            '  Warning: YHe is the Helium fraction of baryons.', &
+            '  Your have:', P%yhe
     end if
     if (P%Num_Nu_massive < 0) then
         OK = .false.
         write(*,*) &
-        'Warning: Num_Nu_massive is strange:',P%Num_Nu_massive
+            'Warning: Num_Nu_massive is strange:',P%Num_Nu_massive
     end if
     if (P%Num_Nu_massless < 0) then
         OK = .false.
         write(*,*) &
-        'Warning: Num_nu_massless is strange:', P%Num_Nu_massless
+            'Warning: Num_nu_massless is strange:', P%Num_Nu_massless
     end if
     if (P%Num_Nu_massive < 1 .and. P%omegan > 0.0) then
         OK = .false.
         write(*,*) &
-        'Warning: You have omega_neutrino > 0, but no massive species'
+            'Warning: You have omega_neutrino > 0, but no massive species'
     end if
 
 
@@ -411,7 +518,7 @@
     end if
 
     if (P%WantScalars .and. P%Max_eta_k < P%Max_l .or.  &
-    P%WantTensors .and. P%Max_eta_k_tensor < P%Max_l_tensor) then
+        P%WantTensors .and. P%Max_eta_k_tensor < P%Max_l_tensor) then
         OK = .false.
         write(*,*) 'You need Max_eta_k larger than Max_l to get good results'
     end if
@@ -423,17 +530,17 @@
         if (P%transfer%num_redshifts > max_transfer_redshifts .or. P%transfer%num_redshifts<1) then
             OK = .false.
             write(*,*) 'Maximum ',  max_transfer_redshifts, &
-            'redshifts. You have: ', P%transfer%num_redshifts
+                'redshifts. You have: ', P%transfer%num_redshifts
         end if
         if (P%transfer%kmax < 0.01 .or. P%transfer%kmax > 50000 .or. &
-        P%transfer%k_per_logint>0 .and.  P%transfer%k_per_logint <1) then
-!            OK = .false.
+            P%transfer%k_per_logint>0 .and.  P%transfer%k_per_logint <1) then
+            !            OK = .false.
             write(*,*) 'Strange transfer function settings.'
         end if
         if (P%transfer%num_redshifts > max_transfer_redshifts .or. P%transfer%num_redshifts<1) then
             OK = .false.
             write(*,*) 'Maximum ',  max_transfer_redshifts, &
-            'redshifts. You have: ', P%transfer%num_redshifts
+                'redshifts. You have: ', P%transfer%num_redshifts
         end if
     end if
 
