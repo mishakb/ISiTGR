@@ -16,7 +16,8 @@ The description of the formalism and its implementation in the CMB code, the Int
 
 Further documentation will be provided soon in this readme file. Below also is some information for the previous version. 
 
-Referencing ISiTGR
+Referencing ISiTGR:
+
 We would ask that when using ISiTGR or a modified version of it, you cite: our papers (arXiv:1109.4583 and arXiv:1205.2422, one more to appear on arXiv); the original CAMB paper; the original CosmoMC paper; Additionally please cite the use of any other datasets already included in the original version of CosmoMC.
 
 
