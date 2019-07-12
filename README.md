@@ -1,4 +1,29 @@
-# ISiTGR
+# ISiTGR Version 3.00 released in July 2019
+
+We introduce a new version of {I}ntegrated {S}oftware {i}n {T}esting {G}eneral {R}elativity (ISiTGR) which is a patch to the software CAMB and CosmoMC. ISiTGR is intended to test deviations from GR at cosmological scales using available cosmological data sets. While doing so, it allows for various extensions to the standard flat $\Lambda$CDM model. In this new release, we have support for the following:  
+
+1) dynamical dark energy parametrizations with a constant or time-dependant equation of state; 
+
+2) a consistent implementation of anisotropic shear to model massive neutrinos throughout the full formalism; 
+
+3) multiple commonly used parameterizations of modified growth (MG) parameters; 
+
+4) functional, binned and hybrid time- and scale-dependencies for all MG parameters; 
+
+5) spatially flat or curved backgrounds. 
+
+The description of the formalism and its implementation in the CMB code, the Integrated Sachs-Wolfe (ISW) effect, and the 3x2 point statistics as well as examples of application to current data sets, all can bound in the paper on the archive. A more technical description of the implementation can be found in the documentation provided in this repository. 
+
+Further documentation will be provided soon in this readme file. Below also is some information for the previous version. 
+
+Referencing ISiTGR
+We would ask that when using ISiTGR or a modified version of it, you cite: our papers (arXiv:1109.4583 and arXiv:1205.2422, one more to appear on arXiv); the original CAMB paper; the original CosmoMC paper; Additionally please cite the use of any other datasets already included in the original version of CosmoMC.
+
+
+-------------------------------------------------------------
+
+# ISiTGR Version 2.01 (previous version information below)
+
 Integrated Software in Testing General Relativity
 
 Version 2.01
