@@ -3,6 +3,7 @@
     !AL 2018, following exactly the same approximations as in the DES papers
     !(can only use Weyl potential for lensing)
     ! MR 2019 update to use Weyl potential for galaxy-lensing cross
+	!CGQ 2019 add small changes to obtain the cls and correlation functions for non-flat cases
 
     module wl
 
@@ -288,7 +289,7 @@
     call this%init_bessel_integration()
     !Get ell for calculating C_L. Linear then log.
     b=0
-    allocate(ls_tmp(this%lmax)) !ls_tmp matrix of 50000 elements
+    allocate(ls_tmp(this%lmax)) 
     do i=2, 100 -int(4/this%acc), max(1,int(4/this%acc))
         b=b+1
         ls_tmp(b) = i
@@ -389,7 +390,6 @@
     ell_last = 1
     do i=1, n
         ell = int(exp(i*dlog))
-		!write(*,*) ell
         if (ell /= ell_last) then
             ix = ix+1
             dell(ix) = ell-ell_last
@@ -454,8 +454,6 @@
     integer i
     integer type_ix, f1, f2, theta_bin
 
-	open(unit = 3, file = 'DES_used_items.dat',    status='unknown', recl = 999999)
-
 	do i=1, this%num_used
         type_ix = this%used_items(i,1)
         f1 = this%used_items(i,2)
@@ -463,11 +461,8 @@
         theta_bin = this%used_items(i,4)
         vec(i) = corr(theta_bin, f1, f2, type_ix)
 		
-		write(3,*) type_ix, f1, f2, theta_bin
     end do
-	
-	close(3)
-	
+		
     end subroutine make_vector
 
     subroutine calc_theory(this,CMB,Theory,corrs, DataParams)
@@ -500,6 +495,11 @@
     real(mcp) :: tmparr(size(this%ls_cl))
     real(mcp) :: kharr(this%num_z_p),zarr(this%num_z_p), powers(this%num_z_p), wpowers(this%num_z_p), mwpowers(this%num_z_p), tmp(this%num_z_p), wtmp(this%num_z_p), mwtmp(this%num_z_p)
     real(mcp) :: time
+	!>ISiTGR MOD START
+	!CGQ for curve models
+	real(mcp), allocatable :: term1(:,:), term2(:)
+	integer cgq !just an index
+	!<ISiTGR MOD END
 
     time= TimerTime()
 
@@ -532,6 +532,7 @@
     omm = CMB%omdm+CMB%omb
 
     allocate(chis(this%num_z_p), dchis(this%num_z_p))
+	allocate(term1(this%num_z_p,this%num_z_p), term2(this%num_z_p))
     call this%Calculator%ComovingRadialDistanceArr(this%z_p, chis, this%num_z_p)
     dchis(1) = (chis(2) + chis(1))/2
     dchis(this%num_z_p) = chis(this%num_z_p) - chis(this%num_z_p-1)
@@ -582,8 +583,14 @@
     do b = 1, this%num_z_bins
         fac = dchis*n_chi(:,b)
         do i=1, this%num_z_p
-            qs(i,b) = dot_product(fac(i:this%num_z_p),(1 - chis(i) / chis(i:this%num_z_p)))
+			!>ISiTGR MOD START
+			do cgq=i, this%num_z_p
+			term1(cgq,i) = this%Calculator%f_K(chis(cgq) - chis(i)) !f_K(chi'-chi)
+			term2(cgq) = this%Calculator%f_K(chis(cgq))	!f_K(chi')
+			end do
+            qs(i,b) = dot_product(fac(i:this%num_z_p), (term1(i:this%num_z_p,i)/term2(i:this%num_z_p))) !( 1 - chis(i) / chis(i:this%num_z_p)))
         end do
+			!<ISiTGR MOD END
         if (this%intrinsic_alignment_model == intrinsic_alignment_DES1YR) then
             qs(:,b) = qs(:,b) - Alignment_z * n_chi(:,b) / (chis * (1 + this%z_p) * 3 * h**2 * (1e5 / const_c) ** 2 / 2)
         end if
@@ -613,7 +620,9 @@
     do i=1, size(this%ls_cl)
         ix =0
         do j = 1, this%num_z_p
-            kh= (this%ls_cl(i) + 0.5) / chis(j)/h
+			!>ISiTGR MOD START
+            kh= (this%ls_cl(i) + 0.5) / this%Calculator%f_K(chis(j))/h
+			!<ISiTGR MOD END
             if (kh >= khmin .and. kh <= khmax) then
                 ix = ix +1
                 zarr(ix) = this%z_p(j)
@@ -629,7 +638,9 @@
 
         ix=0
         do j = 1, this%num_z_p
-            kh = (this%ls_cl(i) + 0.5) / chis(j)/h
+			!>ISiTGR MOD START
+            kh = (this%ls_cl(i) + 0.5) / this%Calculator%f_K(chis(j))/h
+			!<ISiTGR MOD END
             if (kh >= khmin .and. kh <= khmax) then
                 ix = ix+1
                 tmp(j)  = fac(j)*powers(ix)/h**3
