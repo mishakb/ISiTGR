@@ -1,7 +1,7 @@
 [![N|Solid](https://www.utdallas.edu/~jdossett/images/banner_bkgd_isitgr3.jpg)](https://www.utdallas.edu/~jdossett/images/banner_bkgd_isitgr3.jpg)
 
 # ISiTGR Version 3.00 released in July 2019
-We introduce a new version of **I**ntegrated **S**oftware **i**n **T**esting **G**eneral **R**elativity (ISiTGR) which is a patch to the software CAMB and CosmoMC. ISiTGR is intended to test deviations from GR at cosmological scales using available cosmological data sets. While doing so, it allows for various extensions to the standard flat $$\Lambda$$CDM model. In this new release, we have support for the following:  
+We introduce a new version of **I**ntegrated **S**oftware **i**n **T**esting **G**eneral **R**elativity (ISiTGR) which is a patch to the software CAMB and CosmoMC. ISiTGR is intended to test deviations from GR at cosmological scales using available cosmological data sets. While doing so, it allows for various extensions to the standard flat LCDM model. In this new release, we have a combined support for the following:  
 
 * Dynamical dark energy parametrizations with a constant or time-dependent equation of state; 
 
@@ -9,11 +9,11 @@ We introduce a new version of **I**ntegrated **S**oftware **i**n **T**esting **G
 
 * Multiple commonly used parameterizations of modified growth (MG) parameters; 
 
-* Functional, binned and hybrid time- and scale-dependencies for all MG parameters; 
+* Functional, binned and hybrid time- and scale-dependencies for all MG parameters (expanded from previous version); 
 
-* Spatially flat or curved backgrounds. 
+* Spatially flat or curved backgrounds (present in previous version as well). 
 
-The description of the formalism and its implementation in the CMB code, the Integrated Sachs-Wolfe (ISW) effect, and the 3x2 point statistics as well as examples of application to current data sets, all can bound in the paper on the archive. A more technical description of the implementation can be found in the documentation provided in this repository. 
+The description of the formalism and its implementation in the CMB code, the Integrated Sachs-Wolfe (ISW) effect, and the 3x2 point statistics as well as examples of application to current data sets, can be found in the latest paper on the arXiv. A more technical description of the implementation can be found in the documentation provided in this repository. 
 
 ## Installation
 The corresponding versio of ISiTGR was built based on the CosmoMC July 2018 version. To install the GitHub version of ISiTGR you can run the following steps in your terminal :
