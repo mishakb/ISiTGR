@@ -27,7 +27,7 @@ $ make isitgr
 ```
 if there are no errors during compilation, then you should be ready to use ISiTGR.
 
-# We are currently testing results using CosmoMC July 2019 and the Planck 2018 likelyhood. These will be added to ISiTGR by August 12th. 
+We are currently testing results using CosmoMC July 2019 and the Planck 2018 likelyhood. These will be added to ISiTGR by August 12th. 
 
 ## How to run ISiTGR
 The ISiTGR patch allows to run CAMB and CosmoMC for MG different models. Therefore, you can use the ISiTGR capabilities after compiling the code by modifying the corresponding .ini files. The next flowchart gives the different .ini files that you need to modify in case you want to use the functional form or the binning methods for either CAMB or CosmoMC (you can find further instructions inside each of this files). 
