@@ -100,7 +100,7 @@
     	this%Parameterization => ISiTGR_BINParam
     	call ISiTGR_BINParam%InitWithSetNames (Ini,Names,this)    
 	!<ISiTGR MOD END
-	else
+    else
         OK =  this%TGeneralConfig%SetParameterizationName(nametag,Ini,Names)
     end if
 

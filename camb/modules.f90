@@ -1776,8 +1776,8 @@
         ! total perturbations with and without neutrinos, with neutrinos+dark energy in the numerator
         Transfer_Weyl = 10, & ! the Weyl potential, for lensing and ISW
         Transfer_Newt_vel_cdm=11, Transfer_Newt_vel_baryon=12,   & ! -k v_Newtonian/H
-        Transfer_vel_baryon_cdm = 13, &!relative velocity of baryons and CDM
 		!>ISiTGR MOD START: adding variables
+        Transfer_vel_baryon_cdm = 13, & !relative velocity of baryons and CDM
     	Transfer_ISW = 14, &  !derivative of Weyl potential for ISW
     	Transfer_f = 15, &  !Logarithmic growth rate
     	Transfer_vtot = 16   !Mass averaged velocity perturbation (conformal Newtonian Gauge, MPT Breeze Units)
@@ -1789,7 +1789,7 @@
         'no_nu   ', 'total_de', 'Weyl    ', 'v_CDM   ', 'v_b     ', 'v_b-v_c ', &
 		'ISW     ', 'log_grow', 'pert_vel']
 		!<ISiTGR MOD END: adding variables
-		
+
     logical :: transfer_interp_matterpower  = .true. !output regular grid in log k
     !set to false to output calculated values for later interpolation
 
@@ -2526,10 +2526,11 @@
                 end do
                 columns = ['P   ', 'P_vd','P_vv']
                 unit = open_file_header(FileNames(itf), 'k/h', columns(:ncol), 15)
-				!>ISiTGR MOD START
                 do i=1,points
+					!>ISiTGR MOD START
                     !write (unit, '(*(E15.6))') MTrans%TransferData(Transfer_kh,i,1),outpower(i,1:CP%InitPower%nn,:)
 					write (unit, '(*(E15.8))') MTrans%TransferData(Transfer_kh,i,1),outpower(i,1:CP%InitPower%nn,:)
+					!<ISiTGR MOD END
                 end do
                 close(unit)
             else
@@ -2546,12 +2547,14 @@
                 unit = open_file_header(FileNames(itf), 'k/h', columns(:1), 15)
 
                 do i=1,points
+					!>ISiTGR MOD START
                     !write (unit, '(*(E15.6))') minkh*exp((i-1)*dlnkh),outpower(i,1:CP%InitPower%nn,1)
 					write (unit, '(*(E15.8))') minkh*exp((i-1)*dlnkh),outpower(i,1:CP%InitPower%nn,1)
+					!<ISiTGR MOD END
                 end do
                 close(unit)
             end if
-				!ISiTGR MOD END
+
             deallocate(outpower)
         end if
     end do

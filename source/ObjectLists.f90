@@ -97,7 +97,7 @@
     procedure :: RealArrItem => TRealArrayList_Item
     generic :: Item => Value, RealArrItem
     end Type TRealArrayList
-	
+
 	!>ISiTGR MOD START
 	Type, extends(TOwnedIntrinsicList):: TIntegerCompareList
     contains
@@ -121,7 +121,7 @@
     end Type TIntegerArrayList
 
     Type, extends(TOwnedIntrinsicList) :: TStringList
-	contains
+    contains
     procedure :: CharAt => TStringList_CharAt
     procedure :: Compare => TStringList_Compare
     procedure :: StringItem  => TStringList_Item
@@ -883,7 +883,7 @@
 
     end function TIntegerList_AsArray
 	!<ISiTGR MOD END
-
+	
     !TIntegerArrayList: List of arrays of reals
 
     function TIntegerArrayList_Item(this, i) result(P)

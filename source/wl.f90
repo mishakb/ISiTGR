@@ -3,7 +3,7 @@
     !AL 2018, following exactly the same approximations as in the DES papers
     !(can only use Weyl potential for lensing)
     ! MR 2019 update to use Weyl potential for galaxy-lensing cross
-	!CGQ 2019 add small changes to obtain the cls and correlation functions for non-flat cases
+	!CGQ 2019 add small changes to compute the cls and correlation functions for non-flat cases
 
     module wl
 
@@ -289,7 +289,7 @@
     call this%init_bessel_integration()
     !Get ell for calculating C_L. Linear then log.
     b=0
-    allocate(ls_tmp(this%lmax)) 
+    allocate(ls_tmp(this%lmax))
     do i=2, 100 -int(4/this%acc), max(1,int(4/this%acc))
         b=b+1
         ls_tmp(b) = i
@@ -301,6 +301,7 @@
         i=i+1
     end do
     allocate(this%ls_cl, source = ls_tmp(1:b))
+
     end subroutine WL_ReadIni
 
     subroutine WL_WriteLikelihoodData(this,Theory,DataParams, root)
@@ -364,10 +365,8 @@
     real(mcp) :: DataParams(:)
     real(mcp) WL_LnLike
     real(mcp) vec(this%num_used)
-	
-	integer::i
-    
-	if (allocated(this%corr_theory) ) deallocate(this%corr_theory)
+
+    if (allocated(this%corr_theory) ) deallocate(this%corr_theory)
     allocate(this%corr_theory, source = this%corr_data*0)
     call this%calc_theory(CMB,Theory, this%corr_theory, DataParams)
     call this%make_vector(this%corr_theory, vec)
@@ -382,6 +381,7 @@
     real(mcp) dlog, tmp0, tmp2, tmp4, x
     integer n, ix, ell, i, j, ell_last
     integer, allocatable :: ell_sum_min(:), ell_sum_max(:), bigell(:), dell(:)
+
     !Get array of roughly log-spaced ls_bessel to sample in the C_L
     n = int(500*this%acc)
     dlog = (log(real(this%lmax)) - log(1.))/n
@@ -454,15 +454,14 @@
     integer i
     integer type_ix, f1, f2, theta_bin
 
-	do i=1, this%num_used
+    do i=1, this%num_used
         type_ix = this%used_items(i,1)
         f1 = this%used_items(i,2)
         f2 = this%used_items(i,3)
         theta_bin = this%used_items(i,4)
         vec(i) = corr(theta_bin, f1, f2, type_ix)
-		
     end do
-		
+
     end subroutine make_vector
 
     subroutine calc_theory(this,CMB,Theory,corrs, DataParams)
@@ -532,7 +531,6 @@
     omm = CMB%omdm+CMB%omb
 
     allocate(chis(this%num_z_p), dchis(this%num_z_p))
-	allocate(term1(this%num_z_p,this%num_z_p), term2(this%num_z_p))
     call this%Calculator%ComovingRadialDistanceArr(this%z_p, chis, this%num_z_p)
     dchis(1) = (chis(2) + chis(1))/2
     dchis(this%num_z_p) = chis(this%num_z_p) - chis(this%num_z_p-1)
@@ -579,7 +577,8 @@
         end do
     end do
     !$OMP END PARALLEL DO
-    !$OMP PARALLEL DO DEFAULT(SHARED), PRIVATE(fac, i)
+    !FIRSTPRIVATE is a workaround for ifort issues on some machines
+    !$OMP PARALLEL DO DEFAULT(SHARED), PRIVATE(i), FIRSTPRIVATE(fac)
     do b = 1, this%num_z_bins
         fac = dchis*n_chi(:,b)
         do i=1, this%num_z_p
@@ -608,7 +607,7 @@
     !Get C_kappa
     khmin = exp(PK%x(1))
     khmax = exp(PK%x(PK%nx))
-    allocate(cl_kappa(size(this%ls_cl),this%num_z_bins,this%num_z_bins)) !!! (75 ells,,)
+    allocate(cl_kappa(size(this%ls_cl),this%num_z_bins,this%num_z_bins))
     allocate(cl_w(size(this%ls_cl),this%num_gal_bins,this%num_gal_bins))
     allocate(cl_cross(size(this%ls_cl),this%num_gal_bins,this%num_z_bins))
     cl_kappa=0
@@ -616,32 +615,32 @@
     cl_cross=0
 
     fac = dchis/chis**2
-    !$OMP PARALLEL DO DEFAULT(SHARED), PRIVATE(j,kh, type_ix, tp, f1, f2, cltmp, ii, ix, kharr, zarr, powers, wpowers, mwpowers, tmp, wtmp, mwtmp)
+    !FIRSTPRIVATE is a workaround for ifort issues on some machines
+    !$OMP PARALLEL DO DEFAULT(SHARED), PRIVATE(j,kh, type_ix, tp, f1, f2, cltmp, ii, ix), &
+    !$OMP FIRSTPRIVATE(kharr, zarr, powers, wpowers, mwpowers, tmp, wtmp, mwtmp )
     do i=1, size(this%ls_cl)
         ix =0
         do j = 1, this%num_z_p
 			!>ISiTGR MOD START
             kh= (this%ls_cl(i) + 0.5) / this%Calculator%f_K(chis(j))/h
 			!<ISiTGR MOD END
-            if (kh >= khmin .and. kh <= khmax) then
+			if (kh >= khmin .and. kh <= khmax) then
                 ix = ix +1
                 zarr(ix) = this%z_p(j)
                 kharr(ix) = kh
             end if
         end do
-
-	    call PK%PowerAtArr (kharr, zarr, ix, powers )
-    	if ( this%use_weyl ) then
-			call WPK%PowerAtArr(kharr, zarr, ix, wpowers)
+        call PK%PowerAtArr (kharr, zarr, ix, powers )
+        if ( this%use_weyl ) then
+            call WPK%PowerAtArr(kharr, zarr, ix, wpowers)
             call MWPK%PowerAtArr(kharr, zarr, ix, mwpowers)
- 	   	end if
-
+        end if
         ix=0
         do j = 1, this%num_z_p
 			!>ISiTGR MOD START
             kh = (this%ls_cl(i) + 0.5) / this%Calculator%f_K(chis(j))/h
 			!<ISiTGR MOD END
-            if (kh >= khmin .and. kh <= khmax) then
+			if (kh >= khmin .and. kh <= khmax) then
                 ix = ix+1
                 tmp(j)  = fac(j)*powers(ix)/h**3
                 if ( this%use_weyl ) then
@@ -686,7 +685,7 @@
         end do
     end do
     !$OMP END PARALLEL DO
-	
+
     if (WL_timing) print *, 'time 2', TimerTime() - time
     time= TimerTime()
 
@@ -727,7 +726,6 @@
         fac2 =  (1 + shear_calibration_parameters(f1)) &
             * ( 1 + shear_calibration_parameters(f2))
         corrs(this%first_theta_bin_used:,f1,f2,type_ix) = matmul(cl_bessels, this%j0s) *fac2
-
         if (xim_index/=0) &
             corrs(this%first_theta_bin_used:,f1,f2,xim_index) = matmul(cl_bessels, this%j4s) *fac2
     else if (tp == measurement_gammat) then
@@ -745,4 +743,4 @@
 
     end module wl
 
-	
+

@@ -37,7 +37,7 @@ endif
 ifneq ($(NERSC_HOST),)
 #setting for Edison/Cori on NERSC
 MPIF90C = ftn
-FFLAGS = -fpp -qopenmp -dynamic -axMIC-AVX512,CORE-AVX2  
+FFLAGS = -fpp -qopenmp -dynamic -axMIC-AVX512,CORE-AVX2
 else
 ifeq ($(STATIC),YES)
 #so you can re-distribute the binary to another machine
@@ -327,7 +327,7 @@ camb:
 	cd ../camb && \
 	$(MAKE) --file=Makefile_main libcamb OUTPUT_DIR=$(OUTPUT_DIR) \
 	RECOMBINATION=$(RECOMBINATION) EQUATIONS=equations NONLINEAR=halofit_ppf
-	
+
 isitgr: cosmomc dndz
 
 dndz:

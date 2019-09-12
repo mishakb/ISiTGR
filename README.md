@@ -42,11 +42,21 @@ Binning Methods |  MG + Curvature  |  MG + dark energy + neutrinos
 
 ## Referencing ISiTGR
 
-We would ask that when using ISiTGR or a modified version of it, you cite: our papers (arXiv:1109.4583 and arXiv:1205.2422, one more to appear on arXiv); the original CAMB paper; the original CosmoMC paper; Additionally please cite the use of any other datasets already included in the original version of CosmoMC.
-
+We would ask that when using ISiTGR or a modified version of it, you please cite our papers: 
+* **ISiTGR: Testing deviations from GR at cosmological scales including dynamical dark energy, massive neutrinos, functional or binned parametrizations, and spatial curvature**: https://arxiv.org/abs/1908.00290  (current ISiTGR version)
+by: Cristhian Garcia-Quintero, Mustapha Ishak, Logan Fox and Jason Dossett.
+* **Spatial curvature and cosmological tests of general relativity**: https://arxiv.org/abs/1205.2422
+by: Jason Dossett and Mustapha Ishak 
+* **Testing General Relativity at Cosmological Scales: Implementation and Parameter Correlations**: https://arxiv.org/abs/1109.4583
+by: Jason Dossett, Mustapha Ishak and Jacob Moldenhauer
+ 
+as well as the original CAMB paper; the original CosmoMC paper; Additionally please cite the use of any other datasets already included in the original version of CosmoMC.
 ## Contact
 
 If you have comments, questions, or feedback, please feel free to contact to the contributors of this repository: mishak@utdallas.edu or gqcristhian@utdallas.edu.
+
+<details>
+  <summary>Information from previous ISiTGR versions</summary>
 
 -------------------------------------------------------------
 
@@ -175,3 +185,4 @@ These files are loosely based upon the files contained in the original COSMOS we
 Referencing ISiTGR
 We would ask that when using ISiTGR or a modified version of it, you cite: our papers (arXiv:1109.4583 and arXiv:1205.2422), this website; the original CAMB paper; the original CosmoMC paper; and the papers on original ISW-galaxy cross correlation likelihood by Ho et al and Hirata et al. When using any of the CFHTLenS weak lensing data sets, please cite our paper, the corresponding CFHTLens dataset paper (Heymans et al. or Kilbinger et al.), and follow the CFHTLenS publication guidlines given here.  Additionally please cite the use of any other datasets already included in the original version of CosmoMC.
 
+</details> 

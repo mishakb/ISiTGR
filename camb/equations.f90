@@ -26,8 +26,10 @@
     !comoving sound speed. Always exactly 1 for quintessence
     !(otherwise assumed constant, though this is almost certainly unrealistic)
 
-!    real(dl), parameter :: wa_ppf = 0._dl !Not used here, just for compatibility with e.g. halofit
-    real(dl):: wa_ppf = 0._dl
+	!>ISiTGR MOD START
+    !real(dl), parameter :: wa_ppf = 0._dl !Not used here, just for compatibility with e.g. halofit
+	real(dl):: wa_ppf = 0._dl
+	!<ISiTGR MOD END
 
     logical :: w_perturb = .true.
     !If you are tempted to set this = .false. read
@@ -640,48 +642,6 @@
 	
     end function OmegaDEdot
 	
-!	function rhoDE(a) !rhov_t * a**2
-!	use ModelParams
-!	use constants
-!    real(dl), intent(in) :: a
-!    real(dl) rhoDE
-!	
-!	if ( TGR%DE_eqstate == 0 ) then
-!		rhoDE = 3.d0*((CP%H0*1000.d0/c)**2)*CP%omegav*a**2.d0
-!
-!	else if ( TGR%DE_eqstate == 1 ) then
-!		rhoDE = 3.d0*((CP%H0*1000.d0/c)**2)*CP%omegav*a**(-1.d0-3.d0*TGR%w0)
-!
-!	else if ( TGR%DE_eqstate == 2 ) then
-!		rhoDE = 3.d0*((CP%H0*1000.d0/c)**2)*CP%omegav*a**(-1.d0-3.d0*(TGR%w0+TGR%wa))*exp(3.d0*TGR%wa*(a-1.d0))
-!
-!	else if ( TGR%DE_eqstate == 3 ) then
-!		rhoDE = 3.d0*((CP%H0*1000.d0/c)**2)*CP%omegav*a**(-1.d0-3.d0*(TGR%wp+TGR%a_p*TGR%wa))*exp(3.d0*TGR%wa*(a-1.d0))
-!
-!	end if	
-!	
-!	end function rhoDE
-!	
-!	function presDE(a,DErho) 
-!    real(dl), intent(in) :: a,DErho
-!    real(dl) :: presDE
-!	
-!	if ( TGR%DE_eqstate == 0 ) then
-!		presDE = -DErho
-!
-!	else if ( TGR%DE_eqstate == 1 ) then
-!		presDE = TGR%w0*DErho
-!
-!	else if ( TGR%DE_eqstate == 2 ) then
-!		presDE = (TGR%w0+(1.d0-a)*TGR%wa)*DErho
-!		
-!	else if ( TGR%DE_eqstate == 3 ) then
-!		presDE = (TGR%wp+(TGR%a_p-a)*TGR%wa)*DErho
-!
-!	end if	
-!	
-!	end function presDE
-
 	! CGQ End of patch for Dark Energy
 
     end module ISiTGR
@@ -985,11 +945,11 @@
             end if
         end do
     end if
-    !>ISiTGR MOD START
+
     if (DoLateRadTruncation) then
         if (.not. EV%no_nu_multpoles) & !!.and. .not. EV%has_nu_relativistic .and. tau_switch_nu_massless ==noSwitch)  &
             tau_switch_no_nu_multpoles=max(15/EV%k_buf*AccuracyBoost,min(taurend,matter_verydom_tau))
-    !>ISiTGR MOD END
+
         if (.not. EV%no_phot_multpoles .and. (.not.CP%WantCls .or. EV%k_buf>0.03*AccuracyBoost)) &
             tau_switch_no_phot_multpoles =max(15/EV%k_buf,taurend)*AccuracyBoost
     end if
@@ -1234,7 +1194,7 @@
     end if
 	!<ISiTGR MOD END
 
-	!Massive neutrinos
+    !Massive neutrinos
     if (CP%Num_Nu_massive /= 0) then
         EV%has_nu_relativistic = any(EV%nq(1:CP%Nu_Mass_eigenstates)/=nqmax)
         if (EV%has_nu_relativistic) then
@@ -1617,18 +1577,17 @@
     y=yout
 
     end subroutine SwitchToMassiveNuApprox
-	
+
 	!>ISiTGR MOD START: Modifying subroutine to compute extra term
 subroutine MassiveNuVarsOut(EV,y,yprime,a,grho,gpres,dgrho,dgq,dgpi,dgpi_diff,pidot_sum,clxnu_all,dgpi_3wplus1,dgpi_3wplus2, &
 dgpi_3wplus1plusbetak) !CGQ
 	!<ISiTGR MOD END
-    implicit none
+	implicit none
     type(EvolutionVars) EV
     real(dl) :: y(EV%nvar), yprime(EV%nvar),a
     real(dl), optional :: grho,gpres,dgrho,dgq,dgpi, dgpi_diff,pidot_sum,clxnu_all
 	!>ISiTGR MOD START: adding new terms that contributes to MG
 	real(dl), optional :: dgpi_3wplus1, dgpi_3wplus2, dgpi_3wplus1plusbetak!CGQ
-	!<ISiTGR MOD END
     !grho = a^2 kappa rho
     !gpres = a^2 kappa p
     !dgrho = a^2 kappa \delta\rho
@@ -1639,6 +1598,7 @@ dgpi_3wplus1plusbetak) !CGQ
 	!dgpi_3wplus1 = a^2 kappa (3w+1)*rho*pi !CGQ
 	!dgpi_3wplus2 = a^2 kappa (3w+2)*rho*pi !CGQ
 	!dgpi_3wplus1plusbetak = a^2 kappa (3w+1+betak)*rho*pi !CGQ
+	!<ISiTGR MOD END
 
     integer nu_i
     real(dl) pinudot,grhormass_t, rhonu, pnu,  rhonudot
@@ -1692,7 +1652,7 @@ dgpi_3wplus1plusbetak) !CGQ
         if (present(dgpi_3wplus1plusbetak)) dgpi_3wplus1plusbetak = dgpi_3wplus1plusbetak + grhonu_t*pinu * &
 			(3.d0*(pnu/rhonu) + 1.d0 + 1.d0/EV%Kf(1)) 
 		!<ISiTGR MOD END
-	end do
+    end do
     if (present(grho)) grho = grho  + grhonu
     if (present(dgrho)) dgrho= dgrho + dgrhonu
     if (present(clxnu_all)) clxnu_all = dgrhonu/grhonu
@@ -2486,17 +2446,19 @@ end subroutine MassiveNuVarsOut
 	real(dl) betak, gpresv_t !CGQ for spatial curvature and Dark Energy parametrizations
     !CGQ -----------------------------------------------
     !<ISiTGR MOD END
-	
-	k=EV%k_buf
+
+    k=EV%k_buf
     k2=EV%k2_buf
-   
+
+	!>ISiTGR MOD START: computing coefficient beta_k for spatial curvature
    	betak = 1.d0/EV%Kf(1) !betak=1 for flat universe
-   
-	a=ay(1)
+	!<ISiTGR MOD END
+
+    a=ay(1)
     a2=a*a
-	
+
     etak=ay(2)
-	
+
     !  CDM variables
     clxc=ay(3)
 
@@ -2559,16 +2521,16 @@ end subroutine MassiveNuVarsOut
     grho_matter=grhonu_t+grhob_t+grhoc_t
     grho = grho_matter+grhor_t+grhog_t+grhov_t
 
-	if (CP%flat) then
+    if (CP%flat) then
         adotoa=sqrt(grho/3)
         cothxor=1._dl/tau
     else
         adotoa=sqrt((grho+grhok)/3._dl)
         cothxor=1._dl/tanfunc(tau/CP%r)/CP%r
-    end if	
-	
-    dgrho = dgrho_matter
+    end if
 
+    dgrho = dgrho_matter
+	!>ISiTGR MOD START
 	if (TGR%GR==0) then
 	    if (w_lam /= -1 .and. w_Perturb) then
 	        clxde=ay(EV%w_ix)
@@ -2577,7 +2539,9 @@ end subroutine MassiveNuVarsOut
 	        dgq = dgq + qde*grhov_t
 	    end if
 	end if
-		!>ISiTGR MOD START 
+	!<ISiTGR MOD END
+	
+	!>ISiTGR MOD START 
     if (EV%no_nu_multpoles) then
 		if (TGR%GR==0) then !CGQ to work with default GR or with MG models
         !RSA approximation of arXiv:1104.2933, dropping opactity terms in the velocity
@@ -2636,7 +2600,7 @@ end subroutine MassiveNuVarsOut
     pb43=4._dl/3*photbar
 
     ayprime(1)=adotoa*a
-	
+
 	!>ISiTGR MOD START-----------------------------------------------------------------
     !all this module was written by CGQ, adding mueta and muSigma parameterizations.
     !Also, CGQ modified Q,D parameterization originally written by JD in order to work with massive neutrinos.
@@ -2937,7 +2901,8 @@ end subroutine MassiveNuVarsOut
      
 	end if	!here it ends for MG patch
 	!<ISiTGR MOD END -----------------------------------------------------------------------
-
+	
+	!>ISiTGR MOD START
 	if (TGR%GR==0) then
 	    if (w_lam /= -1 .and. w_Perturb) then
 	        ayprime(EV%w_ix)= -3*adotoa*(cs2_lam-w_lam)*(clxde+3*adotoa*qde/k) &
@@ -2946,7 +2911,8 @@ end subroutine MassiveNuVarsOut
 	        ayprime(EV%w_ix+1) = (-adotoa*(1-3*cs2_lam)*qde + k*cs2_lam*clxde)/(1+w_lam)
 	    end if
 	end if
-	
+	!<ISiTGR MOD END
+
     !  CDM equation of motion
     clxcdot=-k*z
     ayprime(3)=clxcdot
@@ -2971,8 +2937,10 @@ end subroutine MassiveNuVarsOut
 			gpres=gpres_nu + (grhog_t+grhor_t)/3 + gpresv_t
 		end if
 		!<ISiTGR MOD END
-			adotdota=(adotoa*adotoa-gpres)/2
-			pig = 32._dl/45/opacity*k*(sigma+vb)
+		
+		adotdota=(adotoa*adotoa-gpres)/2
+        pig = 32._dl/45/opacity*k*(sigma+vb)
+
         !  First-order approximation to baryon-photon splip
         slip = - (2*adotoa/(1+pb43) + dopacity/opacity)* (vb-3._dl/4*qg) &
             +(-adotdota*vb-k/2*adotoa*clxg +k*(cs2*clxbdot-clxgdot/4))/(opacity*(1+pb43))
@@ -2980,6 +2948,7 @@ end subroutine MassiveNuVarsOut
         if (second_order_tightcoupling) then
             ! by Francis-Yan Cyr-Racine simplified (inconsistently) by AL assuming flat
             !AL: First order slip seems to be fine here to 2e-4
+			!>ISiTGR MOD START
 			if (TGR%GR==0) then
             !  8*pi*G*a*a*SUM[rho_i*sigma_i]
             	dgs = grhog_t*pig+grhor_t*pir
@@ -2989,6 +2958,7 @@ end subroutine MassiveNuVarsOut
 			else
 				sigmadot = k*TGR_Psi - adotoa*sigma
 			end if
+			!<ISiTGR MOD END
             !Once know slip, recompute qgdot, pig, pigdot
             qgdot = k*(clxg/4._dl-pig/2._dl) +opacity*slip
 
@@ -3011,6 +2981,7 @@ end subroutine MassiveNuVarsOut
 
         vbdot=vbdot+pb43/(1+pb43)*slip
         EV%pig = pig
+
     else
         vbdot=-adotoa*vb+cs2*k*clxb-photbar*opacity*(4._dl/3*vb-qg)
     end if
@@ -3185,7 +3156,7 @@ end subroutine MassiveNuVarsOut
             pigdot=0
             octg=0
             octgdot=0
-           	qgdot = -4*dz/3
+            qgdot = -4*dz/3
         else
             if (EV%TightCoupling) then
                 if (second_order_tightcoupling) then
@@ -3216,15 +3187,12 @@ end subroutine MassiveNuVarsOut
                 dgpi_diff=dgpi_diff, pidot_sum=pidot_sum)
         end if
         diff_rhopi = pidot_sum - (4*dgpi+ dgpi_diff)*adotoa
-		
 		!>ISiTGR MOD START
 		if (TGR%GR==0) then
 			gpres=gpres_nu+ (grhog_t+grhor_t)/3 +grhov_t*w_lam
 		else
 			gpres=gpres_nu+ (grhog_t+grhor_t)/3 + gpresv_t
 		end	if
-		
-		!<ISiTGR MOD END
         !CGQ ---------------------------
 		if (TGR%GR==0) then
         phi = -((dgrho +3*dgq*adotoa/k)/EV%Kf(1) + dgpi)/(2*k2)
@@ -3232,8 +3200,9 @@ end subroutine MassiveNuVarsOut
 		phi = (TGR_Psi+TGR_Phi)/2._dl
         end if
         !CGQ ---------------------------
-		
-		if (associated(EV%OutputTransfer)) then
+		!<ISiTGR MOD END
+
+        if (associated(EV%OutputTransfer)) then
             EV%OutputTransfer(Transfer_kh) = k/(CP%h0/100._dl)
             EV%OutputTransfer(Transfer_cdm) = clxc
             EV%OutputTransfer(Transfer_b) = clxb
@@ -3251,7 +3220,7 @@ end subroutine MassiveNuVarsOut
 	        	EV%OutputTransfer(Transfer_Weyl) = k2*(TGR_Phi+TGR_Psi)/2.d0 !CGQ
 			end if
 			!<ISiTGR MOD END
-            EV%OutputTransfer(Transfer_Newt_vel_cdm)=  -k*sigma/adotoa
+			EV%OutputTransfer(Transfer_Newt_vel_cdm)=  -k*sigma/adotoa
             EV%OutputTransfer(Transfer_Newt_vel_baryon) = -k*(vb + sigma)/adotoa
             EV%OutputTransfer(Transfer_vel_baryon_cdm) = vb
 			!>ISiTGR MOD START: Different outputs for ISW and WL likelihood for MG
@@ -3271,14 +3240,14 @@ end subroutine MassiveNuVarsOut
         	EV%OutputTransfer(Transfer_vtot) = c/1000*(sigma + grhob_t*vb/(grhob_t+grhoc_t))
 		end if
 			!<ISiTGR MOD END
-           		
-        if (associated(EV%OutputSources)) then
+			
+		if (associated(EV%OutputSources)) then
 
             call IonizationFunctionsAtTime(tau, opacity, dopacity, ddopacity, &
                 visibility, dvisibility, ddvisibility, exptau, lenswindow)
 
             tau0 = CP%tau0
-            
+			
         !>ISiTGR MOD START: CGQ to work with GR and MG ------------------------------------------
         if (TGR%GR==0) then
         
@@ -3358,7 +3327,6 @@ end subroutine MassiveNuVarsOut
                 !Can modify this here if you want to get power spectra for other tracer
                 if (tau>tau_maxvis .and. tau0-tau > 0.1_dl) then
 					if (TGR%GR==0) then !CGQ
-       					phi = -((dgrho +3*dgq*adotoa/k)/EV%Kf(1) + dgpi)/(2*k2)
                     	EV%OutputSources(3) = -2*phi*f_K(tau-tau_maxvis)/(f_K(tau0-tau_maxvis)*f_K(tau0-tau))
 					else 
 						EV%OutputSources(3) = -(TGR_Phi+TGR_Psi)*f_K(tau-tau_maxvis)/(f_K(tau0-tau_maxvis)*f_K(tau0-tau)) !CGQ
@@ -3366,9 +3334,8 @@ end subroutine MassiveNuVarsOut
                 else
                     EV%OutputSources(3) = 0
                 end if
-
+            end if
             !<ISiTGR MOD END
-			end if
             if (associated(EV%CustomSources)) then
                 call custom_sources_func(EV%CustomSources, tau, a, adotoa, grho, gpres,w_lam, cs2_lam, &
                     grhob_t,grhor_t,grhoc_t,grhog_t,grhov_t,grhonu_t, &

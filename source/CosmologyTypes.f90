@@ -138,7 +138,7 @@
         real(mcp) YHe, nnu, iso_cdm_correlated, ALens, Alensf, fdm !fdm is dark matter annihilation, eg,. 0910.3663
         real(mcp) :: omnuh2_sterile = 0._mcp  !note omnhu2 is the sum of this + standard neutrinos
         real(mcp) :: sum_mnu_standard
-		real(mcp) reserved(5)
+        real(mcp) reserved(5)
 		!>ISiTGR MOD START: Adding variables
 		!JD Begin ISiTGR Parameters
         real(mcp) TGR_Q0, TGR_R0, TGR_Qinf, TGR_Rinf, TGR_D0, TGR_Dinf

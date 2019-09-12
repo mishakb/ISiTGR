@@ -250,7 +250,7 @@
       			call GlobalError()
 				!call MpiStop('You need to normalize the high-L template so it is dimensionless')
                 !<ISiTGR MOD END
-				end if
+                end if
             end do
         end if
         if (ALens_Fiducial > 0) then

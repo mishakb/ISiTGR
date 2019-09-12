@@ -35,7 +35,7 @@
         type(TCosmoTheoryPK), allocatable :: NL_MPK
         type(TCosmoTheoryPK), allocatable :: MPK_WEYL
         type(TCosmoTheoryPK), allocatable :: NL_MPK_WEYL
-		type(TCosmoTheoryPK), allocatable :: MPK_WEYL_CROSS
+        type(TCosmoTheoryPK), allocatable :: MPK_WEYL_CROSS
         type(TCosmoTheoryPK), allocatable :: NL_MPK_WEYL_CROSS
         type(TCubicSpline),  allocatable :: growth_z !defined as sigma8_vd^2/sigma8
         type(TCubicSpline),  allocatable :: sigma8_z
@@ -302,8 +302,6 @@
         write(F%unit) this%MPK%y
         write(F%unit) this%MPK%z
         if(CosmoSettings%use_nonlinear) write(F%unit) this%NL_MPK%z
-!        if(CosmoSettings%use_WeylPower) write(F%unit) this%MPK_WEYL%z
-!        if(CosmoSettings%use_nonlinear.and. CosmoSettings%use_WeylPower) write(F%unit) this%NL_MPK_WEYL%z
         if(CosmoSettings%use_WeylPower) then
             write(F%unit) this%MPK_WEYL%z
             write(F%unit) this%MPK_WEYL_CROSS%z
@@ -424,18 +422,18 @@
         end if
         if(FileSettings%use_WeylPower) then
             allocate(this%MPK_WEYL)
-			allocate(this%MPK_WEYL_CROSS)
+            allocate(this%MPK_WEYL_CROSS)
             read(F%unit)temp
             call this%MPK_WEYL%InitExtrap(k,z,temp,CosmoSettings%extrap_kmax)
-			read(F%unit)temp
+            read(F%unit)temp
             call this%MPK_WEYL_CROSS%InitExtrap(k,z,temp,CosmoSettings%extrap_kmax)
         end if
         if(FileSettings%use_nonlinear.and. FileSettings%use_WeylPower) then
             allocate(this%NL_MPK_WEYL)
-			allocate(this%NL_MPK_WEYL_CROSS)
+            allocate(this%NL_MPK_WEYL_CROSS)
             read(F%unit)temp
             call this%NL_MPK_WEYL%InitExtrap(k,z,temp,CosmoSettings%extrap_kmax)
-			read(F%unit)temp
+            read(F%unit)temp
             call this%NL_MPK_WEYL_CROSS%InitExtrap(k,z,temp,CosmoSettings%extrap_kmax)
         end if
 

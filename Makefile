@@ -7,9 +7,9 @@ cleanRelease: clean delete
 
 rebuild: clean delete isitgr
 
-cosmomc: BUILD ?= MPI
-cosmomc_debug: BUILD ?= MPI
-isitgr: BUILD ?= MPI
+cosmomc: BUILD ?= gcc
+cosmomc_debug: BUILD ?= gcc
+isitgr: BUILD ?= gcc
 
 getdist: ./source/*.*90
 	cd ./source && make getdist BUILD=$(BUILD)

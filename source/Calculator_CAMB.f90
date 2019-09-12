@@ -57,7 +57,7 @@
     procedure :: f_k => CAMBCalc_f_k   !JD added for ISiTGR weak lensing
 	!<ISiTGR MOD END
     procedure :: BAO_D_v => CAMBCalc_BAO_D_v
-	procedure :: AngularDiameterDistance => CAMBCalc_AngularDiameterDistance
+    procedure :: AngularDiameterDistance => CAMBCalc_AngularDiameterDistance
     procedure :: ComovingRadialDistance => CAMBCalc_ComovingRadialDistance
     procedure :: ComovingRadialDistanceArr => CAMBCalc_ComovingRadialDistanceArr
     procedure :: AngularDiameterDistance2 => CAMBCalc_AngularDiameterDistance2
@@ -95,7 +95,7 @@
     type(CAMBParams)  P
     real(dl) neff_massive_standard, mnu, m1, m3, normal_frac
     real(dl), external :: Newton_raphson
-!>ISiTGR MOD START
+	!>ISiTGR MOD START
     P = this%CAMBP
     P%omegab = CMB%omb
     P%omegan = CMB%omnu
@@ -105,7 +105,7 @@
     P%Reion%redshift= CMB%zre
     P%Reion%delta_redshift = CMB%zre_delta
     w_lam = CMB%w
-
+    !wa_ppf = CMB%wa
 	!ISiTGR parameters
     !Functional form evolution parameters
 	if(CosmoSettings%ISiTGR_Rfunc)then
@@ -543,7 +543,7 @@
     real(mcp), allocatable :: delta(:,:), rtemp(:), dzdr(:)
     real(mcp) CFHTFac
 	!<ISiTGR MOD END
-
+	
     !Free theory arrays as they may resize between samples
     call Theory%FreePK()
 
@@ -569,19 +569,19 @@
         allocate(k(nk))
 
         k = log(M%TransferData(Transfer_kh,:,1))
-		
+
         call Transfer_GetUnsplinedPower(M, PK,transfer_power_var,transfer_power_var)
         PK = Log(PK)
         if (any(ieee_is_nan(PK))) then
             error = 1
-        	return
-		end if
+            return
+        end if
         allocate(Theory%MPK)
         call Theory%MPK%InitExtrap(k,z,PK, CosmoSettings%extrap_kmax)
     end if
 
     if (CosmoSettings%use_Weylpower) then
-		! Weyl potential:
+        ! Weyl potential:
         call Transfer_GetUnsplinedPower(M, PK,transfer_Weyl,transfer_Weyl,hubble_units=.false.)
         PK = Log(PK)
         if (any(ieee_is_nan(PK))) then
@@ -593,11 +593,11 @@
         end if
         allocate(Theory%MPK_WEYL)
         call Theory%MPK_WEYL%InitExtrap(k,z,PK,CosmoSettings%extrap_kmax)
-		! Weyl density cross correlation:
+        ! Weyl density cross correlation:
         call Transfer_GetUnsplinedPower(M, PK,transfer_Weyl,transfer_power_var,hubble_units=.false.)
         allocate(Theory%MPK_WEYL_CROSS)
         Theory%MPK_WEYL_CROSS%islog = .False.
-		call Theory%MPK_WEYL_CROSS%InitExtrap(k,z,PK,CosmoSettings%extrap_kmax)
+        call Theory%MPK_WEYL_CROSS%InitExtrap(k,z,PK,CosmoSettings%extrap_kmax)
     end if
 
     if (CosmoSettings%use_SigmaR) then
@@ -618,7 +618,7 @@
         call this%GetNLandRatios(M,Theory,NL_Ratios,error)
         if(error/=0) return
     end if
-	
+
 	!>ISiTGR MOD START
 	
     if(CosmoSettings%use_WeakLensing .or. CosmoSettings%use_ISW) then
@@ -716,7 +716,7 @@
 	!<ISiTGR MOD END
 
     end subroutine CAMBCalc_SetPkFromCAMB
-	
+
 	!>ISiTGR MOD START
 	!JD need this function for ISiTGR lensing module for IA calibration
     subroutine CAMBCalc_GetTransfer(this,M,PK,t1)
@@ -740,7 +740,7 @@
 
     end subroutine CAMBCalc_GetTransfer
 	!<ISiTGR MOD END
-
+	
 
     subroutine CAMBCalc_GetNLandRatios(this,M,Theory,Ratios,error)
     use Transfer
@@ -791,14 +791,14 @@
         PK = Theory%MPK_WEYL%z + 2*log(Ratios)
         call Theory%NL_MPK_WEYL%InitExtrap(Theory%MPK%x,Theory%MPK%y,PK,CosmoSettings%extrap_kmax)
     end if
-	
+
     if (allocated(Theory%MPK_WEYL_CROSS)) then
         !Assume Weyl scales the same way under non-linear correction
         allocate(Theory%NL_MPK_WEYL_CROSS)
         PK = Theory%MPK_WEYL_CROSS%z*Ratios**2
         Theory%NL_MPK_WEYL_CROSS%islog = .False.
         call Theory%NL_MPK_WEYL_CROSS%InitExtrap(Theory%MPK%x,Theory%MPK%y,PK,CosmoSettings%extrap_kmax)
-	end if
+    end if
 
     end subroutine CAMBCalc_GetNLandRatios
 
