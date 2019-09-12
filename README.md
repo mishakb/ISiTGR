@@ -1,6 +1,6 @@
 [![N|Solid](https://www.utdallas.edu/~jdossett/images/banner_bkgd_isitgr3.jpg)](https://www.utdallas.edu/~jdossett/images/banner_bkgd_isitgr3.jpg)
 
-# ISiTGR Version 3.00 released in July 2019
+# ISiTGR Version 3.01 released in September 2019
 We introduce a new version of **I**ntegrated **S**oftware **i**n **T**esting **G**eneral **R**elativity (ISiTGR) which is a patch to the software CAMB and CosmoMC. ISiTGR is intended to test deviations from GR at cosmological scales using available cosmological data sets. While doing so, it allows for various extensions to the standard flat LCDM model. In this new release, we have a combined support for the following:  
 
 * Dynamical dark energy parametrizations with a constant or time-dependent equation of state; 
@@ -16,7 +16,7 @@ We introduce a new version of **I**ntegrated **S**oftware **i**n **T**esting **G
 The description of the formalism and its implementation in the CMB code, the Integrated Sachs-Wolfe (ISW) effect, and the 3x2 point statistics as well as examples of application to current data sets, can be found in the latest paper on the arXiv. A more technical description of the implementation can be found in the documentation provided in this repository. 
 
 ## Installation
-The corresponding versio of ISiTGR was built based on the CosmoMC July 2018 version. To install the GitHub version of ISiTGR you can run the following steps in your terminal :
+The corresponding version of ISiTGR was built based on the CosmoMC July 2018 version. To install the GitHub version of ISiTGR you can run the following steps in your terminal :
 
 ```sh
 $ git clone https://github.com/mishakb/ISiTGR
@@ -26,8 +26,6 @@ $ make
 $ make isitgr
 ```
 if there are no errors during compilation, then you should be ready to use ISiTGR.
-
-We are currently testing results using CosmoMC July 2019 and the Planck 2018 likelyhood. These will be added to ISiTGR by August 12th. 
 
 ## How to run ISiTGR
 The ISiTGR patch allows to run CAMB and CosmoMC for MG different models. Therefore, you can use the ISiTGR capabilities after compiling the code by modifying the corresponding .ini files. The next flowchart gives the different .ini files that you need to modify in case you want to use the functional form or the binning methods for either CAMB or CosmoMC (you can find further instructions inside each of this files). 
@@ -59,6 +57,9 @@ If you have comments, questions, or feedback, please feel free to contact to the
   <summary>Information from previous ISiTGR versions</summary>
 
 -------------------------------------------------------------
+# ISiTGR Version 3.00 released in July 2019
+ISiTGR version used in https://arxiv.org/abs/1908.00290 to reproduce Planck 2015 results. The ISiTGR version 3.01 includes minor updates to work with the Planck 2018 data.
+
 
 # ISiTGR Version 2.01 (previous version information below)
 
