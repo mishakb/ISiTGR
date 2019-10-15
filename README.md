@@ -21,7 +21,7 @@ The corresponding version of ISiTGR was built based on the CosmoMC July 2018 ver
 ```sh
 $ git clone https://github.com/mishakb/ISiTGR
 $ cd ISiTGR
-Select your compilers editing the Makefile files.
+Select your compilers by editing the Makefile files inside the principal folder, camb folder and source folder.
 $ make
 $ make isitgr
 ```
