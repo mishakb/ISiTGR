@@ -28,15 +28,23 @@ $ make isitgr
 if there are no errors during compilation, then you should be ready to use ISiTGR.
 
 ## How to run ISiTGR
-The ISiTGR patch allows to run CAMB and CosmoMC for MG different models. Therefore, you can use the ISiTGR capabilities after compiling the code by modifying the corresponding .ini files. The next flowchart gives the different .ini files that you need to modify in case you want to use the functional form or the binning methods for either CAMB or CosmoMC (you can find further instructions inside each of this files). 
-[![N|Solid](https://drive.google.com/uc?export=view&id=1azrtj6u-vhU8WO9APw8oikMqp0EPwDZ9)](https://drive.google.com/uc?export=view&id=1azrtj6u-vhU8WO9APw8oikMqp0EPwDZ9)
-It is important for the user to remember that the current version of ISiTGR is aimed to work with flat and non-flat models. Moreover, ISiTGR not only implements the contributions of massive neutrinos in a consistent way, but also works with different equations of state for dark energy. The above mentioned is implemented for both Functional Form and Binning methods. If the user wants to run the functional form of ISiTGR, the user needs to run `./cosmo test_ISiTGR.ini`. Otherwise, if the user wants to use the binning methods, then one should run `./cosmo test_ISiTGR_BIN`. 
+The ISiTGR patch allows to run CAMB and CosmoMC for MG different models. The next flowchart shows the different parameterizations and methods that ISiTGR is able to work with:
+![Parametrizations](https://drive.google.com/uc?export=view&id=1tgbA9weuGTCAc5qjdnCWkkCgvNu5JVCx)
+The user can take advantage of the ISiTGR capabilities after compiling the code by modifying the corresponding .ini files. The next flowchart shows the different .ini files that you need to modify in case you want to use the functional form or the binning methods for either CAMB or CosmoMC (you can find further instructions inside each of this files). 
+![Implementation](https://drive.google.com/uc?export=view&id=108szPz_VvQQI9anga74-jcSSUgwmavx1)
+It is important for the user to remember that the current version of ISiTGR is aimed to work with flat and non-flat models. Moreover, ISiTGR not only implements the contributions of massive neutrinos consistently, but also works with different equations of state for dark energy. The above mentioned is implemented for both functional form and binning methods. If the user wants to run the functional form of ISiTGR, the user needs to run `./cosmo test_ISiTGR.ini`. Otherwise, if the user wants to use the binning methods, then one should run `./cosmo test_ISiTGR_BIN`. 
 
-In the next table we show some plots to illustrate some features of ISiTGR:
+In the next table we show some plots to illustrate some features of the ISiTGR patch for CosmoMC:
 
 Binning Methods |  MG + Curvature  |  MG + dark energy + neutrinos 
 :-------------------------:|:------------------------:|:---------------------:
 ![](https://drive.google.com/uc?export=view&id=1deSsgLoSpMYaA6l5Z9-7PTggY1yDgz_O)  |  ![](https://drive.google.com/uc?export=view&id=10BKqA6dDem9rDB1-VnwR1Gcwi0Bu688Y)  |![](https://drive.google.com/uc?export=view&id=1vQxtX3uX73LyL0TgWchsy1uo2FmOkRBY)  |
+
+In the next table we show some plots to illustrate the different power spectrums that can be produced using the ISiTGR patch for CAMB:
+
+Angular power Spectrum for (μ, η) | Angular power Spectrum for (μ, η) allowing scale dependence
+:------------------------:|:---------------------:
+![](https://drive.google.com/uc?export=view&id=1lB5BRwO5uuTH9EvZvH_C1uUmdrkDdcXw)   |![](https://drive.google.com/uc?export=view&id=1RpZPqidQzZgYK7UWDzLmH_2MlvW0O9ZS)  |
 
 ## Referencing ISiTGR
 
