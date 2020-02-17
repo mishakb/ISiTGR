@@ -3,7 +3,7 @@
     !AL 2018, following exactly the same approximations as in the DES papers
     !(can only use Weyl potential for lensing)
     ! MR 2019 update to use Weyl potential for galaxy-lensing cross
-	!CGQ 2019 add small changes to compute the cls and correlation functions for non-flat cases
+	!CGQ 2019 add small changes to obtain the cls and correlation functions for non-flat cases
 
     module wl
 
@@ -531,6 +531,9 @@
     omm = CMB%omdm+CMB%omb
 
     allocate(chis(this%num_z_p), dchis(this%num_z_p))
+	!>ISiTGR MOD START
+	allocate(term1(this%num_z_p,this%num_z_p), term2(this%num_z_p))
+	!<ISiTGR MOD END
     call this%Calculator%ComovingRadialDistanceArr(this%z_p, chis, this%num_z_p)
     dchis(1) = (chis(2) + chis(1))/2
     dchis(this%num_z_p) = chis(this%num_z_p) - chis(this%num_z_p-1)
