@@ -2,7 +2,7 @@
 ISiTGR
 ===================
 :ISiTGR: Code for Anisotropies in the Microwave Background
-:Author: Cristhian Garcia Quintero and Mustapha Ishak
+:Author: Cristhian Garcia Quintero, Mustapha Ishak and Jason Dossett
 :Homepage: https://github.com/mishakb/ISiTGR
 
 Description
