@@ -1,13 +1,11 @@
 # coding: utf8
 """
 
-Python CAMB interface (https://camb.info)
+Python CAMB interface (https://github.com/mishakb/ISiTGR)
 
 """
-__author__ = "Antony Lewis"
-__contact__ = "antony at cosmologist dot info"
-__url__ = "https://camb.readthedocs.io"
-__version__ = "1.1.0"
+__url__ = "https://isitgr.readthedocs.io"
+__version__ = "1.0"
 
 from . import baseconfig
 
