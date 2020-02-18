@@ -268,15 +268,14 @@ class CleanLibrary(clean):
 if __name__ == "__main__":
     setup(name=os.getenv('CAMB_PACKAGE_NAME', 'isitgr'),
           version=find_version(),
-          description='Code for Anisotropies in the Microwave Background',
+          description='Integrated Software in Testing General Relativity (ISiTGR). Patch for the software CAMB',
           long_description=get_long_description(),
-          author='Antony Lewis',
-          url="https://camb.info/",
+          author='ISiTGR authors:Cristhian Garcia-Quintero, Mustapha Ishak. CAMB authors: Antony Lewis',
+          url="https://github.com/mishakb/ISiTGR",
           project_urls={
-              'Documentation': 'https://camb.readthedocs.org',
-              'Source': 'https://github.com/cmbant/camb',
-              'Tracker': 'https://github.com/cmbant/camb/issues',
-              'Reference': 'http://arxiv.org/abs/astro-ph/9911177',
+              'Documentation': 'https://isitgr.readthedocs.org',
+              'Source': 'https://github.com/mishakb/ISiTGR',
+              'Reference': 'https://arxiv.org/abs/1908.00290',
               'Licensing': 'https://github.com/cmbant/CAMB/blob/master/LICENCE.txt'
           },
           zip_safe=False,
@@ -305,7 +304,7 @@ if __name__ == "__main__":
               'Programming Language :: Python :: 3.7',
               'Programming Language :: Python :: 3.8'
           ],
-          keywords=['cosmology', 'CAMB', 'CMB'],
+          keywords=['cosmology', 'CAMB', 'CMB', 'ISiTGR', 'Modified', 'Gravity'],
           install_requires=['scipy>=1.0', 'six', 'sympy>=1.0'],
           python_requires='>=2.7,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*'
           )

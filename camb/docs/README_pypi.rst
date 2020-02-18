@@ -1,4 +1,34 @@
 ===================
+ISiTGR
+===================
+:ISiTGR: Code for Anisotropies in the Microwave Background
+:Author: Cristhian Garcia Quintero and Mustapha Ishak
+:Homepage: https://github.com/mishakb/ISiTGR
+
+        :target: https://pypi.python.org/pypi/isitgr/
+   :target: https://isitgr.readthedocs.org/en/latest
+
+Description
+============
+
+
+Integrated Software in Testing General Relativity (ISiTGR) 2019 version is a patch of CAMB software. 
+ISiTGR is intended to test deviations from GR at cosmological scales using cosmological datasets.
+The code is in Python, with numerical code implemented in fast modern Fortran.
+
+See the ISiTGR_reproducing_previous_results.ipynb python example notebook an example of ISiTGR features.
+
+To install the ISiTGR python package on your computer run::
+
+    pip install isitgr [--user]
+
+The --user is optional and only required if you don't have write permission to your main python installation.
+You will need the usual dependencies as needed for the CAMB software.
+
+The python wrapper provides a module called "isitgr" documented in <https://isitgr.readthedocs.io/en/latest/>`_.
+
+
+===================
 CAMB
 ===================
 :CAMB: Code for Anisotropies in the Microwave Background
@@ -12,21 +42,3 @@ CAMB
 
 Description
 ============
-
-
-CAMB is a cosmology code for calculating cosmological observables, including
-CMB, lensing, source count and 21cm angular power spectra, matter power spectra, transfer functions
-and background evolution. The code is in Python, with numerical code implemented in fast modern Fortran.
-
-See the `CAMB python example notebook <https://camb.readthedocs.org/en/latest/CAMBdemo.html>`_ for a
-quick introduction to how to use the CAMB Python package.
-
-To install the CAMB python package on your computer run::
-
-    pip install camb [--user]
-
-The --user is optional and only required if you don't have write permission to your main python installation.
-You will need gfortran 6 or higher installed to compile. Binary files for Windows are also provided, so these are used instead if no
-gfortran installation is found on Windows machines.
-
-The python wrapper provides a module called "camb" documented in the `Python CAMB documentation <https://camb.readthedocs.io/en/latest/>`_.
