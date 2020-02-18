@@ -3,7 +3,7 @@
     use constants, only: const_twopi
     implicit none
 
-    character(LEN=*), parameter :: version = '1.0.1'
+    character(LEN=*), parameter :: version = '1.0.2'
 	!actually version '1.1.0'just change to match python file 
     integer :: FeedbackLevel = 0 !if >0 print out useful information about the model
 

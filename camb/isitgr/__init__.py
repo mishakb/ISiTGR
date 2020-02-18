@@ -5,7 +5,7 @@ Python CAMB interface (https://github.com/mishakb/ISiTGR)
 
 """
 __url__ = "https://isitgr.readthedocs.io"
-__version__ = "1.0.1"
+__version__ = "1.0.2"
 
 from . import baseconfig
 
