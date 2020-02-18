@@ -59,9 +59,6 @@
 		
 		!>ISiTGR MOD START
 		!ISiTGR Parameters
-        logical :: use_WeakLensing = .false.
-        logical :: use_IA = .false.
-        logical :: use_ISW = .false.
         logical :: ISiTGR = .false.           !JD for ISiTGR 
         logical :: ISiTGR_scale_dep!= .false.  !JD for ISiTGR 
         logical :: ISiTGR_Rfunc != .false.     !JD for ISiTGR
@@ -73,8 +70,6 @@
 		logical :: ISiTGR_QDR !CGQ for Q-D parameterization
 		logical :: ISiTGR_BIN_mueta !CGQ for mu-eta binning method
 		logical :: ISiTGR_BIN_muSigma !CGQ for mu-Sigma binning method
-        logical :: use_Vtot
-        logical :: use_growth_kz
 		!<ISiTGR MOD END
 
         !Only used in params_CMB
@@ -153,8 +148,9 @@
 		real(mcp) TGR_mu1, TGR_mu2, TGR_mu3, TGR_mu4 !for binning method
 		real(mcp) TGR_eta1, TGR_eta2, TGR_eta3, TGR_eta4 !for binning method
 		real(mcp) TGR_Sigma1, TGR_Sigma2, TGR_Sigma3, TGR_Sigma4 !for binning method
+		integer :: TGR_GR
 		!CGQ for Dark Energy models
-		real(mcp) TGR_w0, TGR_wa, TGR_wp, TGR_a_p
+!		real(mcp) TGR_w0, TGR_wa, TGR_wp, TGR_a_p
 
 		!<ISiTGR MOD END
     end Type CMBParams
@@ -228,8 +224,10 @@
     if (this%neutrino_hierarchy == neutrino_hierarchy_degenerate) then
         call Ini%Read('num_massive_neutrinos',this%num_massive_neutrinos)
         if (this%num_massive_neutrinos <1) call MpiStop('num_massive_neutrinos must be set set')
-    else if (Ini%Read_Int('num_massive_neutrinos',0)>0) then
-        write(*,*) 'NOTE: num_massive_neutrinos ignored, using specified hierarchy'
+    elseif (Ini%HasKey('num_massive_neutrinos')) then
+        if (Ini%Read_Int('num_massive_neutrinos',0)>0) then
+            write(*,*) 'NOTE: num_massive_neutrinos ignored, using specified hierarchy'
+        end if
     end if
     call Ini%Read('lmax_computed_cl',this%lmax_computed_cl)
     call Ini%Read('lmin_computed_cl',this%lmin_computed_cl)

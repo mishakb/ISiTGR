@@ -98,27 +98,13 @@
     generic :: Item => Value, RealArrItem
     end Type TRealArrayList
 
-	!>ISiTGR MOD START
-	Type, extends(TOwnedIntrinsicList):: TIntegerCompareList
-    contains
-    procedure :: Compare => CompareInteger
-    end Type TIntegerCompareList
-
-    Type, extends(TIntegerCompareList):: TIntegerList
-    contains
-    procedure :: TIntegerList_Item
-    procedure :: AddArrayItems => TIntegerList_AddArrayItems
-    procedure :: AsArray =>TIntegerList_AsArray
-    generic :: Item => TIntegerList_Item
-    !could add read and save state here
-    end Type TIntegerList
-
-    Type, extends(TIntegerCompareList):: TIntegerArrayList
+    Type, extends(TObjectList):: TIntegerArrayList
     contains
     procedure :: Value => TIntegerArrayList_Value
     procedure :: IntegerArrItem => TIntegerArrayList_Item
     generic :: Item => Value, IntegerArrItem
     end Type TIntegerArrayList
+
 
     Type, extends(TOwnedIntrinsicList) :: TStringList
     contains
@@ -136,8 +122,7 @@
     end Type TStringList
 
 
-    public list_prec, TSaveLoadStateObject, TObjectList, TRealArrayList, TRealList, TIntegerList, TIntegerArrayList, TStringList
-	!<ISiTGR MOD END
+    public list_prec, TSaveLoadStateObject, TObjectList, TRealArrayList, TRealList, TIntegerArrayList, TStringList
     contains
 
     subroutine LoadState(this,F)
@@ -818,72 +803,7 @@
     end select
 
     end function TRealArrayList_Value
-	
-	!>ISiTGR MOD START
-    integer function CompareInteger(this, R1, R2) result(comp)
-    Class(TIntegerCompareList) :: this
-    class(*) R1,R2
-    integer R
 
-    select type (RR1 => R1)
-    type is (integer)
-        select type (RR2 => R2)
-        type is (integer)
-            R = RR1-RR2
-            if (R< 0) then
-                comp =-1
-            elseif (R>0) then
-                comp = 1
-            else
-                comp = 0
-            end if
-            return
-        end select
-        class default
-        call this%Error('TIntegerlList: Compare not defined for this type')
-    end select
-
-    end function CompareInteger
-    
-    !TIntegerList: List of integers
-    function TIntegerList_Item(this,i) result(R)
-    Class(TIntegerList) :: this
-    integer, intent(in) :: i
-    integer R
-
-    call this%CheckIndex(i)
-    select type (pt=>this%Items(i)%P)
-    type is (integer)
-        R = pt
-        class default
-        call this%Error('TIntegerList: object of wrong type')
-    end select
-
-    end function TIntegerList_Item
-
-    subroutine TIntegerList_AddArrayItems(this, A)
-    Class(TIntegerList) :: this
-    integer, intent(in) :: A(:)
-    integer i
-
-    do i=1, size(A)
-        call this%AddItem(A(i))
-    end do
-
-    end subroutine TIntegerList_AddArrayItems
-
-    function TIntegerList_AsArray(this) result(A)
-    Class(TIntegerList) :: this
-    integer:: A(this%Count)
-    integer i
-
-    do i=1, size(A)
-        A(i) = this%Item(i)
-    end do
-
-    end function TIntegerList_AsArray
-	!<ISiTGR MOD END
-	
     !TIntegerArrayList: List of arrays of reals
 
     function TIntegerArrayList_Item(this, i) result(P)

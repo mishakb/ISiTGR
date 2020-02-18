@@ -16,10 +16,6 @@
     use szcounts !Anna
     use wl
     use ElementAbundances
-	!>ISiTGR MOD START
-    use CFHTLens
-    use iswdata
-	!<ISiTGR MOD END
     class(TSettingIni), intent(in) :: Ini
 
     CosmoSettings%get_sigma8 = Ini%Read_Logical('get_sigma8',.false.)
@@ -41,18 +37,6 @@
     call SZLikelihood_Add(DataLikelihoods, Ini) !Anna
 
     call WLLikelihood_Add(DataLikelihoods, Ini)
-	
-	!>ISiTGR MOD START
-    
-    !JD ISiTGR Likelihoods
-    
-    call ISWLikelihood_Add(DataLikelihoods, Ini)
-
-    call CFHTLensLikelihood_Add(DataLikelihoods, Ini)
-
-    !call COSMOSLenLikelihood_Add(DataLikelihoods, Ini)
-	
-	!<ISiTGR MOD END
 
     end subroutine SetDataLikelihoods
 

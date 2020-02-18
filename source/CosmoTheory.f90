@@ -40,25 +40,6 @@
         type(TCubicSpline),  allocatable :: growth_z !defined as sigma8_vd^2/sigma8
         type(TCubicSpline),  allocatable :: sigma8_z
         type(TCubicSpline),  allocatable :: sigma_R
-		!>ISiTGR MOD START
-		!Arrays for ISiTGR modules
-        !Weak-lensing modules 
-        Type(TCubicSpline), allocatable :: R
-        !dz/dR (Hofz)
-        Type(TCubicSpline), allocatable :: dzdR
-        !P_{(\phi+\psi),(\phi+\psi)}}
-        type(TCosmoTheoryPK), allocatable :: P_GG
-        !P_{(\phi+\psi),I}
-        type(TCosmoTheoryPK), allocatable :: P_GI
-        !P_{I,I}
-        type(TCosmoTheoryPK), allocatable :: P_II
-        !ISW-Galaxy cross correlations
-        type(TCosmoTheoryPK), allocatable :: P_ISW
-        !Velocity PK for Andrew Johnson's 6dF code
-        type(TCosmoTheoryPK), allocatable :: P_VV
-        !Logarithmic growth rate f(k,z) from CAMB derivatives 
-        type(TCosmoTheoryPK), allocatable :: growth_k_z 
-        !<ISiTGR MOD END
     contains
     procedure :: FreePK
     procedure :: ClArray
@@ -161,16 +142,6 @@
     if(allocated(this%NL_MPK_WEYL)) deallocate(this%NL_MPK_WEYL)
     if(allocated(this%MPK_WEYL_CROSS)) deallocate(this%MPK_WEYL_CROSS)
     if(allocated(this%NL_MPK_WEYL_CROSS)) deallocate(this%NL_MPK_WEYL_CROSS)
-	!>ISiTGR MOD START
-    if(allocated(this%R)) deallocate(this%R)
-    if(allocated(this%dzdR)) deallocate(this%dzdR)
-    if(allocated(this%P_GG)) deallocate(this%P_GG)
-    if(allocated(this%P_GI)) deallocate(this%P_GI)
-    if(allocated(this%P_II)) deallocate(this%P_II)
-    if(allocated(this%P_ISW)) deallocate(this%P_ISW)
-    if(allocated(this%P_VV)) deallocate(this%P_VV)
-    if(allocated(this%growth_k_z)) deallocate(this%growth_k_z)
-	!<ISiTGR MOD END
 
     end subroutine FreePK
 
@@ -395,7 +366,7 @@
 
     if (FileSettings%use_matterpower) then
         if (CosmoSettings%use_matterpower) then
-            if (any(FileSettings%power_redshifts/=CosmoSettings%power_redshifts)) &
+            if (any(abs(FileSettings%power_redshifts-CosmoSettings%power_redshifts)>1e-6)) &
                 & call MpiStop('TCosmoTheoryPredictions_ReadTheory: power_redshifts differ - check')
             if (CosmoSettings%extrap_kmax /= FileSettings%extrap_kmax) &
                 call MpiStop('TCosmoTheoryPredictions_ReadTheory: extrap_kmax differ - check')

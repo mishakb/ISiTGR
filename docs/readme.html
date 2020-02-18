@@ -8,7 +8,7 @@
 <center>
 <h2>CosmoMC Readme </h2></center>
 
-<center><b>July 2018 (Planck2018)</b>. Check the <a href="http://cosmologist.info/cosmomc/">web
+<center><b>July 2019</b>. Check the <a href="http://cosmologist.info/cosmomc/">web
 page</a> for the latest version.<BR>
 </center>
 <P>
@@ -58,6 +58,11 @@ for an introduction and descriptions, and up-to-date <a href="http://arxiv.org/a
 <P>
 On a multi-processor machine you can start to get good results in a few of hours. On single processors
 you'll need to set aside rather longer. You can also run on a cluster.
+</P>
+<p>
+You may also want to consider the new <a href="https://cobaya.readthedocs.io/en/latest/">Cobaya</a> sampler,
+which is based on Python and also allows use of other samplers or cosmology codes.
+</p>
 
 <p>By default CosmoMC uses a simple Metropolis algorithm or an optimized fast-slow sampling method (which works for likelihood with many fast nuisance parameters like Planck).
 The program takes as inputs estimates of central values and posterior uncertainties of the various parameters. The proposal density can use information about parameter correlations from a supplied covariance matrix: use one if possible as it will significantly improve performance. Covariance matrices are supplied for common sets of default base parameters. If you compile and run with <A HREF="https://en.wikipedia.org/wiki/Message_Passing_Interface">MPI</A> (to run across nodes in a cluster), there is an option to dynamically
@@ -84,21 +89,28 @@ To run compile and run CosmoMC you will need a Fortran 2008 compiler. Various op
 <LI>A pre-configured virtual development environment, available from <A HREF="http://cosmologist.info/CosmoBox">CosmoBox</A>. <br>
 <i>This is good for consistent development and debugging, and ensures required libraries are also available. There are both desktop virtual machine (and Docker) images, and an Amazon AWS image that can be used for running clusters in the cloud.</i>
 </UL>
-If you just want to analyse chains and run plots, you only need python 2.7+ or 3.4+ (see <A HREF="#Analysing">plotting</A> below).
+If you just want to analyse chains and run plots, you only need python 2.7+ or 3.5+ (see <A HREF="#Analysing">plotting</A> below).
 <P>
 You then need to download and install the program:
 <ul>
-<li>Get the <a href="http://cosmologist.info/cosmomc/submit.html">download</a> (or clone from git)
-<li>Extract the files with
-<pre>
-tar xvf CosmoMC-xxx.tar.gz
-</pre>
-<li>Change to the cosmomc directory and run "make"
+<li>Register for the <a href="http://cosmologist.info/cosmomc/submit.html">download</a>, and install by cloning from git using
+<blockquote>
+git clone --recursive https://github.com/cmbant/CosmoMC.git
+</blockquote>
+<li>Change to the CosmoMC directory and run "make"
 <br>
 <i>To use Planck data you need to download and install the Planck likelihood code and data first. See the <A HREF="readme_planck.html">Planck readme</A>.
 The Makefiles used by "make" should detect ifort and gfortran, but if necessary edit the relevant top parts of the Makefile in the source directory depending on what system you are using.</i>
 <li>To output chains you might want to make a <b>chains</b> subdirectory, or (perhaps better) symlink to somewhere on your data disk.
 </ul>
+<p>
+Note that the latest version of CosmoMC is not the same as used for the Planck 2018 final analysis. See the github planck2018 branch for the exact CAMB and other settings used for that.
+</p>
+<p><i>
+Some people have reported problems using Intel MPI 2019, earlier versions should be OK.
+</i>
+</p>
+
 
 By default the build uses MPI. Using MPI simplifies running several chains and proposal optimization. MPI can be used with OpenMP for parallelization of each chain. Generally you want to use OpenMP to use all the shared-memory processors on each node of a cluster, and MPI to run multiple chains on different nodes (the program can also just be run on a single CPU).
 <p>
@@ -565,7 +577,7 @@ installed manually or obtained from the cosmomc git repository (access available
 -->
 <A NAME="Version"><h2  style ="color:darkred">Version History</h2></A>
 <UL>
-<LI><B>July 2019 - Planck2018</B><BR>
+<LI><B>July 2019</B><BR>
 <UL>
 <li>Added <a href="https://cosmologist.info/cosmomc/readme_planck.html">Planck 2018</a> likelihoods and associated files.</li>
 <li>Minor <a href="https://github.com/dscolnic/Pantheon/issues/2">updated Pantheon</a> (batch3/Pantheon18.ini)</li>
@@ -575,6 +587,8 @@ installed manually or obtained from the cosmomc git repository (access available
 <li>Updated to latest <a href="http://http://getdist.readthedocs.org">GetDist</a></li>
 <li>GetDist GUI supports Python 3 with PySide2</li>
 <li>Make Planck2018 branch for fixed version consistent with that used for release (uses CAMB July 2018)</li>
+<li>Updated to <A HREF="https://github.com/cmbant/CAMB/releases">CAMB version 1.0.7</A>. (note that this changes likelihood values slightly compared to Planck2018 branch; also HMcode
+    version changes for numerical stability and speed)</li>
 </UL>
 
 <LI><B>October 2018</B><BR>
@@ -627,6 +641,7 @@ installed manually or obtained from the cosmomc git repository (access available
 <UL>
 <LI>Added .derived_ranges files (in /paramnames folder) to specify hard priors on derived parameters. These are now propagated to output chain .ranges file along with H0 and z_rei priors (and hence limits do not need to be manually specified when running GetDist).
 <LI>Added <b>neutrino_hierarchy</b> (={normal, inverted, degenerate}), to support one or two distinct eigenstate approximation to oscillation constraints.
+<LI>python/runGridGetDist.py script now uses python getdist. Batch3-based grids no longer use getdist_common.ini, but default getdist settings (+ what's set in the grid setting file).
 <LI>Bicep BK14 data files and CMB_BK_Planck update (thanks Colin Bischoff)
 <LI>Support for BAO .dataset files with no measurement_type keyword (set in data file for each point instead)
 <LI>Updated getdist to 0.2.6 (fixing compatibility issue with latest matplotlib for 2D contours)

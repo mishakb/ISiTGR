@@ -1,4 +1,0 @@
-name = ISWHo
-
-realcl_file = data/ISWHo_Cl_k_0p05.dat
-invcov_file = data/ISWHo_invcov_k_0p05.dat

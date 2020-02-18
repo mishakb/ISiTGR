@@ -36,9 +36,10 @@
     class(TCosmologyConfig) :: this
     class(TSettingIni) :: Ini
     character(LEN=:), allocatable :: CalcName
-	!>ISiTGR MOD START
+	!> ISiTGR MOD START
     character(LEN=:), allocatable :: ptxt
-
+	!< ISiTGR MOD END
+	
     CalcName = Ini%Read_String_Default('cosmology_calculator', 'CAMB')
     if (calcName=='CAMB') then
         allocate(CAMB_Calculator::this%Calculator)
@@ -53,12 +54,13 @@
     end if
     call this%Calculator%InitWithParams(Ini,this)
 	
+	!> ISiTGR MOD START
 	if (Ini%HasKey('parameterization')) then
     	ptxt = Ini%ReadFileName('parameterization')
     	CosmoSettings%ISiTGR = trim(ptxt)=='ISiTGR'
     	CosmoSettings%ISiTGR_BIN = trim(ptxt)=='ISiTGR_BIN'
     end if
-	!<ISiTGR MOD END
+	!< ISiTGR MOD END
 
     call CosmoSettings%ReadParams(Ini)
 
@@ -73,9 +75,10 @@
     Type(ThetaParameterization), pointer :: CMBParameterization
     Type(BackgroundParameterization), pointer :: BackgroundParam
     Type(AstroParameterization), pointer :: AstParam
-	!>ISiTGR MOD START
+	!> ISiTGR MOD START
     Type(ISiTGRParameterization), pointer :: ISiTGRParam
     Type(ISiTGR_BINParameterization), pointer :: ISiTGR_BINParam
+	!< ISiTGR MOD END
 	
 	!CGQ comment: Here you set different parameterization types to be called by CosmoMC
     OK = .true.
@@ -91,6 +94,7 @@
         allocate(AstParam)
         this%Parameterization => AstParam
         call AstParam%InitWithSetNames(Ini,Names,this)
+	!> ISiTGR MOD START
 	else if (nametag=='ISiTGR') then
     	allocate(ISiTGRParam)
     	this%Parameterization => ISiTGRParam

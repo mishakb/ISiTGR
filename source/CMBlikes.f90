@@ -401,7 +401,8 @@
         Err = .false.
         do while (F%ReadNextContentLine(S,InLine))
             read(InLine,*, iostat=status) l, tmp_ar
-            if (status/=0) call MpiStop('ReadBinWindows: error reading line '//trim(filename))
+            if (status/=0) &
+                call MpiStop('ReadBinWindows: error reading line '//trim(S))
             if (l>=this%pcl_lmin .and. l <=this%pcl_lmax) then
                 binWindows%W(l,:,i) = tmp_ar
             else
@@ -1043,6 +1044,7 @@
                 !Code here is gfortran 8 regression workaround for
                 !   Cls(i,j)%CL(this%pcl_lmin:this%pcl_lmax) = &
                 !    Theory%Cls(Cls(i,j)%theory_i ,Cls(i,j)%theory_j)%CL(this%pcl_lmin:this%pcl_lmax)
+                !see https://gcc.gnu.org/bugzilla/show_bug.cgi?id=88685
 
                 ix1 = Cls(i,j)%theory_i
                 ix2 = Cls(i,j)%theory_j

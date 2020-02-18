@@ -10,10 +10,6 @@
     use DataLikelihoodList
     use RandUtils
     use bbn
-	!>ISiTGR MOD START
-    use iswdata
-	use ISiTGR
-	!<ISiTGR MOD END
     implicit none
 
     character(LEN=:), allocatable :: LogFileName,  numstr, fname, rootdir
@@ -78,19 +74,6 @@
             call CustomParams%Open(fname)
         end if
     end if
-	
-	!>ISiTGR MOD START
-	call Ini%Read( 'DarkEnergyModel', TGR%DE_eqstate )
-	if ( TGR%DE_eqstate == 0 ) then
-		write(*,*) 'DE model: w=-1'
-	else if ( TGR%DE_eqstate == 1 ) then
-		write(*,*) 'DE model: w=w0'
-	else if ( TGR%DE_eqstate == 2 ) then
-		write(*,*) 'DE model: w=w0+(1-a)wa'
-	else if ( TGR%DE_eqstate == 3 ) then
-		write(*,*) 'DE model: w=wp+(ap-a)wa'
-	end if
-	!<ISiTGR MOD END
 
     call Ini%Read('accuracy_level',AccuracyLevel)
     call Ini%Read('stop_on_error',stop_on_error)
@@ -100,11 +83,6 @@
     if(instance<=1) then
         write(*,*) 'file_root:'//baseroot
     end if
-	!>ISiTGR MOD START
-    if (instance /= 0) then
-      baserootISW = trim(baseroot)//'_'//IntToStr(Instance) !JD for ISiTGR ISW module
-    end if
-	!<ISiTGR MOD START
     if (Ini%HasKey('root_dir')) then
         !Begin JD modifications for output of filename in output file
         rootdir = Ini%ReadFileName('root_dir')
@@ -266,7 +244,7 @@
     end if
 
     if (estimate_propose_matrix .and. Setup%action == action_MCMC .or. Setup%action==action_Hessian) then
-        call MpiStop('hessian evaluation disabled for now')
+        call MpiStop('hessian evaluation disabled for now (it never worked very well anyway)')
         !        ! slb5aug04 with AL updates
         !        if (MpiRank==0) then
         !            EstParams = Params
