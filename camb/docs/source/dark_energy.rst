@@ -1,22 +1,22 @@
 Dark Energy models
 ==================================
 
-.. autoclass:: camb.dark_energy.DarkEnergyModel
+.. autoclass:: isitgr.dark_energy.DarkEnergyModel
    :members:
 
-.. autoclass:: camb.dark_energy.DarkEnergyEqnOfState
+.. autoclass:: isitgr.dark_energy.DarkEnergyEqnOfState
    :show-inheritance:
    :members:
 
-.. autoclass:: camb.dark_energy.DarkEnergyFluid
+.. autoclass:: isitgr.dark_energy.DarkEnergyFluid
    :show-inheritance:
    :members:
 
-.. autoclass:: camb.dark_energy.DarkEnergyPPF
+.. autoclass:: isitgr.dark_energy.DarkEnergyPPF
    :show-inheritance:
    :members:
 
-.. autoclass:: camb.dark_energy.AxionEffectiveFluid
+.. autoclass:: isitgr.dark_energy.AxionEffectiveFluid
    :show-inheritance:
    :members:
 

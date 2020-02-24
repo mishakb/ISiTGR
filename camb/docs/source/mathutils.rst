@@ -1,5 +1,5 @@
 Maths utils
 ==================================
 
-.. automodule:: camb.mathutils
+.. automodule:: isitgr.mathutils
    :members:

@@ -1,7 +1,7 @@
 Correlation functions
 ==================================
 
-.. automodule:: camb.correlations
+.. automodule:: isitgr.correlations
    :members:
 
 

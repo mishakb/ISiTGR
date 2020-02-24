@@ -1,13 +1,13 @@
 Source windows functions
 ==================================
 
-.. autoclass:: camb.sources.SourceWindow
+.. autoclass:: isitgr.sources.SourceWindow
    :members:
 
-.. autoclass:: camb.sources.GaussianSourceWindow
+.. autoclass:: isitgr.sources.GaussianSourceWindow
    :show-inheritance:
    :members:
 
-.. autoclass:: camb.sources.SplinedSourceWindow
+.. autoclass:: isitgr.sources.SplinedSourceWindow
    :show-inheritance:
    :members:

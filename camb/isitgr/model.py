@@ -236,52 +236,52 @@ class CAMBparams(F2003Class):
         ("SourceWindows", AllocatableObjectArray(SourceWindow)),
         ("CustomSources", CustomSources),
         #> ISiTGR MOD START: Adding MG parameters.
-        ("Q0", c_double, "Q0 parameter"),
-        ("Qinf", c_double, "Qinf parameter"),
-        ("DR0", c_double, "DR0 parameter"),
-        ("DRinf", c_double, "DRinf parameter"),
-        ("s", c_double, "s parameter"),
-        ("k_c", c_double, "k_c parameter"),
-        ("Q1", c_double, "Q1 parameter"),
-        ("Q2", c_double, "Q2 parameter"),
-        ("Q3", c_double, "Q3 parameter"),
-        ("Q4", c_double, "Q4 parameter"),
-        ("D1", c_double, "D1 parameter"),
-        ("D2", c_double, "D2 parameter"),
-        ("D3", c_double, "D3 parameter"),
-        ("D4", c_double, "D4 parameter"),
-        ("z_div", c_double, "z_div parameter"),
-        ("z_TGR", c_double, "z_TGR parameter"),
-        ("z_tw", c_double, "z_tw parameter"),
-        ("k_tw", c_double, "k_tw parameter"),
-        ("t_dep", c_bool, "t_dep parameter"),
-        ("R_func", c_bool, "R_func parameter"),
-        ("true_bin", c_bool, "true_bin parameter"),  
-        ("ISiTGR_BIN", c_bool, "ISiTGR_BIN parameter"),
-        ("E11", c_double, "E_11"),
-        ("E22", c_double, "E_22"),
-        ("mu0", c_double, "mu_0"),
-        ("Sigma0", c_double, "Sigma_0"),
-        ("c1", c_double, "c_1"),
-        ("c2", c_double, "c_2"),
-        ("Lambda", c_double, "lambda"),
-        ("mu1", c_double, "mu1 parameter"),
-        ("mu2", c_double, "mu2 parameter"),
-        ("mu3", c_double, "mu3 parameter"),
-        ("mu4", c_double, "mu4 parameter"),
-        ("eta1", c_double, "eta1 parameter"),
-        ("eta2", c_double, "eta2 parameter"),
-        ("eta3", c_double, "eta3 parameter"),
-        ("eta4", c_double, "eta4 parameter"),
-        ("Sigma1", c_double, "Sigma1 parameter"),
-        ("Sigma2", c_double, "Sigma2 parameter"),
-        ("Sigma3", c_double, "Sigma3 parameter"),
-        ("Sigma4", c_double, "Sigma4 parameter"),
-        ("ISiTGR_mueta", c_bool, "ISiTGR_mueta parameter"),
-        ("ISiTGR_muSigma", c_bool, "ISiTGR_muSigma parameter"),
-        ("ISiTGR_QDR", c_bool, "SiTGR_QDR parameter"),
-        ("ISiTGR_BIN_mueta", c_bool, "ISiTGR_BIN_mueta parameter"),
-        ("ISiTGR_BIN_muSigma", c_bool, "ISiTGR_BIN_muSigma parameter"),
+        ("Q0", c_double, "MG parameter for (Q,D) and (Q,R) parametrizations as used in arXiv:1002.4197v4, or also as described in Table VI in arXiv:1908.00290"),
+        ("Qinf", c_double, "MG parameter for (Q,D) and (Q,R) parametrizations as used in arXiv:1002.4197v4, or also as described in Table VI in arXiv:1908.00290"),
+        ("DR0", c_double, "MG parameter for (Q,D) and (Q,R) parametrizations as used in arXiv:1002.4197v4, or also as described in Table VI in arXiv:1908.00290"),
+        ("DRinf", c_double, "MG parameter for (Q,D) and (Q,R) parametrizations as used in arXiv:1002.4197v4, or also as described in Table VI in arXiv:1908.00290"),
+        ("s", c_double, "MG parameter for a^s dependence"),
+        ("k_c", c_double, "parameter that separates scale-bins"),
+        ("Q1", c_double, "Bin parameter for (Q,D) parameterization"),
+        ("Q2", c_double, "Bin parameter for (Q,D) parameterization"),
+        ("Q3", c_double, "Bin parameter for (Q,D) parameterization"),
+        ("Q4", c_double, "Bin parameter for (Q,D) parameterization"),
+        ("D1", c_double, "Bin parameter for (Q,D) parameterization"),
+        ("D2", c_double, "Bin parameter for (Q,D) parameterization"),
+        ("D3", c_double, "Bin parameter for (Q,D) parameterization"),
+        ("D4", c_double, "Bin parameter for (Q,D) parameterization"),
+        ("z_div", c_double, "redshift at which the transition between the two bins occurs"),
+        ("z_TGR", c_double, "redshift below which GR is to be tested"),
+        ("z_tw", c_double, "transition width for the hyperbolic tangent function."),
+        ("k_tw", c_double, "transition width between k bins"),
+        ("t_dep", c_bool, "flag for a^s dependence for (Q,D) and (Q,R)"),
+        ("R_func", c_bool, "flag to swith (Q,D) for (Q,R) parametrization"),
+        ("true_bin", c_bool, "flag to use traditional binning instead of hybrid binning"),  
+        ("ISiTGR_BIN", c_bool, "flag to use binning method instead of functional form"),
+        ("E11", c_double, "MG parameter for (mu,eta) parametrization"),
+        ("E22", c_double, "MG parameter for (mu,eta) parametrization"),
+        ("mu0", c_double, "MG parameter for (mu,Sigma) parametrization"),
+        ("Sigma0", c_double, "MG parameter for (mu,Sigma) parametrization"),
+        ("c1", c_double, "MG parameter for scale-dependence"),
+        ("c2", c_double, "MG parameter for scale-dependence"),
+        ("Lambda", c_double, "MG parameter for scale-dependence"),
+        ("mu1", c_double, "Bin parameter for (mu,eta) or (mu,Sigma) parameterization"),
+        ("mu2", c_double, "Bin parameter for (mu,eta) or (mu,Sigma) parameterization"),
+        ("mu3", c_double, "Bin parameter for (mu,eta) or (mu,Sigma) parameterization"),
+        ("mu4", c_double, "Bin parameter for (mu,eta) or (mu,Sigma) parameterization"),
+        ("eta1", c_double, "Bin parameter for (mu,eta) parameterization"),
+        ("eta2", c_double, "Bin parameter for (mu,eta) parameterization"),
+        ("eta3", c_double, "Bin parameter for (mu,eta) parameterization"),
+        ("eta4", c_double, "Bin parameter for (mu,eta) parameterization"),
+        ("Sigma1", c_double, "Bin parameter for (mu,Sigma) parameterization"),
+        ("Sigma2", c_double, "Bin parameter for (mu,Sigma) parameterization"),
+        ("Sigma3", c_double, "Bin parameter for (mu,Sigma) parameterization"),
+        ("Sigma4", c_double, "Bin parameter for (mu,Sigma) parameterization"),
+        ("ISiTGR_mueta", c_bool, "flag to use (mu,eta) parametrization for functional form"),
+        ("ISiTGR_muSigma", c_bool, "flag to use (mu,Sigma) parametrization for functional form"),
+        ("ISiTGR_QDR", c_bool, "flag to use (Q,D) or (Q,R) parametrizations for functional form (flag 'R_func' decides if D or R is used)"),
+        ("ISiTGR_BIN_mueta", c_bool, "flag to use (mu,eta) parametrization for binning method"),
+        ("ISiTGR_BIN_muSigma", c_bool, "flag to use (mu,Sigma) parametrization for binning method"),
         ("GR", c_int, "GR switch on/off")
         #< ISiTGR MOD END
     ]
@@ -512,18 +512,57 @@ class CAMBparams(F2003Class):
          or name of a BBN predictor class, or file name of an interpolation table
         :param theta_H0_range: if thetastar or cosmomc_theta is specified, the min, max interval of H0 values to map to;
           if H0 is outside this range it will raise an exception.
-		
-		**************************************** ISiTGR Modifications ************************************************** 
-        Function to define the different MG functional parameterizations. The parameterizations that ISiTGR can handle
-		for functional form of MG parameters are:
-		(mu,eta): based on E11 and E22 (as Planck collaboration papers)
-		(mu,Sigma): based on mu0 and Sigma0 (as DES collaboration papers)
-		(Q,D): based on Q0, DR0 
-		(Q,R): based on Q0, DR0
-		**************************************** ISiTGR Modifications ************************************************** 
+        :param parameterization: set which MG parametrization to be used, None, "mueta", "muSigma", "QD", or "QR".
+        :param Q0: MG parameter for (Q,D) and (Q,R) parametrizations as shown in arXiv:1002.4197v4. Also, it can be used as in eq 26 in arXiv:1908.00290.
+        :param Qinf: MG parameter for (Q,D) and (Q,R) parametrizations as shown in arXiv:1002.4197v4.
+        :param D0: MG parameter for (Q,D) parametrization as in eq 28 in arXiv:1908.00290.
+        :param R0: MG parameter for (Q,R) parametrization as in eq 27 in arXiv:1908.00290.
+        :param Dinf: MG parameter for (Q,D) and (Q,R) parametrizations as shown in arXiv:1002.4197v4.
+        :param Rinf: MG parameter for (Q,D) and (Q,R) parametrizations as shown in arXiv:1002.4197v4.
+        :param s: MG parameter for exponent of scale factor (a^s). See Table VI in arXiv:1908.00290.
+        :param k_c: sets scale factor at which transition between bins in scale occurs.
+        :param binning: allows ISiTGR to bin MG parameters. Set as "traditional", "hybrid" or None for functional form.
+        :param E11: MG parameter for functional (mu,eta) parametrization. Defined in arXiv:1502.01590v2.
+        :param E22: MG parameter for functional (mu,eta) parametrization. Defined in arXiv:1502.01590v2.
+        :param mu0: MG parameter for functional (mu,Sigma) parametrization as defined in 1212.3339v2 originally.
+        :param Sigma0: MG parameter for functional (mu,Sigma) parametrization as defined in 1212.3339v2 originally.
+        :param c1: Scale dependence parameter. See Table VI in arXiv:1908.00290.
+        :param c2: Scale dependence parameter. See Table VI in arXiv:1908.00290.
+        :param Lambda: Scale dependence parameter. See Table VI in arXiv:1908.00290.
+        :param z_div: transition redshift between bins.
+        :param z_TGR: redshift below which GR is to be tested.
+        :param z_tw: transition width redshift.
+        :param k_tw: transition width for scale.
+        :param Q1: MG parameter for binning method, using (Q,D) parametrization.
+        :param Q2: MG parameter for binning method, using (Q,D) parametrization.
+        :param Q3: MG parameter for binning method, using (Q,D) parametrization.
+        :param Q4: MG parameter for binning method, using (Q,D) parametrization.
+        :param D1: MG parameter for binning method, using (Q,D) parametrization.
+        :param D2: MG parameter for binning method, using (Q,D) parametrization.
+        :param D3: MG parameter for binning method, using (Q,D) parametrization.
+        :param D4: MG parameter for binning method, using (Q,D) parametrization.
+        :param mu1: MG parameter for binning method, using (mu,eta) and (mu,Sigma) parametrization.
+        :param mu2: MG parameter for binning method, using (mu,eta) and (mu,Sigma) parametrization.
+        :param mu3: MG parameter for binning method, using (mu,eta) and (mu,Sigma) parametrization.
+        :param mu4: MG parameter for binning method, using (mu,eta) and (mu,Sigma) parametrization.
+        :param eta1: MG parameter for binning method, using (mu,eta) parametrization.
+        :param eta2: MG parameter for binning method, using (mu,eta) parametrization.
+        :param eta3: MG parameter for binning method, using (mu,eta) parametrization.
+        :param eta4: MG parameter for binning method, using (mu,eta) parametrization.
+        :param Sigma1: MG parameter for binning method, using (mu,Sigma) parametrization.
+        :param Sigma2: MG parameter for binning method, using (mu,Sigma) parametrization.
+        :param Sigma3: MG parameter for binning method, using (mu,Sigma) parametrization.
+        :param Sigma4: MG parameter for binning method, using (mu,Sigma) parametrization.
         """
 		#> ISiTGR MOD START: Flags for ISiTGR python wrapper to work with different parameterizations
-        # --------------------------------------- For Functional Form --------------------------------------- #
+#		**************************************** ISiTGR Modifications ************************************************** 
+#       Flags to work with the different MG functional parameterizations. The parameterizations that ISiTGR can handle
+#		for functional form of MG parameters are:
+#		(mu,eta): based on E11 and E22 (as Planck collaboration papers)
+#		(mu,Sigma): based on mu0 and Sigma0 (as DES collaboration papers)
+#		(Q,D): based on Q0, DR0 
+#		(Q,R): based on Q0, DR0
+#		**************************************** ISiTGR Modifications ************************************************** 
 		#(mu,eta)
         if parameterization is "mueta":
             if binning is not None:
@@ -657,8 +696,6 @@ class CAMBparams(F2003Class):
                         self.s=s
                     else:
                         self.t_dep = False
-        # --------------------------------------- For Functional Form --------------------------------------- #
-
 		#< ISiTGR MOD END
 		
         if YHe is None:

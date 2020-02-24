@@ -2,18 +2,18 @@ Recombination models
 ==================================
 
 
-.. autoclass:: camb.recombination.RecombinationModel
+.. autoclass:: isitgr.recombination.RecombinationModel
    :members:
 
-.. autoclass:: camb.recombination.Recfast
+.. autoclass:: isitgr.recombination.Recfast
    :show-inheritance:
    :members:
 
-.. autoclass:: camb.recombination.CosmoRec
+.. autoclass:: isitgr.recombination.CosmoRec
    :show-inheritance:
    :members:
 
-.. autoclass:: camb.recombination.HyRec
+.. autoclass:: isitgr.recombination.HyRec
    :show-inheritance:
    :members:
 

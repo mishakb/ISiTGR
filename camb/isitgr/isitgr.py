@@ -208,9 +208,7 @@ def set_params_cosmomc(p, num_massive_neutrinos=1, neutrino_hierarchy='degenerat
                        omk=p.get('omegak', 0), tau=p['tau'], deltazrei=p.get('deltazrei', None),
                        nnu=p.get('nnu', constants.default_nnu), Alens=p.get('Alens', 1.0),
                        YHe=p.get('yheused', None), meffsterile=p.get('meffsterile', 0),
-                       num_massive_neutrinos=num_massive_neutrinos, neutrino_hierarchy=neutrino_hierarchy)#,
-#                       GR=p['GR'], ISiTGR_mueta=p['ISiTGR_mueta'], E11=p.get['E11'], E22=p['E22'],
-#                       c1=p['c1'],c2=p['c2'],Lambda=p['lambda'])
+                       num_massive_neutrinos=num_massive_neutrinos, neutrino_hierarchy=neutrino_hierarchy)
     pars.InitPower.set_params(ns=p['ns'], r=p.get('r', 0), As=p['A'] * 1e-9, nrun=p.get('nrun', 0),
                               nrunrun=p.get('nrunrun', 0))
     pars.set_dark_energy(w=p.get('w', -1), wa=p.get('wa', 0), dark_energy_model=dark_energy_model)

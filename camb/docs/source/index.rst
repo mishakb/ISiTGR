@@ -1,53 +1,46 @@
-Python CAMB
-=============
+===================
+ISiTGR
+===================
 
-CAMB (Code for Anisotropies in the Microwave Background), a cosmology code for calculating CMB, lensing,
-galaxy count, dark-age 21cm power spectra, matter power spectra and transfer functions.
-There are also general utility function for cosmological calculations such as the background expansion, distances, etc.
-The main code is Python with numerical calculations implemented efficiently in Python-wrapped modern Fortran.
+The *Integrated Software in Testing General Relativity (ISiTGR)* is a patch to the software CAMB and CosmoMC. 
+ISiTGR is intended to test deviations from GR at cosmological scales using available cosmological data sets. 
+While doing so, it allows for various extensions to the standard flat LCDM model. 
+In this new release, we have a combined support for the following:
 
-See the `CAMB python example notebook <https://camb.readthedocs.org/en/latest/CAMBdemo.html>`_ for an
-introductory set of examples of how to use the CAMB package. This is usually the fastest way to learn how to use it
-and quickly see some of the capabilities.
+* Dynamical dark energy parametrizations with a constant or time-dependent equation of state;
 
-For a standard non-editable installation use::
+* A consistent implementation of anisotropic shear to model massive neutrinos throughout the full formalism;
 
-    pip install camb [--user]
+* Multiple commonly used parameterizations of modified growth (MG) parameters;
+
+* Functional, binned and hybrid time- and scale-dependencies for all MG parameters (expanded from previous version);
+
+* Spatially flat or curved backgrounds (present in previous version as well).
+
+The description of the formalism and its implementation in the CMB code, the Integrated Sachs-Wolfe (ISW) effect,
+and the 3x2 point statistics as well as examples of application to current data sets,
+can be found in the latest paper on the arXiv. A more technical description of the implementation can be found
+in the documentation provided in the ISiTGR repository or the published paper.
+
+See the `ISiTGR python example notebook <https://isitgr.readthedocs.org/en/latest/ISiTGRdemo.html>`_ 
+python notebook for illustrative examples of ISiTGR features.
+
+To install the ISiTGR python package on your computer run::
+
+    pip install isitgr [--user]
 
 The --user is optional and only required if you don't have write permission to your main python installation.
-If you want to work on the code from `GitHub <https://github.com/cmbant/camb>`_, you can also just install in place without copying anything using::
+You will need the usual dependencies as required for the CAMB software. 
+The code can be obtained in our `GitHub repository <https://github.com/mishakb/ISiTGR>`_ and is based on `our paper <https://arxiv.org/abs/1908.00290>`_.
 
-    pip install -e /path/to/CAMB [--user]
-
-You will need ifort or gfortran 6 or higher installed (and on your path) to compile; see :ref:`fortran-compilers` for
-compiler installation details if needed. A compiled library for Windows is also provided, and is used if no
-gfortran installation is found on Windows machines. If you have gfortrand installed, "python setup.py make" will build
-the Fortran library on all systems (including Windows without directly using a Makefile), and can be used to update
-a source installation after changes or pulling an updated version.
-
-Anaconda users can also install from conda-forge using::
-
-  conda install -c conda-forge camb
-
-with no need for a Fortran compiler (unless you want to use custom sources/symbolic compilation features).
-Check that conda installs the latest version, if not try installing in a new clean conda environment.
-
-After installation the camb python module can be loaded from your scripts using "import camb".
-You can also run CAMB from the command line reading parameters from a .ini file, e.g.::
-
-  camb inifiles/planck_2018.ini
-
-You may need to check your python scripts directory is in your path for this to work.
-Alternatively from the source package root directory (after make but without installation) use::
-
-  python camb.py inifiles/planck_2018.ini
+==================================
 
 Main high-level modules:
 
 .. toctree::
    :maxdepth: 2
 
-   camb
+   isitgr
    model
    results
    symbolic
@@ -75,6 +68,6 @@ Other modules:
    fortran_compilers
    mathutils
 
-* `Example notebook <https://camb.readthedocs.org/en/latest/CAMBdemo.html>`_
+* `Example notebook <https://isitgr.readthedocs.org/en/latest/ISiTGRdemo.html>`_
 * :ref:`genindex`
 

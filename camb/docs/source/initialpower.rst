@@ -1,15 +1,15 @@
 Initial power spectra
 ==================================
 
-.. autoclass:: camb.initialpower.InitialPower
+.. autoclass:: isitgr.initialpower.InitialPower
    :members:
 
-.. autoclass:: camb.initialpower.InitialPowerLaw
+.. autoclass:: isitgr.initialpower.InitialPowerLaw
    :show-inheritance:
    :members:
 
 
-.. autoclass:: camb.initialpower.SplinedInitialPower
+.. autoclass:: isitgr.initialpower.SplinedInitialPower
    :show-inheritance:
    :members:
 

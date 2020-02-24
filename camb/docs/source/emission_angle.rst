@@ -1,7 +1,7 @@
 Lensing emission angle
 ==================================
 
-.. automodule:: camb.emission_angle
+.. automodule:: isitgr.emission_angle
    :members:
 
 

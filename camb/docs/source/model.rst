@@ -1,19 +1,19 @@
-Input parameter model
-==================================
+Input parameter model (main modifications are here)
+======================================================
 
 
-.. autoclass:: camb.model.CAMBparams
+.. autoclass:: isitgr.model.CAMBparams
    :members:
    :inherited-members:
 
 
-.. autoclass:: camb.model.AccuracyParams
+.. autoclass:: isitgr.model.AccuracyParams
    :members:
 
-.. autoclass:: camb.model.TransferParams
+.. autoclass:: isitgr.model.TransferParams
    :members:
 
-.. autoclass:: camb.model.SourceTermParams
+.. autoclass:: isitgr.model.SourceTermParams
    :members:
 
-.. autoclass:: camb.model.CustomSources
+.. autoclass:: isitgr.model.CustomSources

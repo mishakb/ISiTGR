@@ -1,16 +1,16 @@
 Calculation results
 ==================================
 
-.. autoclass:: camb.results.CAMBdata
+.. autoclass:: isitgr.results.CAMBdata
    :members:
    :inherited-members:
 
 
-.. autoclass:: camb.results.MatterTransferData
+.. autoclass:: isitgr.results.MatterTransferData
    :members:
    :inherited-members:
 
-.. autoclass:: camb.results.ClTransferData
+.. autoclass:: isitgr.results.ClTransferData
    :members:
 
 

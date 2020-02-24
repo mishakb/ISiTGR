@@ -1,14 +1,14 @@
 Non-linear models
 ==================================
 
-.. autoclass:: camb.nonlinear.NonLinearModel
+.. autoclass:: isitgr.nonlinear.NonLinearModel
    :members:
 
-.. autoclass:: camb.nonlinear.Halofit
+.. autoclass:: isitgr.nonlinear.Halofit
    :show-inheritance:
    :members:
 
-.. autoclass:: camb.nonlinear.SecondOrderPK
+.. autoclass:: isitgr.nonlinear.SecondOrderPK
    :show-inheritance:
    :members:
 

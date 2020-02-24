@@ -1,7 +1,7 @@
-Symbolic manipulation
-==================================
+Symbolic manipulation (not updated yet)
+===========================================
 
-.. automodule:: camb.symbolic
+.. automodule:: isitgr.symbolic
    :members:
 
 

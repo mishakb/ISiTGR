@@ -1,7 +1,7 @@
 Post-Born lensing
 ==================================
 
-.. automodule:: camb.postborn
+.. automodule:: isitgr.postborn
    :members:
 
 

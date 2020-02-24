@@ -2,7 +2,7 @@ BBN models
 ==================================
 
 
-.. automodule:: camb.bbn
+.. automodule:: isitgr.bbn
    :members:
 
 
