@@ -129,11 +129,11 @@ class CAMBdata(F2003Class):
     """
     An object for storing calculational data, parameters and transfer functions.
     Results for a set of parameters (given in a :class:`~.model.CAMBparams` instance)
-    are returned by the :func:`.camb.get_background`, :func:`.camb.get_transfer_functions` or :func:`.camb.get_results`
+    are returned by the :func:`.isitgr.get_background`, :func:`.isitgr.get_transfer_functions` or :func:`.isitgr.get_results`
     functions. Exactly which quantities are already calculated depends on which of these functions you use and the
     input parameters.
 
-    To quickly make a fully calculated CAMBdata instance for a set of parameters you can call :func:`.camb.get_results`.
+    To quickly make a fully calculated CAMBdata instance for a set of parameters you can call :func:`.isitgr.get_results`.
 
     """
     _fortran_class_module_ = 'results'
@@ -391,6 +391,7 @@ class CAMBdata(F2003Class):
 
     def save_cmb_power_spectra(self, filename, lmax=None, CMB_unit='muK'):
         r"""
+		
         Save CMB power to a plain text file. Output is lensed total :math:`\ell(\ell+1)C_\ell/2\pi` then
         lensing potential and cross: L TT EE BB TE PP PT PE.
 
@@ -398,6 +399,7 @@ class CAMBdata(F2003Class):
         :param lmax: lmax to save
         :param CMB_unit: scale results from dimensionless. Use 'muK' for :math:`\mu K^2` units for CMB :math:`C_\ell`
         and :math:`\mu K` units for lensing cross.
+		
         """
         lmax = self._lmax_setting(lmax)
         cmb = self.get_total_cls(lmax, CMB_unit=CMB_unit)
@@ -408,6 +410,7 @@ class CAMBdata(F2003Class):
                               spectra=('total', 'unlensed_scalar', 'unlensed_total', 'lensed_scalar', 'tensor',
                                        'lens_potential'), CMB_unit=None, raw_cl=False):
         r"""
+		
         Get CMB power spectra, as requested by the 'spectra' argument. All power spectra are
          :math:`\ell(\ell+1)C_\ell/2\pi` self-owned numpy arrays (0..lmax, 0..3), where 0..3 index
          are TT, EE, BB, TE, unless raw_cl is True in which case return just :math:`C_\ell`.
@@ -415,13 +418,14 @@ class CAMBdata(F2003Class):
 
         :param params: optional :class:`~.model.CAMBparams` instance with parameters to use. If None, must have
           previously set parameters and called `calc_power_spectra` (e.g. if you got this instance
-          using :func:`.camb.get_results`),
+          using :func:`.isitgr.get_results`),
         :param lmax: maximum L
         :param spectra: list of names of spectra to get
         :param CMB_unit: scale results from dimensionless. Use 'muK' for :math:`\mu K^2` units for CMB :math:`C_\ell`
           and :math:`\mu K` units for lensing cross.
         :param raw_cl: return :math:`C_\ell` rather than :math:`\ell(\ell+1)C_\ell/2\pi`
         :return: dictionary of power spectrum arrays, indexed by names of requested spectra
+		
         """
         P = {}
         if params is not None:
@@ -442,7 +446,7 @@ class CAMBdata(F2003Class):
 
         :param params: optional :class:`~.model.CAMBparams` instance with parameters to use. If None, must have
           previously set parameters and called :meth:`calc_power_spectra` (e.g. if you got this instance
-          using :func:`.camb.get_results`),
+          using :func:`.isitgr.get_results`),
         :param lmax: optional maximum L to use from the cls arrays
         :param spectrum: type of CMB power spectrum to get; default 'lensed_scalar', one of
           ['total', 'unlensed_scalar', 'unlensed_total', 'lensed_scalar', 'tensor']
@@ -485,7 +489,7 @@ class CAMBdata(F2003Class):
 
         :param q: wavenumber values to calculate (or array of k values)
         :param eta: array of requested conformal times to output
-        :param vars: list of variable names or sympy symbolic expressions to output (using camb.symbolic)
+        :param vars: list of variable names or sympy symbolic expressions to output (using isitgr.symbolic)
         :param lAccuracyBoost: factor by which to increase l_max in hierarchies compared to default - often
           needed to get nice smooth curves of acoustic oscillations for plotting.
         :param frame: for symbolic expressions, can specify frame name if the variable is not gauge invariant.
@@ -518,7 +522,7 @@ class CAMBdata(F2003Class):
                     ix[i] = num_standard_names + len(custom_vars) - 1
                 else:
                     raise CAMBError(
-                        'Variables must be variable names, or a sympy expression (using camb.symbolic variables)')
+                        'Variables must be variable names, or a sympy expression (using isitgr.symbolic variables)')
 
             if np.isscalar(q):
                 k = np.array([q], dtype=np.float64)
@@ -555,7 +559,7 @@ class CAMBdata(F2003Class):
 
         :param q: wavenumber values to calculate (or array of k values)
         :param z: array of redshifts to output
-        :param vars: list of variable names or camb.symbolic sympy expressions to output
+        :param vars: list of variable names or isitgr.symbolic sympy expressions to output
         :param lAccuracyBoost: boost factor for ell accuracy (e.g. to get nice smooth curves for plotting)
         :return: nd array, A_{qti}, size(q) x size(times) x len(vars), or 2d array if q is scalar
         """
@@ -1069,7 +1073,7 @@ class CAMBdata(F2003Class):
 
         :param params: optional :class:`~.model.CAMBparams` instance with parameters to use. If None, must have
           previously set parameters and called :meth:`calc_power_spectra` (e.g. if you got this instance
-          using :func:`.camb.get_results`),
+          using :func:`.isitgr.get_results`),
         :param lmax: maximum :math:`\ell`
         :param CMB_unit: scale results from dimensionless. Use 'muK' for :math:`\mu K^2` units for
           CMB :math:`C_\ell` and :math:`\mu K` units for lensing cross.
@@ -1126,7 +1130,7 @@ class CAMBdata(F2003Class):
 
         :param params: optional :class:`~.model.CAMBparams` instance with parameters to use. If None, must have
           previously set parameters and called :meth:`calc_power_spectra`
-          (e.g. if you got this instance using :func:`.camb.get_results`),
+          (e.g. if you got this instance using :func:`.isitgr.get_results`),
         :param lmax: maximum :math:`\ell`
         :param raw_cl: return :math:`C_\ell` rather than :math:`\ell(\ell+1)C_\ell/2\pi`
         :return: dictionary of power spectrum arrays, index as PXP, PxW1, W1xW2, ... etc.

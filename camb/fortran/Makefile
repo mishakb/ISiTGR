@@ -38,7 +38,7 @@ endif
 ifeq "$(ifortErr)" "0"
 
 #Intel compiler
-F90C     = gcc
+F90C     = ifort
 
 ifortVer_major = $(shell ifort -v 2>&1 | cut -d " " -f 3 | cut -d. -f 1)
 compiler_ver = $(shell ifort -v 2>&1)

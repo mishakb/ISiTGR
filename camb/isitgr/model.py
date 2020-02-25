@@ -164,7 +164,7 @@ class CAMBparams(F2003Class):
 
     You can view the set of underlying parameters used by the Fortran code by printing the CAMBparams instance.
     In python, to set cosmology parameters it is usually best to use :meth:`set_cosmology` and
-    equivalent methods for most other parameters. Alternatively the convenience function :func:`.camb.set_params`
+    equivalent methods for most other parameters. Alternatively the convenience function :func:`.isitgr.set_params`
     can construct a complete instance from a dictionary of relevant parameters.
 
     """
@@ -1010,7 +1010,7 @@ class CAMBparams(F2003Class):
     def set_custom_scalar_sources(self, custom_sources, source_names=None, source_ell_scales=None,
                                   frame='CDM', code_path=None):
         r"""
-        Set custom sources for angular power spectrum using camb.symbolic sympy expressions.
+        Set custom sources for angular power spectrum using isitgr.symbolic sympy expressions.
 
         :param custom_sources: list of sympy expressions for the angular power spectrum sources
         :param source_names: optional list of string naes for the sources

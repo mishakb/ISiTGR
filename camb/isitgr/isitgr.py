@@ -106,7 +106,7 @@ def set_params(cp=None, verbose=False, **params):
 
     E.g.::
 
-      cp = camb.set_params(ns=1, H0=67, ombh2=0.022, omch2=0.1, w=-0.95, Alens=1.2, lmax=2000,
+      cp = isitgr.set_params(ns=1, H0=67, ombh2=0.022, omch2=0.1, w=-0.95, Alens=1.2, lmax=2000,
                            WantTransfer=True, dark_energy_model='DarkEnergyPPF')
 
     This is equivalent to::
@@ -285,7 +285,7 @@ def get_matter_power_interpolator(params, zmin=0, zmax=10, nz_step=100, zs=None,
 
     .. code-block:: python
 
-       from camb import get_matter_power_interpolator
+       from isitgr import get_matter_power_interpolator
        PK = get_matter_power_interpolator(params);
        print('Power spectrum at z=0.5, k/h=0.1/Mpc is %s (Mpc/h)^3 '%(PK.P(0.5, 0.1)))
 

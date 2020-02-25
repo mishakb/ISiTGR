@@ -1,10 +1,10 @@
 Reionization models
 ==================================
 
-.. autoclass:: camb.reionization.ReionizationModel
+.. autoclass:: isitgr.reionization.ReionizationModel
    :members:
 
-.. autoclass:: camb.reionization.TanhReionization
+.. autoclass:: isitgr.reionization.TanhReionization
    :show-inheritance:
    :members:
 

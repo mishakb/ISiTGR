@@ -22,7 +22,7 @@ and the 3x2 point statistics as well as examples of application to current data 
 can be found in the latest paper on the arXiv. A more technical description of the implementation can be found
 in the documentation provided in the ISiTGR repository or the published paper.
 
-See the `ISiTGR python example notebook <https://isitgr.readthedocs.org/en/latest/ISiTGRdemo.html>`_ 
+See the  `ISiTGR python example notebook <ISiTGRdemo.html>`_ 
 python notebook for illustrative examples of ISiTGR features.
 
 To install the ISiTGR python package on your computer run::
@@ -68,6 +68,9 @@ Other modules:
    fortran_compilers
    mathutils
 
-* `Example notebook <https://isitgr.readthedocs.org/en/latest/ISiTGRdemo.html>`_
-* :ref:`genindex`
+* `example`_
 
+.. _example: ISiTGRdemo.html
+
+* :ref:`genindex`
+    

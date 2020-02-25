@@ -40,7 +40,7 @@ def get_emission_angle_powers(camb_background, PK, chi_source, lmax=3000, acc=1,
     Uses the Limber approximation (and assumes flat universe).
 
     :param camb_background: a CAMB results object, used for calling background functions
-    :param PK: a matter power spectrum interpolator (from camb.get_matter_power_interpolator)
+    :param PK: a matter power spectrum interpolator (from isitgr.get_matter_power_interpolator)
     :param chi_source: comoving radial distance of source in Mpc
     :param lmax: maximum L
     :param acc: accuracy parameter

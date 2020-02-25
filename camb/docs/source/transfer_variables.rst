@@ -3,7 +3,7 @@
 Matter power spectrum and matter transfer function variables
 =============================================================
 
-The various matter power spectrum functions, e.g. :func:`~camb.get_matter_power_interpolator`, can calculate power
+The various matter power spectrum functions, e.g. :func:`~isitgr.get_matter_power_interpolator`, can calculate power
 spectra for various quantities. Each variable used to form the power spectrum has a name as follows:
 
 =====================  ======  =====================================================================
@@ -40,7 +40,7 @@ All density variables :math:`\Delta_i` here are synchronous gauge.
 
 For transfer function variables (rather than matter power spectra), the variables are normalized corresponding to
 unit primordial curvature perturbation on super-horizon scales. The
-:meth:`~camb.results.CAMBdata.get_matter_transfer_data` function returns the above quantities
+:meth:`~isitgr.results.CAMBdata.get_matter_transfer_data` function returns the above quantities
 divided by :math:`k^2` (so they are roughly constant at low :math:`k` on super-horizon scales).
 
 The  `example notebook <https://camb.readthedocs.org/en/latest/CAMBdemo.html>`_  has various examples of getting the

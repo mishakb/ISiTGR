@@ -10,7 +10,6 @@ Calculation results
    :members:
    :inherited-members:
 
+
 .. autoclass:: isitgr.results.ClTransferData
    :members:
-
-
