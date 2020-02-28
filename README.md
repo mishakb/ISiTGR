@@ -13,12 +13,12 @@ We introduce a new version of **I**ntegrated **S**oftware **i**n **T**esting **G
 
 * Spatially flat or curved backgrounds (present in previous version as well). 
 
-Additionally, **this new version of ISiTGR provides a python wrapper**. The python wrapper extends the original CAMB's python wrapper to work with the different MG parameterizations provided in ISiTGR, allowing the user to obtained power spectra and transfer functions in the context of phenomenological modified gravity.
+Additionally, **this new version of ISiTGR provides a python wrapper**. The python wrapper extends the original CAMB's python wrapper to work with the different MG parameterizations provided in ISiTGR, allowing the user to obtain the power spectra and transfer functions including phenomenological modified gravity parameters.
 
 The description of the formalism and its implementation in the CMB code, the Integrated Sachs-Wolfe (ISW) effect, and the 3x2 point statistics as well as examples of application to current data sets, can be found in the latest paper on the arXiv. A more technical description of the implementation can be found in the documentation provided in this repository. 
 
 ## Installation (to run MCMC)
-The corresponding version of ISiTGR was built based on the CosmoMC July 2019 version. If you install ISiTGR from the principal folder, you will be allowed to do MCMC sampling to constraint modified gravity and cosmological parameters. To install the GitHub version of ISiTGR you can run the following steps in your terminal :
+The corresponding version of ISiTGR was built based on the CosmoMC July 2019 version. If you install ISiTGR from the principal folder, you will be allowed to do MCMC sampling to constraint modified gravity and cosmological parameters. To install ISiTGR from the GitHub repository you can run the following steps in your terminal :
 
 ```sh
 $ git clone https://github.com/mishakb/ISiTGR
@@ -31,20 +31,20 @@ if there are no errors during compilation, then you should be ready to use ISiTG
 ### Use ISiTGR to calculate cosmological observables
 If you want to compute cosmological observables using ISiTGR, then you should install ISiTGR as an extension to CAMB, in order to include MG parameters. 
 
-ISiTGR can be installed using PyPI (https://pypi.org/project/isitgr/) by running
+In this new version, ISiTGR can be installed using PyPI (https://pypi.org/project/isitgr/) by running
 ```
 $ pip install isitgr [--user]
 ```
 See also https://isitgr.readthedocs.io/en/latest/ for documentation and an example notebook for python-ISiTGR. 
 
-Alternatively, one can use CAMB-ISiTGR by compiling the fortran code:
+Alternatively, one can use ISiTGR by compiling the fortran code:
 
 ```sh
 $ cd camb/fortran
 Select your compilers by editing the Makefile files inside the camb/fortran folder.
 $ make
 ```
-if there are no errors during compilation, then you should be ready to use ISiTGR by executing 
+if there are no errors during compilation, then you should be ready to use the fortran ISiTGR code by executing 
 ```sh
 $ ./camb ../inifiles/params_MG.ini
 ```
@@ -53,28 +53,28 @@ In the next table we show some plots to illustrate the different power spectrums
 
 Temperature and lensing potential power spectrum with (μ, η) | TT and TE power Spectrum with (μ, Σ)
 :------------------------:|:---------------------:
-![](https://dl.boxcloud.com/api/2.0/internal_files/624542586000/versions/662178477600/representations/png_paged_2048x2048/content/1.png?access_token=1!09kbTECN751CPbLqc2tYVzbbKyVf5g2e_Ekk7-ehIGKwduFVwzb8ydWqP1qzcexUoXaVk0ueCU12o7v32Yg_lgqtHu8nvMiIqqbSHAwy5V7Mc9X-It87-xaFCw1zCTg4Zd_JJ0bQUMSCRdJEGbFTqvbRQSqJ_Yqp8bY7jHLqgxyqct1BlPNE1ZjiKiBLmPUyYiOH6k51Y6d_FBqythcERFbMkEM8H8GNmC57XFbQM9FMq_yGmb5_iTj4m54DelnV-P9Eu_22taQoraiNm8WZJkDWh1sxNHwOJmLg7zyQESV1TZsK1w9nX339IZYqxDwKDsC1Y03dnarxDH32XUpy_lWOBBbX5ErxKFONEg2CxgCB121i648mrym5_rMvnIqHaX_S7CYiWFdOrJCweuwjpwGXbMKUPAZOzF788rAOGRAUsdDesqX2MZ2cvhktu8zGUxmdAPyBjVqAPBMkeMlLd5GSGHiuB0B0aYxfqIZyyoMEGcp3TKX26f_zKxCgYSN5XHCSgRVySJiI0Ye76PRAsSqa8njbte_oq9fSYHnU0W2N2we_cgMAjf6hqB4Hk5WboQ..&box_client_name=box-content-preview&box_client_version=2.36.0)   |![](https://dl.boxcloud.com/api/2.0/internal_files/624554338960/versions/662191846960/representations/png_paged_2048x2048/content/1.png?access_token=1!EvBxIyCnPn0hz5vCUFXcnFs3nRV2g0WCprwNcMlYVmChaEGpW0-zo-Sw3BvUO2psuvlmZeJHGbiWklYizw6WoT8X36uDU-d1CO13IX25UWl0pQSdO30Nat0UYmoNBy6_KkIEC9o8H0j0IcSgAcbtlyYM2HgpBoXYaQabFGZMByXE9MyD3woy8pmH8bD9BUjvL8J67o2avddmVfEEyCXPDG46zk_ZHDD4rfmWkpE9tr5MU3RmOqvjT37ZVj4uAx5FULijVuv6qo2d7rVTcq7H8etPOSiTAEgzmyLEQnDCy9F8Im7mwAMtbOm-hbVz-1YaejZm3diyY4F6SPjbUPesn3PonOIIBm-yhjQ6B26aM7y8UVDFUGNGy2mBTUMDcYQUdHmcSkmiikL22a-VK1rSSCCs_hwnY8b0pQM_h74XQHO0MNnaKCJnEGbM69hnfXhjwh2NiXzbddO6EALqC2lJF3bx-QG2S7dvQ1M6sLKZmMazcPmivEUT3N06vAdKy1qfa9-DZtiAKtnmG-sXVSZgxzlD_JENbfV1A4mmFNePy_4HYW23L3RMldmtHS9LTquL_Q..&box_client_name=box-content-preview&box_client_version=2.36.0)  |
+![](https://imagizer.imageshack.com/img922/2492/OSyYNQ.png)   |![](https://imagizer.imageshack.com/img924/6177/MJeYME.png)  |
 
 
 ## How to run ISiTGR
 The ISiTGR patch allows to run CAMB and CosmoMC for MG different models. The next flowchart shows the different parameterizations and methods that ISiTGR is able to work with:
-![Parametrizations](https://dl.boxcloud.com/api/2.0/internal_files/624555886276/versions/662193100276/representations/png_paged_2048x2048/content/1.png?access_token=1!hhFT7zg7v3pwu8tz4HHOOoeB3Tgv98otuEqzdtl_AT-_Dye57HLKQINle7F-4ClOw3EKMtiCj93htBLNn0bgl6a47lwxs8mHb9CD1vQjhrkCqz9XzGRdpBg-8x9pnzl-a7dbNE9K29KxFBk8_HPJ4kAgWYlnk13ZoLv8AZGX3I3KyVa9BLp1FDA931mOWZoNCXcVfR7nS4b4g3GQTKZ9war_TygZE44qaV-EU9BAcbhKyWm8i_tiX2t9BlQN-RKd3sSq6f5U7d83uIBLkKUTWId7psy6NrvJ9M1mlVny_frs73W6jVkB1k3oew3GSjiNwCCiq-ZRRUEV3YWCKGCFwpHLF-WIirLwLWV9Dic7FJo3k92fkNgJwNnrO85EQyQhjXGR6Y39a0owETog1gCVJA7JYesENJ-YIVTvbA-wYehrdKJT-HnbRLgSU8z2azPo1lNWhLjtxG6dSTp9soWuDs13Fnyvs_5k82FLorBqsrXOwjhNAyOFDH_EfR8EawVHppDnYL4VCajzqOWp7WMqW_aZFR67Eug9Z5tNrLQHzASlRrrzq03zAluoSBo24YRdTQ..&box_client_name=box-content-preview&box_client_version=2.36.0)
+![Parametrizations](https://imagizer.imageshack.com/img922/5735/VwisJk.png)
 The user can take advantage of the ISiTGR capabilities after compiling the code by modifying the corresponding .ini files. The next flowchart shows the different .ini files that you need to modify in case you want to use the functional form or the binning methods for either CAMB or CosmoMC (you can find further instructions inside each of this files). 
-![Implementation](https://dl.boxcloud.com/api/2.0/internal_files/624549348527/versions/662186876927/representations/png_paged_2048x2048/content/1.png?access_token=1!ombitm0Flt-RC1SQOfNF2dcWmzCgixfS7iRI-2i9rwDfiUTLxvtBYSwbJcl8Fyo3DneG5EE7654k6PxgVeQR3_LPGzLWO0WIHzuXIfkSvOV4RlszrrZ2lpxWjqUb97Lk_AB7V6Lpya3jOb0QiJ1-PCzkeyCGkkZAqe2V5s0ODI-mKNKFlRJgDh5-DEZMJsi1eHabwE94JiufATiN08eqXgsbiKRiCkHtg5hytSsBX17Rs6m1IaH2WQ-ILXswHNWr-UcpbmuVsbdV8OOdZMxY_vli2bKsCKc5T74k6MGCERw5hzq9c_B_oRcZPUEItBRB9IXHgbQlrEV3u-fWH-DQB4-o1SBoqBNQgCzsg6dNS-rpDL568RXnr8lygfHMWUioEjupIBWYgo0ydCr_RvuqdXtc7zdMn60KSpRBIg8V8KhiZsGQe6AVj78-a8IjSLgclloLZT2pfMPMaL4fuL2JlRX9MlUfI35xtkNbCwqLM1Dh3I3cuyfKWiwaEcwrahZmPk4PP7UF01_QF55W7CL2dkNzAsnkDoxbr0eWL-siVo5Uea3XvdleRstCBq-zD6J0xA..&box_client_name=box-content-preview&box_client_version=2.36.0)
+![Implementation](https://imagizer.imageshack.com/img921/710/TDBMMJ.png)
 It is important for the user to remember that the current version of ISiTGR is aimed to work with flat and non-flat models. Moreover, ISiTGR not only implements the contributions of massive neutrinos consistently, but also works with different equations of state for dark energy. The above mentioned is implemented for both functional form and binning methods. If the user wants to run the functional form of ISiTGR, the user needs to run 
 ```
 ./cosmomc test_ISiTGR.ini
 ```
-. Otherwise, if the user wants to use the binning methods, then one should run 
+Otherwise, if the you want to use binning methods, instead you should run 
 ```
-./cosmomc test_ISiTGR_BIN
+./cosmomc test_ISiTGR_BIN.ini
 ``` 
 
 In the next table we show some plots to illustrate some features of the ISiTGR patch for CosmoMC:
 
 Binning Methods |  MG + Curvature  |  Planck 2018 data 
 :-------------------------:|:------------------------:|:---------------------:
-![](https://dl.boxcloud.com/api/2.0/internal_files/624538642134/versions/662174546934/representations/png_paged_2048x2048/content/1.png?access_token=1!WY0yRBx7TFpouFvdi5KQXKPmfx4SpOwuIkwl023xX4QxXgHKcW_pTLm7xAMliFgB9pwXv9_Q-hUIurQkwsrS8qll8dNjo8ED60cReevJa7Xrqghk82mOfu74huIAcEmQE59PwBaE0PAzlSFdi33b74IhFmswtmfpHmeDSD0tnO7QXwHaR-W4zjhosPozwkUoQ6y5GSdVefdBMk5EC93OeDAtqbGaKjDC2CKfwpJLisT7xX4DLR7duNGo12lUqrOB0W-5q7oQ4SSOIfTkZZeqtj8w8GRElvCkxiKcCEUcC-bgMYk2OghW6X2GkbJdx-FmZKXpY5AdTfm3bKm7PxNmq0p8NIt8v-BaJBKNPenP9rZLJESfR5mvB-mRXUgOMz_ADR3Dv00pkduk1Vrn8t8_5Kl9axEUNZ0_TDvaNDCxZfABJrOOvM2w5FCSKrzr72EjlcmNyQ7foHGyFEkh-P2CcDD5eHoic4zVbfhEFXPo3KoT_ShJTdB8kkkO07v3I5KFcpX7fJPaiGEDfadJq2rjjXCXs2SU2-ZQJ6jNi6K7YM1jcZFe_crqJEQIqTGQ-PBLKA..&box_client_name=box-content-preview&box_client_version=2.36.0)  |  ![](https://dl.boxcloud.com/api/2.0/internal_files/624552947927/versions/662190065927/representations/png_paged_2048x2048/content/1.png?access_token=1!tqW_jyy8N5TGxKtQ3XNXXJz2C1b1z1kSrr0Mf6BgYx7J6JDwWLjixUyW7Dw0qDiGMAA5Dbd38w4EEnRIUMOAsP5fAyVgs9QNJ_JYfb2q7EvDC_Zb5jqGn9oZZDwnj9OrqhO4xv1Fvqiqf5yYeYpK1ddTlNY82S6QRgf8xDhoocKR8XaGEsk7FmpCfsrp81xFdGk89gVY7jeQCVwOzN2iWZg0qNRKntWkN-v81DG1tsyFd6tz-WNwNv0snr8FYfGshb5Lc7S7BSHyvfOP-oTbSSeQUOhJdR1WUElEHpSmYNGnfP22FX9XOMeVHbHHogqWBqDzD5p7h6-smaOOS0WbBRT249I0DaXn2GgI_pGML8yP-hwalcMeiIAb8VCsCpiG7NTAYCumptm0YfiM0aoQe-Iu2dAGJF0ae_VoNwYQQKLCOuZOzFvptSDP3tzticSQJt1sTUyltl8VEXlB19N78vP-y3ABybS9XN-zULDRxxUquxvqNI48JGCMow-sKfGKx54bhchJviKKuDhbhvgJUl3kOpeL2mEY6y5LCClIPfA-hQfECox3IbdtPW84YvAdPQ..&box_client_name=box-content-preview&box_client_version=2.36.0)  |![](https://dl.boxcloud.com/api/2.0/internal_files/624557633619/versions/662195140419/representations/png_paged_2048x2048/content/1.png?access_token=1!aZGl_RXjrnc7w-Wl_GjiZaowNBlhf9pWkBIf13LVHpsZNw6eEv-ZvBlsqg8EiM0sPilc7CCMqg6YYQVo7cAOSYD61Jl5AF7agBp3mTRzPNxmaF7CZnErlOFL8aPZxC7DEbmlMl4-Dh2SvxV1RpBofTcU_8moR4gTcIyVvajTfqKi18bCKnib5lmxV8FLIkvKL79i9Lz2AqkAxJkj_m4Mdv1B-UPV7cCpvX9lfYjAwXaSUh-un5Nr5Oq7RrZqEWi9UFWC3gdTxZ63bgH0pYZbxzJvMSa_vO8gVH0I_cCmtXZrMxMZZftnGwcjHT_15uh0fbje_3D42Ecz3jN3mYXnLx0-p4GhlMfDlMpXLVIJRIq6otiJLxdiqzwZkOJGD4-dPYp7QIQQj2Ap6_MoSGVqnASkI7xKW4gDoLplkHWS4KzxMkWRGsUZNviY3sE6POZXpBdA4PgpuYBg_JZOlTGcRuWBhW1mKRSs2Ntn3EhQKoWxN5R0IUW1F_MSPleOFB2nvxCAWR8XUd6vGfrPm6S-wZ-Vnak1H5bi84SlBV4gpBil3tL6kHzemAIrDkNz-e9QVg..&box_client_name=box-content-preview&box_client_version=2.36.0)  |
+![](https://imagizer.imageshack.com/img921/4875/UF2JJq.png)  |  ![](https://imagizer.imageshack.com/img922/3460/BnmcTM.png)  |![](https://imagizer.imageshack.com/img922/4962/o1LWlk.png)  |
 
 
 ## Referencing ISiTGR
