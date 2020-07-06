@@ -1,6 +1,7 @@
 [![N|Solid](https://www.utdallas.edu/~jdossett/images/banner_bkgd_isitgr3.jpg)](https://www.utdallas.edu/~jdossett/images/banner_bkgd_isitgr3.jpg)
 
-# ISiTGR Version 3.1 released in February 2020 (with python wrapper)
+# ISiTGR Version 3.1 released in February 2020 
+# (a python wrapper for ISiTGR version of CAMB has also been released -- see instructions further below)
 We introduce a new version of **I**ntegrated **S**oftware **i**n **T**esting **G**eneral **R**elativity (ISiTGR) which is a patch to the software CAMB and CosmoMC. ISiTGR is intended to test deviations from GR at cosmological scales using available cosmological data sets. While doing so, it allows for various extensions to the standard flat LCDM model. In this new release, we have a combined support for the following:  
 
 * Dynamical dark energy parametrizations with a constant or time-dependent equation of state; 
