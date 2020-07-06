@@ -14,11 +14,11 @@ We introduce a new version of **I**ntegrated **S**oftware **i**n **T**esting **G
 
 * Spatially flat or curved backgrounds (present in previous version as well). 
 
-Additionally, **this new version of ISiTGR provides a python wrapper**. The python wrapper extends the original CAMB's python wrapper to work with the different MG parameterizations provided in ISiTGR, allowing the user to obtain the power spectra and transfer functions including phenomenological modified gravity parameters.
-
 The description of the formalism and its implementation in the CMB code, the Integrated Sachs-Wolfe (ISW) effect, and the 3x2 point statistics as well as examples of application to current data sets, can be found in the latest paper on the arXiv. A more technical description of the implementation can be found in the documentation provided in this repository. 
 
-## Installation (to run MCMC)
+Additionally, **this new version of ISiTGR is accompanied with a python wrapper**. The python wrapper extends the original CAMB's python wrapper to work with the different MG parameterizations provided in ISiTGR, allowing the user to obtain the power spectra and transfer functions including phenomenological modified gravity parameters.
+
+## Installation of ISiTGR to run MCMC 
 The corresponding version of ISiTGR was built based on the CosmoMC July 2019 version. If you install ISiTGR from the principal folder, you will be allowed to do MCMC sampling to constraint modified gravity and cosmological parameters. To install ISiTGR from the GitHub repository you can run the following steps in your terminal :
 
 ```sh
