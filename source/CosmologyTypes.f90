@@ -25,6 +25,12 @@
     integer, parameter :: neutrino_hierarchy_normal = 1, neutrino_hierarchy_inverted = 2, neutrino_hierarchy_degenerate = 3
     character(LEN=Ini_Enumeration_Len), parameter :: neutrino_types(3) = &
         [character(Ini_Enumeration_Len)::'normal','inverted','degenerate']
+		
+    Type ISiTGR_CP
+		integer :: DE_eqstate
+        !CGQ ------------------------------------------------
+    end type ISiTGR_CP
+    Type(ISiTGR_CP) TGR
 
     Type TCosmoTheoryParams
         logical :: get_sigma8 = .true.
@@ -148,9 +154,9 @@
 		real(mcp) TGR_mu1, TGR_mu2, TGR_mu3, TGR_mu4 !for binning method
 		real(mcp) TGR_eta1, TGR_eta2, TGR_eta3, TGR_eta4 !for binning method
 		real(mcp) TGR_Sigma1, TGR_Sigma2, TGR_Sigma3, TGR_Sigma4 !for binning method
-		integer :: TGR_GR
+		integer :: TGR_GR=1
 		!CGQ for Dark Energy models
-!		real(mcp) TGR_w0, TGR_wa, TGR_wp, TGR_a_p
+		real(mcp) TGR_w0, TGR_wa
 
 		!<ISiTGR MOD END
     end Type CMBParams

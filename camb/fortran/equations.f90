@@ -20,11 +20,35 @@
     integer :: nu_i
 
     a2 = a ** 2
-    call this%CP%DarkEnergy%BackgroundDensityAndPressure(this%grhov, a, grhov_t)
+	
+	!>ISiTGR MOD START
+	if (this%CP%GR==1) then
+	    call this%CP%DarkEnergy%BackgroundDensityAndPressure(this%grhov, a, grhov_t)
 
-    !  8*pi*G*rho*a**4.
-    grhoa2 = this%grhok * a2 + (this%grhoc + this%grhob) * a + this%grhog + this%grhornomass + &
-        grhov_t * a2
+    	!  8*pi*G*rho*a**4.
+	    grhoa2 = this%grhok * a2 + (this%grhoc + this%grhob) * a + this%grhog + this%grhornomass + &
+	        grhov_t * a2
+	else
+		
+		if ( this%CP%DE_eqstate == 0 ) then
+		    call this%CP%DarkEnergy%BackgroundDensityAndPressure(this%grhov, a, grhov_t)
+
+    		!  8*pi*G*rho*a**4.
+	    	grhoa2 = this%grhok * a2 + (this%grhoc + this%grhob) * a + this%grhog + this%grhornomass + &
+	        	grhov_t * a2
+
+		else if ( this%CP%DE_eqstate == 1 ) then
+		grhoa2 = this%grhok * a2 + (this%grhoc + this%grhob) * a + this%grhog + this%grhornomass
+		grhoa2 = grhoa2 + this%grhov*a**(1.d0-3.d0*this%CP%w0)
+
+		else if ( this%CP%DE_eqstate == 2 ) then
+		grhoa2 = this%grhok * a2 + (this%grhoc + this%grhob) * a + this%grhog + this%grhornomass
+		grhoa2 = grhoa2 + this%grhov*a**(1.d0-3.d0*(this%CP%w0+this%CP%wa))*exp(3.d0*this%CP%wa*(a-1.d0))
+
+		end if
+		
+	end if
+	!<ISiTGR MOD END
 
     if (this%CP%Num_Nu_massive /= 0) then
         !Get massive neutrino density relative to massless
@@ -2749,19 +2773,16 @@ dgpi_3wplus1plusbetak) !CGQ
 	HubbleConstant = State%CP%h0
 	end select
 
-!	if ( State%CP%DE_eqstate == 0 ) then
+	if ( CP%DE_eqstate == 0 ) then
 		OmegaDE = omegav * ((HubbleConstant*1000.d0/c)/(adotoa/a))**2.d0
 		
-!	else if ( State%CP%DE_eqstate == 1 ) then
-!		OmegaDE = omegav * a**(-3.d0*(1.d0+State%CP%w0)) * ((CP%H0*1000.d0/c)/(adotoa/a))**2.d0
+	else if ( CP%DE_eqstate == 1 ) then
+		OmegaDE = omegav * a**(-3.d0*(1.d0+CP%w0)) * ((CP%H0*1000.d0/c)/(adotoa/a))**2.d0
 	
-!	else if ( State%CP%DE_eqstate == 2 ) then
-!		OmegaDE = omegav * ((CP%H0*1000.d0/c)/(adotoa/a))**2.d0 * a**(-3.d0*(1.d0+State%CP%w0+State%CP%wa)) * exp(3.d0*State%CP%wa*(a-1.d0)) 
+	else if ( CP%DE_eqstate == 2 ) then
+		OmegaDE = omegav * ((CP%H0*1000.d0/c)/(adotoa/a))**2.d0 * a**(-3.d0*(1.d0+CP%w0+CP%wa)) * exp(3.d0*CP%wa*(a-1.d0)) 
 
-!	else if ( State%CP%DE_eqstate == 3 ) then
-!		OmegaDE = omegav * ((CP%H0*1000.d0/c)/(adotoa/a))**2.d0 * a**(-3.d0*(1.d0+State%CP%wp+State%CP%a_p*State%CP%wa)) * exp(3.d0*State%CP%wa*(a-1.d0)) 
-		
-!	end if
+	end if
 	
     end function OmegaDE
 	
@@ -2772,22 +2793,18 @@ dgpi_3wplus1plusbetak) !CGQ
     real(dl), intent(in) :: a, adotoa, Hdot
     real(dl) :: OmegaDEdot
 
-!	if ( State%CP%DE_eqstate == 0 ) then
+	if ( CP%DE_eqstate == 0 ) then
 		OmegaDEdot = - OmegaDE(State,a,adotoa) * 2.d0 * (Hdot - adotoa**2.d0)/adotoa 
 	
-!	else if ( State%CP%DE_eqstate == 1 ) then
-!		OmegaDEdot = - OmegaDE(a,adotoa) * ( 2.d0 * (Hdot - adotoa**2.d0)/adotoa + &
-!		 			3.d0 * (1.d0+State%CP%w0) * adotoa)
+	else if ( CP%DE_eqstate == 1 ) then
+		OmegaDEdot = - OmegaDE(State,a,adotoa) * ( 2.d0 * (Hdot - adotoa**2.d0)/adotoa + &
+		 			3.d0 * (1.d0+CP%w0) * adotoa)
 
-!	else if ( State%CP%DE_eqstate == 2 ) then
-!		OmegaDEdot = -OmegaDE(a,adotoa) * ( 2.d0 * (Hdot - adotoa**2.d0)/adotoa + &
-!					3.d0 * (1.d0+State%CP%w0) * adotoa + 3.d0 * State%CP%wa * adotoa * (1.d0-a) )
+	else if ( CP%DE_eqstate == 2 ) then
+		OmegaDEdot = -OmegaDE(State,a,adotoa) * ( 2.d0 * (Hdot - adotoa**2.d0)/adotoa + &
+					3.d0 * (1.d0+CP%w0) * adotoa + 3.d0 * CP%wa * adotoa * (1.d0-a) )
 		
-!	else if ( State%CP%DE_eqstate == 3 ) then
-!		OmegaDEdot = -OmegaDE(a,adotoa) * ( 2.d0 * (Hdot - adotoa**2.d0)/adotoa + &
-!					3.d0 * (1.d0+State%CP%wp) * adotoa + 3.d0 * State%CP%wa * adotoa * (State%CP%a_p-a) )
-		
-!	end if
+	end if
 	
     end function OmegaDEdot
 	
@@ -2879,13 +2896,32 @@ dgpi_3wplus1plusbetak) !CGQ
     grhor_t=State%grhornomass/a2
     grhog_t=State%grhog/a2
 
-    if (EV%is_cosmological_constant) then
-        grhov_t = State%grhov * a2
-        w_dark_energy_t = -1_dl
-    else
-        call State%CP%DarkEnergy%BackgroundDensityAndPressure(State%grhov, a, grhov_t, w_dark_energy_t)
-    end if
+	!>ISiTGR MOD START
+	if (CP%GR==1) then
+	    if (EV%is_cosmological_constant) then
+    	    grhov_t = State%grhov * a2
+        	w_dark_energy_t = -1_dl
+	    else
+    	    call State%CP%DarkEnergy%BackgroundDensityAndPressure(State%grhov, a, grhov_t, w_dark_energy_t)
+	    end if
+	else
+		if ( CP%DE_eqstate == 0 ) then
+		    if (EV%is_cosmological_constant) then
+    		    grhov_t = State%grhov * a2
+        		w_dark_energy_t = -1_dl
+		    else
+    		    call State%CP%DarkEnergy%BackgroundDensityAndPressure(State%grhov, a, grhov_t, w_dark_energy_t)
+	    	end if
 
+		else if ( CP%DE_eqstate == 1 ) then
+			grhov_t = State%grhov*a**(-1.d0-3.d0*CP%w0)
+
+		else if ( CP%DE_eqstate == 2 ) then
+			grhov_t = State%grhov*a**(-1.d0-3.d0*(CP%w0+CP%wa))*exp(3.d0*CP%wa*(a-1.d0))
+
+		end if
+	end if
+	!<ISiTGR MOD END
 
     !total perturbations: matter terms first, then add massive nu, de and radiation
     !  8*pi*a*a*SUM[rho_i*clx_i]
@@ -2916,7 +2952,7 @@ dgpi_3wplus1plusbetak) !CGQ
 
 	!> ISiTGR MOD START 
     if (EV%no_nu_multpoles) then
-		if (CP%GR==0) then !CGQ to work with default GR or with MG models
+		if (CP%GR==1) then !CGQ to work with default GR or with MG models
 	        !RSA approximation of arXiv:1104.2933, dropping opactity terms in the velocity
     	    !Approximate total density variables with just matter terms
         	z=(0.5_dl*dgrho/k + etak)/adotoa
@@ -2941,7 +2977,7 @@ dgpi_3wplus1plusbetak) !CGQ
 
 	if (EV%no_phot_multpoles) then
 		!> ISiTGR MOD START
-		if (CP%GR==0) then !CGQ to work with default GR or with MG models
+		if (CP%GR==1) then !CGQ to work with default GR or with MG models
 	        if (.not. EV%no_nu_multpoles) then
     	        z=(0.5_dl*dgrho/k + etak)/adotoa
         	    dz= -adotoa*z - 0.5_dl*dgrho/k
@@ -2981,18 +3017,26 @@ dgpi_3wplus1plusbetak) !CGQ
         dgrho = dgrho + dgrho_de
         dgq = dgq + dgq_de
     end if
-!			write(*,*) CP%GR, CP%ISiTGR_mueta, CP%E11, CP%Alens
 	
 	!>ISiTGR MOD START-----------------------------------------------------------------
     !all this module was written by CGQ, adding mueta and muSigma parameterizations.
     !Also, CGQ modified Q,D parameterization originally written by JD in order to work with massive neutrinos.
-
-!write(*,*) CP%E11, CP%E22, CP%c1, CP%c2, CP%lambda, CP%ISiTGR_mueta, CP%ISiTGR_muSigma, CP%GR
 	
-    if (CP%GR/=0) then
+    if (CP%GR/=1) then
 	
 	! 1) Get sigma
-	gpresv_t = -grhov_t
+		!CGQ for Dark Energy pressure ----------------------
+		if ( CP%DE_eqstate == 0 ) then
+			gpresv_t = -grhov_t
+
+		else if ( CP%DE_eqstate == 1 ) then
+			gpresv_t = CP%w0*grhov_t
+
+		else if ( CP%DE_eqstate == 2 ) then
+			gpresv_t = (CP%w0+(1.d0-a)*CP%wa)*grhov_t
+			
+		end if	
+		!---------------------------------------------------	
     gpres = (grhog_t+grhor_t)/3.d0 + gpresv_t + gpres_nu !CGQ
     TGR_rhoDelta = dgrho+3.d0*adotoa*dgq/k !CGQ
    	Hdot = -(grho+3.d0*gpres)/6.d0   !JD
@@ -3332,7 +3376,7 @@ dgpi_3wplus1plusbetak) !CGQ
             !AL: First order slip seems to be fine here to 2e-4
 			
 			!>ISiTGR MOD START
-			if (CP%GR==0) then
+			if (CP%GR==1) then
 	            !  8*pi*G*a*a*SUM[rho_i*sigma_i]
     	        dgs = grhog_t*pig+grhor_t*pir
 
@@ -3666,7 +3710,7 @@ dgpi_3wplus1plusbetak) !CGQ
             EV%kf(1), k, grhov_t, z, k2, ayprime, ay, EV%w_ix)
 		!> ISiTGR MOD START
         !CGQ ---------------------------
-		if (CP%GR==0) then
+		if (CP%GR==1) then
         phi = -((dgrho +3*dgq*adotoa/k)/EV%Kf(1) + dgpi)/(2*k2)
 		else
 		phi = (TGR_Psi+TGR_Phi)/2._dl
@@ -3686,7 +3730,7 @@ dgpi_3wplus1plusbetak) !CGQ
             EV%OutputTransfer(Transfer_tot_de) =  dgrho/grho_matter
             !Transfer_Weyl is k^2Phi, where Phi is the Weyl potential
 			!> ISiTGR MOD START: Weyl function for GR or MG
-			if (CP%GR==0) then !CGQ
+			if (CP%GR==1) then !CGQ
           		EV%OutputTransfer(Transfer_Weyl) = k2*phi
 			else
 	        	EV%OutputTransfer(Transfer_Weyl) = k2*(TGR_Phi+TGR_Psi)/2.d0 !CGQ
@@ -3726,7 +3770,7 @@ dgpi_3wplus1plusbetak) !CGQ
             tau0 = State%tau0
 
 			!>ISiTGR MOD START: CGQ to work with GR and MG ------------------------------------------
-        	if (CP%GR==0) then
+        	if (CP%GR==1) then
 	            phidot = (1.0d0/2.0d0)*(adotoa*(-dgpi - 2*k2*phi) + dgq*k - &
     	            diff_rhopi+ k*sigma*(gpres + grho))/k2
 					
@@ -3802,7 +3846,7 @@ dgpi_3wplus1plusbetak) !CGQ
                 !Get lensing sources
                 if (tau>State%tau_maxvis .and. tau0-tau > 0.1_dl) then
 					!> ISiTGR MOD START
-					if (CP%GR==0) then !CGQ
+					if (CP%GR==1) then !CGQ
                     	EV%OutputSources(3) = -2*phi*f_K(tau-State%tau_maxvis)/(f_K(tau0-State%tau_maxvis)*ang_dist)
                     	!We include the lensing factor of two here
 					else 

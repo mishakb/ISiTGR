@@ -1,0 +1,1 @@
+Here you can get the output of jobID.err if you use the job script provided in scripts folder

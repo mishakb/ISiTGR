@@ -18,7 +18,9 @@ QD0			  \Q_0			#ISiTGR parameters
 D0		 	  \D_0
 c1			  c_1
 c2			  c_2
-lambda		  \lambda		#End ISiTGR parameters
+lambda		  \lambda
+w0DE		  w_0
+waDE		  w_a		#End ISiTGR parameters
 logA          {\rm{ln}}(10^{10} A_s)
 ns            n_s       #beware that pivot scale can change in .ini file
 nrun          n_{\rm run}

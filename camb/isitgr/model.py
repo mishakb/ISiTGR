@@ -277,12 +277,15 @@ class CAMBparams(F2003Class):
         ("Sigma2", c_double, "Bin parameter for (mu,Sigma) parameterization"),
         ("Sigma3", c_double, "Bin parameter for (mu,Sigma) parameterization"),
         ("Sigma4", c_double, "Bin parameter for (mu,Sigma) parameterization"),
+        ("w0", c_double, "w0 parameter for Dark Energy equation of state used in CPL parameterization"),
+        ("wa", c_double, "wa parameter for Dark Energy equation of state used in CPL parameterization"),
         ("ISiTGR_mueta", c_bool, "flag to use (mu,eta) parametrization for functional form"),
         ("ISiTGR_muSigma", c_bool, "flag to use (mu,Sigma) parametrization for functional form"),
         ("ISiTGR_QDR", c_bool, "flag to use (Q,D) or (Q,R) parametrizations for functional form (flag 'R_func' decides if D or R is used)"),
         ("ISiTGR_BIN_mueta", c_bool, "flag to use (mu,eta) parametrization for binning method"),
         ("ISiTGR_BIN_muSigma", c_bool, "flag to use (mu,Sigma) parametrization for binning method"),
-        ("GR", c_int, "GR switch on/off")
+        ("GR", c_int, "GR switch on/off"),
+		("DE_eqstate", c_int, "Set which Dark Energy equation of state to use together with the MG parameters")
         #< ISiTGR MOD END
     ]
 
@@ -464,7 +467,7 @@ class CAMBparams(F2003Class):
                       E11=0, E22=0, mu0=0, Sigma0=0, c1=1, c2=1, Lambda=0,
                       z_div=0, z_TGR=0, z_tw=0, k_tw=0, Q1=0, Q2=0, Q3=0, Q4=0, D1=0,
                       D2=0, D3=0, D4=0, mu1=0, mu2=0, mu3=0, mu4=0, eta1=0, eta2=0, 
-					  eta3=0, eta4=0, Sigma1=0, Sigma2=0, Sigma3=0, Sigma4=0):
+					  eta3=0, eta4=0, Sigma1=0, Sigma2=0, Sigma3=0, Sigma4=0, w0=-1, wa=0):
      #< ISiTGR MOD END
         r"""
         Sets cosmological parameters in terms of physical densities and parameters (e.g. as used in Planck analyses).
@@ -566,7 +569,7 @@ class CAMBparams(F2003Class):
 		#(mu,eta)
         if parameterization is "mueta":
             if binning is not None:
-                self.GR = 1
+                self.GR = 0
                 self.ISiTGR_mueta=False
                 self.ISiTGR_BIN_mueta = True
                 self.mu1=mu1
@@ -587,7 +590,7 @@ class CAMBparams(F2003Class):
                 if binning is "hybrid":
                     self.true_bin=False
             else:
-                self.GR = 1
+                self.GR = 0
                 self.ISiTGR_mueta = True
                 self.E11=E11
                 self.E22=E22
@@ -597,7 +600,7 @@ class CAMBparams(F2003Class):
         #(mu,Sigma)
         if parameterization is "muSigma":
             if binning is not None:
-                self.GR = 1
+                self.GR = 0
                 self.ISiTGR_muSigma=False
                 self.ISiTGR_BIN_muSigma = True
                 self.mu1=mu1
@@ -618,7 +621,7 @@ class CAMBparams(F2003Class):
                 if binning is "hybrid":
                     self.true_bin=False
             else:
-                self.GR = 1
+                self.GR = 0
                 self.ISiTGR_muSigma = True
                 self.mu0=mu0
                 self.Sigma0=Sigma0
@@ -628,7 +631,7 @@ class CAMBparams(F2003Class):
 		#(Q,D)
         if parameterization is "QD":
             if binning is not None:
-                self.GR = 1 
+                self.GR = 0
                 self.ISiTGR_QDR = False
                 self.ISiTGR_BIN = True
                 self.Q1=Q1
@@ -649,7 +652,7 @@ class CAMBparams(F2003Class):
                 if binning is "hybrid":
                     self.true_bin=False
             else:
-                self.GR, self.R_func = 1, False
+                self.GR, self.R_func = 0, False
                 self.Q0=Q0
                 self.DR0=D0
                 if k_c > 0:
@@ -668,7 +671,7 @@ class CAMBparams(F2003Class):
                     self.ISiTGR_QDR = True
         #(Q,R)	
         if parameterization is "QR":
-            self.GR, self.R_func = 1, True
+            self.GR, self.R_func = 0, True
             if Q0 != 0 or R0 != 0:
                 self.Q0=Q0
                 self.DR0=R0
@@ -696,6 +699,16 @@ class CAMBparams(F2003Class):
                         self.s=s
                     else:
                         self.t_dep = False
+        if self.GR == 0:
+            self.DE_eqstate=0
+            if wa != 0:
+                self.DE_eqstate=2
+                self.wa=wa
+                self.w0=w0
+            elif w0 != -1:
+                self.DE_eqstate=1
+                self.w0=w0
+				
 		#< ISiTGR MOD END
 		
         if YHe is None:

@@ -13,9 +13,6 @@
     use likelihood
     use Calculator_Cosmology
     use GeneralTypes
-	!> ISiTGR MOD START
-	!use ISiTGR
-	!< ISiTGR MOD END
     use, intrinsic :: ieee_arithmetic
     implicit none
     private
@@ -119,6 +116,7 @@
 	!ISiTGR parameters
     !Functional form evolution parameters
 	P%GR = CMB%TGR_GR
+	P%DE_eqstate = TGR%DE_eqstate	
 	if(CosmoSettings%ISiTGR_Rfunc)then
         P%DR0 = CMB%TGR_R0
         P%DRinf = CMB%TGR_Rinf
@@ -179,10 +177,8 @@
 	P%ISiTGR_BIN_mueta=CosmoSettings%ISiTGR_BIN_mueta 
 	P%ISiTGR_BIN_muSigma=CosmoSettings%ISiTGR_BIN_muSigma
 	!Dark Energy parameterizations
-!	P%w0 = CMB%TGR_w0
-!	P%wa = CMB%TGR_wa
-!	P%wp = CMB%TGR_wp
-!	P%a_p = CMB%TGR_a_p
+	P%w0 = CMB%TGR_w0
+	P%wa = CMB%TGR_wa
 	!<ISiTGR MOD END
 	
     P%ALens = CMB%ALens

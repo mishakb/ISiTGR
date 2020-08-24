@@ -1,0 +1,1 @@
+here you can get the file jobID.out if you use the job script provided in the scripts folder to run on a cluster

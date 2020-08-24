@@ -427,7 +427,7 @@
 
 	!CGQ
 	Parameterization = Ini%Read_Int('Parameterization')
-	P%GR = 1
+	P%GR = 0
 	Parameterization_BIN = Ini%Read_Int('Parameterization_BIN', 0)
 	exp_s_dep = Ini%Read_Logical('exp_s_dep', .false.)
 !	Scale_dep = Ini%Read_Logical('Scale_dep', .false.)
@@ -467,7 +467,7 @@ if (Binning_Method .eqv. .true.) then
 	!for default GR
 	if (Parameterization_BIN == 0) then
 		write(*,*) 'ISiTGR: using default General Relativity'
-		P%GR = 0
+		P%GR = 1
 
 	!mu-eta
 	else if (Parameterization_BIN == 1) then
@@ -536,7 +536,7 @@ else
 	!for default GR
 	if (Parameterization == 0) then
 		write(*,*) 'ISiTGR: using default General Relativity'
-		P%GR = 0
+		P%GR = 1
 	
 	!for mu and eta parameterization
 	else if (Parameterization == 1) then
@@ -608,21 +608,17 @@ end if
 	write(*,*) "---------------------"
 	
 	!For Dark Energy parameterization
-!	TGR%DE_eqstate = Ini%Read_Int('DarkEnergyModel', 0)
-!	if (TGR%DE_eqstate == 0) then
-!		TGR%w0 = -1.d0
-!	else if (TGR%DE_eqstate == 1) then
-!		TGR%w0 = Ini%Read_Double('wDE0',0.d0)
-!	else if (TGR%DE_eqstate == 2) then
-!		TGR%w0 = Ini%Read_Double('wDE0',0.d0)
-!		TGR%wa = Ini%Read_Double('wDEa',0.d0)
-!	else if (TGR%DE_eqstate == 3) then
-!		TGR%wa = Ini%Read_Double('wDEa',0.d0)
-!		TGR%wp = Ini%Read_Double('wDEp',0.d0)
-!		TGR%a_p = Ini%Read_Double('ap',0.d0)
-!	end if
-!	write(*,*) 'Dark Energy model:', TGR%DE_eqstate
-!	write(*,*) "---------------------"
+	P%DE_eqstate = Ini%Read_Int('DarkEnergyModel', 0)
+	if (P%DE_eqstate == 0) then
+		P%w0 = -1.d0
+	else if (P%DE_eqstate == 1) then
+		P%w0 = Ini%Read_Double('wDE0',0.d0)
+	else if (P%DE_eqstate == 2) then
+		P%w0 = Ini%Read_Double('wDE0',0.d0)
+		P%wa = Ini%Read_Double('wDEa',0.d0)
+	end if
+	write(*,*) 'Dark Energy model:', P%DE_eqstate
+	write(*,*) "---------------------"
 	
 	!< ISiTGR MOD END -----------------------------------------------------------------------------------------
 

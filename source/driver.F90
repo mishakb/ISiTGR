@@ -10,6 +10,7 @@
     use DataLikelihoodList
     use RandUtils
     use bbn
+	use CosmologyTypes
     implicit none
 
     character(LEN=:), allocatable :: LogFileName,  numstr, fname, rootdir
@@ -27,6 +28,7 @@
     logical :: estimate_propose_matrix = .false.
     real(mcp), allocatable :: test_paramvals(:)
     real(mcp) :: test_check_compare = logZero
+	integer :: TGR_DE_eqstate
 
 #ifdef MPI
     integer ierror
@@ -74,6 +76,17 @@
             call CustomParams%Open(fname)
         end if
     end if
+	
+	!>ISiTGR MOD START
+	call Ini%Read( 'DarkEnergyModel', TGR%DE_eqstate )
+	if ( TGR%DE_eqstate == 0 ) then
+		write(*,*) 'DE model: w=-1'
+	else if ( TGR%DE_eqstate == 1 ) then
+		write(*,*) 'DE model: w=w0'
+	else if ( TGR%DE_eqstate == 2 ) then
+		write(*,*) 'DE model: w=w0+(1-a)wa'
+	end if
+	!<ISiTGR MOD END
 
     call Ini%Read('accuracy_level',AccuracyLevel)
     call Ini%Read('stop_on_error',stop_on_error)

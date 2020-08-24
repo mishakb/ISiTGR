@@ -235,15 +235,15 @@
 		real(dl) :: Sigma3=0._dl
 		real(dl) :: Sigma4=0._dl !binning models 
 		!Dark Energy parameterizations
-		!real(dl) :: w0, wa, wp, a_p!CGQ for 3 new models of DE
+		real(dl) :: w0, wa!CGQ for DE models
 		logical :: ISiTGR_mueta=.false. !for functional form
 		logical :: ISiTGR_muSigma=.false. !for functional form
 		logical :: ISiTGR_QDR=.false. !for functional form
 		logical :: ISiTGR_BIN_mueta=.false. !for binning method
 		logical :: ISiTGR_BIN_muSigma=.false. !for binning method
 		!logical :: ISiTGR_k_dep !for scale dependence
-		integer :: GR = 0 !to use default GR without MG
-!		integer :: DE_eqstate
+		integer :: GR = 1 !to use default GR without MG, GR=0 means MG formalism is on
+		integer :: DE_eqstate = 0 !use cosmological constant (or set CPL with MG)
         !CGQ ------------------------------------------------
 		!< ISiTGR MOD END
     contains

@@ -196,10 +196,8 @@
 	CMB%TGR_c2 = 1.d0
 	CMB%TGR_lambda = 0.d0
 	!CGQ for Dark Energy models
-!	CMB%TGR_w0 = 1.d0
-!	CMB%TGR_wa = 1.d0
-!	CMB%TGR_wp = 1.d0
-!	CMB%TGR_a_p = 1.d0
+	CMB%TGR_w0 = 1.d0
+	CMB%TGR_wa = 1.d0
 
     end subroutine SetISiTGRParams
 	!<ISiTGR MOD END
@@ -618,7 +616,7 @@
     Type(CMBParams) CMB
 !	Type(CAMBparams) P
     call this%SetForHParameterization%SetISiTGRParams(Params,CMB)
-	CMB%TGR_GR = 1	!Using equations for MG and not GR
+	CMB%TGR_GR = 0	!Using equations for MG and not GR
 	!CGQ for New Parameters
 	if (CosmoSettings%ISiTGR_Use_mueta .eqv. .true.) then
 		CMB%TGR_E11 = Params(17)
@@ -627,10 +625,8 @@
 		CMB%TGR_c2 = Params(20)
 		CMB%TGR_lambda = Params(21)
 		!Dark Energy model Params
-!		CMB%TGR_w0 = Params(22)
-!		CMB%TGR_wa = Params(23)
-!		CMB%TGR_wp = Params(24)
-!		CMB%TGR_a_p = Params(25)
+		CMB%TGR_w0 = Params(22)
+		CMB%TGR_wa = Params(23)
 	else if (CosmoSettings%ISiTGR_Use_muSigma .eqv. .true.) then
 		CMB%TGR_mu0 = Params(17)
 		CMB%TGR_Sigma0 = Params(18)
@@ -638,10 +634,8 @@
 		CMB%TGR_c2 = Params(20)
 		CMB%TGR_lambda = Params(21)
 		!Dark Energy model Params
-!		CMB%TGR_w0 = Params(22)
-!		CMB%TGR_wa = Params(23)
-!		CMB%TGR_wp = Params(24)
-!		CMB%TGR_a_p = Params(25)
+		CMB%TGR_w0 = Params(22)
+		CMB%TGR_wa = Params(23)
 	else if ((CosmoSettings%ISiTGR_QDR .eqv. .true.) .and. (CosmoSettings%ISiTGR_Rfunc .eqv. .false.)) then
 		CMB%TGR_Q0 = Params(17)
 		CMB%TGR_D0 = Params(18)
@@ -649,10 +643,8 @@
 		CMB%TGR_c2 = Params(20)
 		CMB%TGR_lambda = Params(21)
 		!Dark Energy model Params
-!		CMB%TGR_w0 = Params(22)
-!		CMB%TGR_wa = Params(23)
-!		CMB%TGR_wp = Params(24)
-!		CMB%TGR_a_p = Params(25)
+		CMB%TGR_w0 = Params(22)
+		CMB%TGR_wa = Params(23)
 	else if ((CosmoSettings%ISiTGR_QDR .eqv. .true.) .and. (CosmoSettings%ISiTGR_Rfunc .eqv. .true.)) then
 		CMB%TGR_Q0 = Params(17)
 		CMB%TGR_R0 = Params(18)
@@ -660,10 +652,8 @@
 		CMB%TGR_c2 = Params(20)
 		CMB%TGR_lambda = Params(21)
 		!Dark Energy model Params
-!		CMB%TGR_w0 = Params(22)
-!		CMB%TGR_wa = Params(23)
-!		CMB%TGR_wp = Params(24)
-!		CMB%TGR_a_p = Params(25)
+		CMB%TGR_w0 = Params(22)
+		CMB%TGR_wa = Params(23)
 	else
 	    CMB%TGR_Q0 = Params(17)
 	    CMB%TGR_Qinf = Params(18)
@@ -675,10 +665,8 @@
 	    CMB%TGR_R0 = 2.d0*CMB%TGR_D0/CMB%TGR_Q0-1.d0
 	    CMB%TGR_Rinf = 2.d0*CMB%TGR_Dinf/CMB%TGR_Qinf-1.d0
 		!Dark Energy model Params
-!		CMB%TGR_w0 = Params(23)
-!		CMB%TGR_wa = Params(24)
-!		CMB%TGR_wp = Params(25)
-!		CMB%TGR_a_p = Params(26)
+		CMB%TGR_w0 = Params(23)
+		CMB%TGR_wa = Params(24)
 	end if
 	
     end subroutine ISiTGRP_SetISiTGRParams
@@ -722,9 +710,9 @@
     !set number of hard parameters, number of initial power spectrum parameters
 	if ((CosmoSettings%ISiTGR_Use_mueta .eqv. .true.) .or. (CosmoSettings%ISiTGR_Use_muSigma .eqv. .true.) .or. &
 	(CosmoSettings%ISiTGR_QDR .eqv. .true.)) then
-		call this%SetTheoryParameterNumbers(21,last_power_index) !CGQ for new parameterizations
+		call this%SetTheoryParameterNumbers(23,last_power_index) !CGQ for new parameterizations
 	else
-		call this%SetTheoryParameterNumbers(22,last_power_index) !for original ISiTGR parameters
+		call this%SetTheoryParameterNumbers(24,last_power_index) !for original ISiTGR parameters
 	end if
 	
 	if (((CosmoSettings%ISiTGR_Use_mueta .eqv. .true.) .and. (CosmoSettings%ISiTGR_Use_muSigma .eqv. .true.)) .or. &
@@ -741,7 +729,7 @@
     class(ISiTGRParameterization) :: this
     class(TTheoryParams) :: CMB
     real(mcp):: ISiTGRP_NonBaseParameterPriors
-	real(mcp):: HardPrior!, HardPrior2
+	real(mcp):: HardPrior, HardPrior2
 	
     select type (CMB)
     class is (CMBParams)
@@ -750,8 +738,8 @@
 		if (CosmoSettings%ISiTGR_Use_muSigma .eqv. .true.) then
 			HardPrior = 1.d0 + 2.d0*CMB%TGR_Sigma0 !CGQ for HardPrior
 			if (CMB%TGR_mu0 > HardPrior) return
-!            HardPrior2 = CMB%TGR_wa + CMB%TGR_w0
- !           if (HardPrior2 > 0) return
+            HardPrior2 = CMB%TGR_wa + CMB%TGR_w0
+            if (HardPrior2 > 0) return
 		else
 		    !JD priors on ISiTGR parameter R
  	    	if (CMB%TGR_R0 <-1 .or. CMB%TGR_R0 >10) return
@@ -962,7 +950,7 @@
     Type(CMBParams) CMB
 !	Type(CAMBparams) P
     call this%SetForHParameterization%SetISiTGRParams(Params,CMB)
-	CMB%TGR_GR = 1	!Using equations for MG and not GR
+	CMB%TGR_GR = 0	!Using equations for MG and not GR
 
 	!CGQ for New Parameters begin
 	if (CosmoSettings%ISiTGR_BIN_mueta .eqv. .true.) then
@@ -1000,10 +988,8 @@
 	!CGQ for New Parameters end
     CMB%TGR_kc = Params(25)
 	!Dark Energy model Params
-!	CMB%TGR_w0 = Params(26)
-!	CMB%TGR_wa = Params(27)
-!	CMB%TGR_wp = Params(28)
-!	CMB%TGR_a_p = Params(29)
+	CMB%TGR_w0 = Params(26)
+	CMB%TGR_wa = Params(27)
 	
 	if ((CosmoSettings%ISiTGR_BIN_mueta .eqv. .true.) .and. (CosmoSettings%ISiTGR_BIN_muSigma .eqv. .true.)) then
 	write(*,*) "------------------------------------------------------------------"
@@ -1045,7 +1031,7 @@
     if (CosmoSettings%compute_tensors) call Names%Add('paramnames/derived_tensors.paramnames')
     this%num_derived = Names%num_derived
     !set number of hard parameters, number of initial power spectrum parameters
-    call this%SetTheoryParameterNumbers(25,last_power_index)
+    call this%SetTheoryParameterNumbers(27,last_power_index)
 
     end subroutine ISiTGRBP_Init
 
