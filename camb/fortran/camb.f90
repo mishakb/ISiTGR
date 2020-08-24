@@ -520,6 +520,19 @@ if (Binning_Method .eqv. .true.) then
 		write(*,*) 'Traditional Binning method'
 	end if
 	
+	!For Dark Energy parameterization
+	P%DE_eqstate = Ini%Read_Int('DarkEnergyModel_BIN', 0)
+	if (P%DE_eqstate == 0) then
+		P%w0 = -1.d0
+	else if (P%DE_eqstate == 1) then
+		P%w0 = Ini%Read_Double('w0_DE_BIN',0.d0)
+	else if (P%DE_eqstate == 2) then
+		P%w0 = Ini%Read_Double('w0_DE_BIN',0.d0)
+		P%wa = Ini%Read_Double('wa_DE_BIN',0.d0)
+	end if
+	write(*,*) 'Dark Energy model:', P%DE_eqstate
+	write(*,*) "---------------------"
+	
 else
 	P%ISiTGR_BIN = .false.
 	P%ISiTGR_mueta = .false.
@@ -612,10 +625,10 @@ end if
 	if (P%DE_eqstate == 0) then
 		P%w0 = -1.d0
 	else if (P%DE_eqstate == 1) then
-		P%w0 = Ini%Read_Double('wDE0',0.d0)
+		P%w0 = Ini%Read_Double('w0_DE',0.d0)
 	else if (P%DE_eqstate == 2) then
-		P%w0 = Ini%Read_Double('wDE0',0.d0)
-		P%wa = Ini%Read_Double('wDEa',0.d0)
+		P%w0 = Ini%Read_Double('w0_DE',0.d0)
+		P%wa = Ini%Read_Double('wa_DE',0.d0)
 	end if
 	write(*,*) 'Dark Energy model:', P%DE_eqstate
 	write(*,*) "---------------------"
