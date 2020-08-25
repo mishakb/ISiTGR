@@ -19,7 +19,7 @@ The description of the formalism and its implementation in the CMB code, the Int
 Additionally, **this new version of ISiTGR is accompanied with a python wrapper**. The python wrapper extends the original CAMB's python wrapper to work with the different MG parameterizations provided in ISiTGR, allowing the user to obtain the power spectra and transfer functions including phenomenological modified gravity parameters.
 
 ## Installation of ISiTGR
-ISiTGR can be used as an extension of CosmoMC in order to perform MG and cosmological parameter inference or it can be used as a stand-alone extension of CAMB to produce cosmological observable considering the effect of MG parameters. Find below the instructions of how to install ISiTGR in each case.
+ISiTGR can be used as an extension of CosmoMC in order to perform MG and cosmological parameter inference or it can be used as a stand-alone extension of CAMB to produce cosmological observable considering the effect of MG parameters. In order to install ISiTGR the user will need a Fortran 2008 compiler such as Intel Fortran 14 or higher, or gfortran 6 at least. Find below the instructions about of how to install ISiTGR in each case.
 
 ### Installation of ISiTGR to run MCMC
 The corresponding version of ISiTGR was built based on the CosmoMC July 2019. Installing ISiTGR as a patch of CosmoMC will allow you to perform MCMC sampling to constrain modified gravity and cosmological parameters. To install ISiTGR from the GitHub repository you can run the following commands in your terminal :
@@ -34,7 +34,7 @@ if there are no errors during compilation, you should see a new executable file 
 
 ### Installation of ISITGR modified version of CAMB (as a stand-alone)
 
-One can use ISiTGR as an extension to CAMB (version 1.1.0) without performing MCMC.  ISiTGR as a patch to CAMB can be installed either by compiling the fortran code or downloading the  [new python wrapper](#How-to-run-MCMCs-with-ISiTGR). For the fortran base version of ISiTGR run the following commands in the principal folder:
+One can use ISiTGR as an extension to CAMB (version 1.1.0) without performing MCMC.  ISiTGR as a patch to CAMB can be installed either by compiling the fortran code or downloading the  [new python wrapper](#Python-Wrapper-for-ISiTGR). For the fortran base version of ISiTGR run the following commands in the principal folder:
 
 ```sh
 $ cd camb/fortran
@@ -75,6 +75,8 @@ Binning Methods |  MG + Curvature  |  Planck 2018 data
 :-------------------------:|:------------------------:|:---------------------:
 ![](https://imagizer.imageshack.com/img921/4875/UF2JJq.png)  |  ![](https://imagizer.imageshack.com/img922/3460/BnmcTM.png)  |![](https://imagizer.imageshack.com/img922/4962/o1LWlk.png)  |
 
+If you want to use the Planck 2018 data, please follow the typical [installation instructions](https://cosmologist.info/cosmomc/readme_planck.html) as in CosmoMC.
+
 ## Python Wrapper for ISiTGR
 In this new version, ISiTGR as a patch to CAMB can be run through a python wrapper in order to produce cosmological observables. The easiest way to install the ISiTGR python wrapper is using PyPI (https://pypi.org/project/isitgr/) by running
 ```
@@ -94,6 +96,7 @@ Temperature and lensing potential power spectrum with (μ, η) | TT and TE power
 
 
 ## How to modify the ISiTGR code
+Soon!
 
 ## Referencing ISiTGR
 
