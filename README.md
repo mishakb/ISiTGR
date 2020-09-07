@@ -50,7 +50,7 @@ if no error is shown during the test then the code should be ready to go. Output
 ## How to run MCMCs with ISiTGR
 
 The ISiTGR patch allows to run CAMB and CosmoMC for MG different models. The next flowchart shows the different parameterizations and methods that ISiTGR is able to work with:
-![Parametrizations](https://imagizer.imageshack.com/img922/5735/VwisJk.png)
+![Parametrizations](https://i.imgur.com/PlaqjAv.png)
 The user can take advantage of the ISiTGR capabilities after compiling the code by modifying the corresponding .ini files. The next flowchart shows the different .ini files that you need to modify in case you want to use the functional form or the binning methods for either CAMB (only use the files inside red circles) or CosmoMC (green circles for functional form and blue circles for binning methods). You can find further instructions inside each of this files. 
 ![Implementation](https://imagizer.imageshack.com/img921/710/TDBMMJ.png)
 It is important for the user to remember that the current version of ISiTGR is aimed to work with flat and non-flat models. Moreover, ISiTGR not only implements the contributions of massive neutrinos consistently, but also works with different equations of state for dark energy. The above mentioned is implemented for both functional form and binning methods.
