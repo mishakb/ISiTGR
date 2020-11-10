@@ -254,7 +254,7 @@
 
     end function CAMBdata_GetTransfers
 
-    
+
     function CAMBdata_CalcBackgroundTheory(State, P) result(error)
     use cambmain, only: initvars
     Type (CAMBdata):: State
@@ -681,5 +681,49 @@
     end associate
 
     end subroutine GetBackgroundThermalEvolution
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    function get_adotoa(State, a)
+    use CAMBmain
+    type(CAMBdata) :: State
+    real(dl) :: a, get_adotoa
+    procedure(obj_function) :: dtauda
+
+    get_adotoa = 1/(a*dtauda(State,a))
+
+    end function get_adotoa
+
+    function get_mu(this,k,a,adotoa)
+    use results
+	  use GaugeInterface
+    Type(CAMBdata) :: this
+    real(dl), intent(in) :: k, a, adotoa
+    real(dl) :: get_mu
+
+		get_mu = ISiTGR_mu(this,k,a,adotoa)
+
+    end function get_mu
+
+    function get_eta(this,k,a,adotoa)
+    use results
+	  use GaugeInterface
+    Type(CAMBdata) :: this
+    real(dl), intent(in) :: k, a, adotoa
+    real(dl) :: get_eta
+
+		get_eta = ISiTGR_eta(this,k,a,adotoa)
+
+    end function get_eta
+
+    function get_Sigma(this,k,a,adotoa)
+    use results
+	  use GaugeInterface
+    Type(CAMBdata) :: this
+    real(dl), intent(in) :: k, a, adotoa
+    real(dl) :: get_Sigma
+
+		get_Sigma = ISiTGR_Sigma(this,k,a,adotoa)
+
+    end function get_Sigma
 
     end module handles

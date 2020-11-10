@@ -391,7 +391,7 @@ class CAMBdata(F2003Class):
 
     def save_cmb_power_spectra(self, filename, lmax=None, CMB_unit='muK'):
         r"""
-		
+
         Save CMB power to a plain text file. Output is lensed total :math:`\ell(\ell+1)C_\ell/2\pi` then
         lensing potential and cross: L TT EE BB TE PP PT PE.
 
@@ -399,7 +399,7 @@ class CAMBdata(F2003Class):
         :param lmax: lmax to save
         :param CMB_unit: scale results from dimensionless. Use 'muK' for :math:`\mu K^2` units for CMB :math:`C_\ell`
         and :math:`\mu K` units for lensing cross.
-		
+
         """
         lmax = self._lmax_setting(lmax)
         cmb = self.get_total_cls(lmax, CMB_unit=CMB_unit)
@@ -410,7 +410,7 @@ class CAMBdata(F2003Class):
                               spectra=('total', 'unlensed_scalar', 'unlensed_total', 'lensed_scalar', 'tensor',
                                        'lens_potential'), CMB_unit=None, raw_cl=False):
         r"""
-		
+
         Get CMB power spectra, as requested by the 'spectra' argument. All power spectra are
          :math:`\ell(\ell+1)C_\ell/2\pi` self-owned numpy arrays (0..lmax, 0..3), where 0..3 index
          are TT, EE, BB, TE, unless raw_cl is True in which case return just :math:`C_\ell`.
@@ -425,7 +425,7 @@ class CAMBdata(F2003Class):
           and :math:`\mu K` units for lensing cross.
         :param raw_cl: return :math:`C_\ell` rather than :math:`\ell(\ell+1)C_\ell/2\pi`
         :return: dictionary of power spectrum arrays, indexed by names of requested spectra
-		
+
         """
         P = {}
         if params is not None:
@@ -1435,6 +1435,52 @@ class CAMBdata(F2003Class):
         """
         return self.f_CosmomcTheta()
 
+    def adotoa(self, z):
+        """
+        Get a adotoa for a given z value
+        """
+        a=1/(1+z)
+        adotoa = get_adotoa(byref(self), byref(c_double(a)))
+        return adotoa
+
+    def mu_MG(self,z,k):
+        """
+        Get a grid of values for `\mu(a,k)`
+
+        :param redshifts: list of redshifts
+        :param params: optional :class:`~.model.CAMBparams` instance to use
+        :return: array of rs/DV, H, DA, F_AP for each redshift as 2D array
+        """
+        a = 1/(1+z)
+        mu = [get_mu(byref(self),byref(c_double(k[j])),byref(c_double(a[i])),
+        byref(c_double(self.adotoa(z[i])))) for i in range(len(a)) for j in range(len(k))]
+        mu = np.reshape(mu, (len(a), len(k)))
+        return mu
+
+    def eta_MG(self,z,k):
+        """
+        Get a grid of values for `\eta(a,k)`
+
+        :param redshifts: list of redshifts
+        :param params: optional :class:`~.model.CAMBparams` instance to use
+        :return: array of rs/DV, H, DA, F_AP for each redshift as 2D array
+        """
+        eta = (2*self.Sigma_MG(z,k)-self.mu_MG(z,k))/self.mu_MG(z,k)
+        return eta
+
+    def Sigma_MG(self,z,k):
+        """
+        Get a grid of values for `\Sigma(a,k)`
+
+        :param redshifts: list of redshifts
+        :param params: optional :class:`~.model.CAMBparams` instance to use
+        :return: array of rs/DV, H, DA, F_AP for each redshift as 2D array
+        """
+        a = 1/(1+z)
+        Sigma = [get_Sigma(byref(self),byref(c_double(k[j])),byref(c_double(a[i])),
+        byref(c_double(self.adotoa(z[i])))) for i in range(len(a)) for j in range(len(k))]
+        Sigma = np.reshape(Sigma, (len(a), len(k)))
+        return Sigma
 
 CAMBdata_gettransfers = isitgrlib.__handles_MOD_cambdata_gettransfers
 CAMBdata_gettransfers.argtypes = [POINTER(CAMBdata), POINTER(model.CAMBparams),
@@ -1496,3 +1542,20 @@ CAMB_BackgroundThermalEvolution.argtypes = [POINTER(CAMBdata), int_arg, numpy_1d
 
 CAMB_GetBackgroundOutputs = isitgrlib.__handles_MOD_camb_getbackgroundoutputs
 CAMB_GetBackgroundOutputs.argtypes = [POINTER(CAMBdata), numpy_1d, int_arg]
+
+#CGQ mod: get MG functions and dtauda
+get_adotoa = isitgrlib.__handles_MOD_get_adotoa
+get_adotoa.restype = c_double
+get_adotoa.argtypes = [POINTER(CAMBdata), d_arg]
+
+get_mu = isitgrlib.__handles_MOD_get_mu
+get_mu.restype = c_double
+get_mu.argtypes = [POINTER(CAMBdata), d_arg, d_arg, d_arg]
+
+get_eta = isitgrlib.__handles_MOD_get_eta
+get_eta.restype = c_double
+get_eta.argtypes = [POINTER(CAMBdata), d_arg, d_arg, d_arg]
+
+get_Sigma = isitgrlib.__handles_MOD_get_sigma
+get_Sigma.restype = c_double
+get_Sigma.argtypes = [POINTER(CAMBdata), d_arg, d_arg, d_arg]
