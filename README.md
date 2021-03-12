@@ -112,7 +112,7 @@ as well as the original CAMB paper; the original CosmoMC paper; Additionally ple
 
 ## Acknowledgments
 
-Mustapha Ishak acknowledges that this material is based upon work supported in part by the U.S. Departmentof Energy, Office of Science, under Award Number DE-SC0019206 and the National Science Foundation under grantAST-1517768.
+Mustapha Ishak acknowledges that this material is based upon work supported in part by the U.S. Departmentof Energy, Office of Science, under Award Number DE-SC0019206 and the National Science Foundation under grant AST-1517768.
 
 Cristhian Garcia-Quintero gratefully acknowledges a PhD scholarship from the Mexican National Council for Science andTechnology (CONACYT).
 
