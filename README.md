@@ -109,6 +109,13 @@ by: Jason Dossett and Mustapha Ishak
 by: Jason Dossett, Mustapha Ishak and Jacob Moldenhauer
  
 as well as the original CAMB paper; the original CosmoMC paper; Additionally please cite the use of any other datasets already included in the original version of CosmoMC.
+
+## Acknowledgments
+
+Mustapha Ishak acknowledges that this material is based upon work supported in part by the U.S. Departmentof Energy, Office of Science, under Award Number DE-SC0019206 and the National Science Foundation under grantAST-1517768.
+
+Cristhian Garcia-Quintero gratefully acknowledges a PhD scholarship from the Mexican National Council for Science andTechnology (CONACYT).
+
 ## Contact
 
 If you have comments, questions, or feedback, please feel free to contact to the contributors of this repository: mishak@utdallas.edu or gqcristhian@utdallas.edu.
