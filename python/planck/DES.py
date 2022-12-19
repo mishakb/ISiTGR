@@ -147,9 +147,9 @@ class DES_like(object):
         self.thetas = []
         for i, tp in enumerate(self.data_types):
             xi = np.loadtxt(ini.relativeFileName('measurements[%s]' % tp))
-            bin1 = xi[:, 0].astype(np.int) - 1
-            bin2 = xi[:, 1].astype(np.int) - 1
-            tbin = xi[:, 2].astype(np.int) - 1
+            bin1 = xi[:, 0].astype(int) - 1
+            bin2 = xi[:, 1].astype(int) - 1
+            tbin = xi[:, 2].astype(int) - 1
             corr = np.empty((maxbin, maxbin), dtype=np.object)
             corr[:, :] = None
             self.data_arrays.append(corr)
@@ -416,7 +416,7 @@ class DES_like(object):
             # Approximate bessel integral as binned smooth C_L against integrals of bessel in each bin.
             # Here we crudely precompute an approximation to the bessel integral by brute force
             dls = np.diff(np.unique((np.exp(np.linspace(np.log(1.), np.log(self.lmax), int(500 * acc)))).astype(
-                np.int)))
+                int)))
             groups = []
             ell = 2  # ell_min
             self.ls_bessel = np.zeros(dls.size)
