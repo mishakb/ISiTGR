@@ -83,7 +83,7 @@ class ClsArray(object):
             dat = np.loadtxt(filename)
             if isinstance(cols, six.string_types): cols = cols.split()
         Lix = cols.index('L')
-        L = dat[:, Lix].astype(np.int)
+        L = dat[:, Lix].astype(int)
         lmin = L[0]
         lmax = L[-1]
         if not add_only:

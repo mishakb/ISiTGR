@@ -35,7 +35,7 @@ plt.semilogx(fit_ALens[:, 0], fit_ALens[:, 5] * 1e7, ls='--', lw=0.7, color='C0'
 
 plt.scatter(bands[:, 3], bands[:, 4], marker='.', s=3, color='k', zorder=100)
 
-for lmin, lmax, PP, error in zip(bands[:, 1].astype(np.int), bands[:, 2].astype(np.int),
+for lmin, lmax, PP, error in zip(bands[:, 1].astype(int), bands[:, 2].astype(int),
                                  bands[:, 4], bands[:, 5]):
     plt.fill_between(np.arange(lmin, lmax + 1), PP - error, PP + error, color='gray',
                      alpha=0.3, linewidth=0)
