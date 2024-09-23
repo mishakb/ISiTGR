@@ -100,15 +100,19 @@ Soon!
 
 ## Referencing ISiTGR
 
-We would ask that when using ISiTGR or a modified version of it, you please cite our papers: 
+We would ask that when using ISiTGR or a modified version of it, you please cite these 2 papers: 
 * **ISiTGR: Testing deviations from GR at cosmological scales including dynamical dark energy, massive neutrinos, functional or binned parametrizations, and spatial curvature**: https://arxiv.org/abs/1908.00290  (current ISiTGR version)
 by: Cristhian Garcia-Quintero, Mustapha Ishak, Logan Fox and Jason Dossett.
-* **Spatial curvature and cosmological tests of general relativity**: https://arxiv.org/abs/1205.2422
-by: Jason Dossett and Mustapha Ishak 
+
 * **Testing General Relativity at Cosmological Scales: Implementation and Parameter Correlations**: https://arxiv.org/abs/1109.4583
 by: Jason Dossett, Mustapha Ishak and Jacob Moldenhauer
  
 as well as the original CAMB paper; the original CosmoMC paper; Additionally please cite the use of any other datasets already included in the original version of CosmoMC.
+
+If you use curved models: 
+
+* **Spatial curvature and cosmological tests of general relativity**: https://arxiv.org/abs/1205.2422
+by: Jason Dossett and Mustapha Ishak 
 
 ## Acknowledgments
 
