@@ -65,11 +65,11 @@ class CamSpec_likelihood(object):
             lines = f.readlines()
             while not lines[-1].strip(): lines = lines[:-1]
             self.Nspec = len(lines)
-            lmin = np.zeros(self.Nspec, dtype=np.int)
-            lmax = np.zeros(self.Nspec, dtype=np.int)
+            lmin = np.zeros(self.Nspec, dtype=int)
+            lmax = np.zeros(self.Nspec, dtype=int)
             self.cl_names = []
             self.ell_ranges = np.empty(self.Nspec, dtype=np.object)
-            self.used_sizes = np.zeros(self.Nspec, dtype=np.int)
+            self.used_sizes = np.zeros(self.Nspec, dtype=int)
             for i, line in enumerate(lines):
                 items = line.split()
                 tp = items[0]
@@ -85,7 +85,7 @@ class CamSpec_likelihood(object):
                             else:
                                 ells = used_ell
                             self.ell_ranges[i] = np.array([L for L in range(lmin[i], lmax[i] + 1) if L in ells],
-                                                          dtype=np.int)
+                                                          dtype=int)
                             used_indices.append(self.ell_ranges[i] + (nX - lmin[i]))
                         else:
                             used_indices.append(range(nX, nX + n))
@@ -248,7 +248,7 @@ class CamSpec_likelihood(object):
         lmin = np.min([min(r) for r in self.ell_ranges[:4]])
         lmax = np.max([max(r) for r in self.ell_ranges[:4]])
         n_p = lmax - lmin + 1
-        LS = np.zeros(delta_vector.shape, dtype=np.int)
+        LS = np.zeros(delta_vector.shape, dtype=int)
         ix = 0
         for i, (cal, n) in enumerate(zip(cals[:4], self.used_sizes[:4])):
             if n > 0:
@@ -262,7 +262,7 @@ class CamSpec_likelihood(object):
         ix1 = 0
         Loffsets = [LS - lmin for LS in self.ell_ranges[:4]]
         contiguous = not np.any(
-            [np.count_nonzero(LS - np.arange(LS[0], LS[-1] + 1, dtype=np.int)) for LS in self.ell_ranges[:4]])
+            [np.count_nonzero(LS - np.arange(LS[0], LS[-1] + 1, dtype=int)) for LS in self.ell_ranges[:4]])
         for i, (cal, LS, n) in enumerate(zip(cals[:4], Loffsets, self.used_sizes[:4])):
             dL[LS] += d[ix1:ix1 + n] / cal
             ix = 0

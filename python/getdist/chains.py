@@ -14,7 +14,7 @@ import copy
 # whether to write to terminal chain names and burn in details when loaded from file
 print_load_details = True
 
-_int_types = six.integer_types + (np.integer,)
+_int_types = six.integer_types + (integer,)
 
 try:
     import pandas
@@ -759,7 +759,7 @@ class WeightedSamples(object):
         if weights is None:  weights = self.weights
         numrows = len(weights)
         norm1 = np.sum(weights)
-        weights = weights.astype(np.int)
+        weights = weights.astype(int)
         norm = np.sum(weights)
 
         if abs(norm - norm1) > 1e-4:
@@ -774,7 +774,7 @@ class WeightedSamples(object):
         else:
             tot = 0
             i = 0
-            thin_ix = np.empty(norm // factor, dtype=np.int)
+            thin_ix = np.empty(norm // factor, dtype=int)
             ix = 0
             mult = weights[i]
             while i < numrows:
@@ -807,7 +807,7 @@ class WeightedSamples(object):
             P = self.weights[i] / max_weight
             if random.random() < P:
                 thin_ix.append(i)
-        return np.array(thin_ix, dtype=np.int)
+        return np.array(thin_ix, dtype=int)
 
     def thin(self, factor):
         """
