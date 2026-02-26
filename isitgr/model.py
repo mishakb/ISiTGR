@@ -392,7 +392,7 @@ class CAMBparams(F2003Class):
         ("E22", c_double, "MG parameter for (mu,eta) parametrization"),
         ("c1", c_double, "MG parameter for scale-dependence"),
         ("c2", c_double, "MG parameter for scale-dependence"),
-        ("Lambda", c_double, "MG parameter for scale-dependence"),
+        ("lambda_k", c_double, "MG parameter for scale-dependence"),
         ("mu0", c_double, "MG parameter for (mu,Sigma) parametrization"),
         ("Sigma0", c_double, "MG parameter for (mu,Sigma) parametrization"),
         ("mu1", c_double, "Bin parameter for (mu,eta) or (mu,Sigma) parameterization"),
