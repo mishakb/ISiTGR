@@ -1974,3 +1974,21 @@ CAMB_BackgroundThermalEvolution.argtypes = [POINTER(CAMBdata), int_arg, numpy_1d
 
 CAMB_GetBackgroundOutputs = camblib.__handles_MOD_camb_getbackgroundoutputs
 CAMB_GetBackgroundOutputs.argtypes = [POINTER(CAMBdata), numpy_1d, int_arg]
+
+#> ISiTGR MOD START: CGQ to get MG functions and dtauda
+get_adotoa = camblib.__handles_MOD_get_adotoa
+get_adotoa.restype = c_double
+get_adotoa.argtypes = [POINTER(CAMBdata), d_arg]
+
+get_mu = camblib.__handles_MOD_get_mu
+get_mu.restype = c_double
+get_mu.argtypes = [POINTER(CAMBdata), POINTER(model.CAMBparams), d_arg, d_arg, d_arg]
+
+get_eta = camblib.__handles_MOD_get_eta
+get_eta.restype = c_double
+get_eta.argtypes = [POINTER(CAMBdata), POINTER(model.CAMBparams), d_arg, d_arg, d_arg]
+
+get_Sigma = camblib.__handles_MOD_get_sigma
+get_Sigma.restype = c_double
+get_Sigma.argtypes = [POINTER(CAMBdata), POINTER(model.CAMBparams), d_arg, d_arg, d_arg]
+#< ISiTGR MOD END

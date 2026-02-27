@@ -816,7 +816,7 @@ class CAMBparams(F2003Class):
                 self.c2=c2
                 self.lambda_k=lambda_k
         #(mu,Sigma)
-        if MG_parameterization == "muSigma":
+        elif MG_parameterization == "muSigma":
             self.GR = int(0)
             if redshift_bins is True:
                 self.ISiTGR_BIN_muSigma = True
@@ -845,7 +845,7 @@ class CAMBparams(F2003Class):
                 self.c2=c2
                 self.lambda_k=lambda_k
 		# No other parameterization is accepted
-        elif MG_parameterization is not None:
+        else:
             raise CAMBError('Select a valid parameterization: mueta or muSigma')
 		#< ISiTGR MOD END
 
