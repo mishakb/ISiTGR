@@ -1,0 +1,74 @@
+[build-system]
+requires = ["setuptools>=77", "packaging>=24.2", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "isitgr"
+authors = [
+    { name = "Antony Lewis" },
+]
+description = "Code for Anisotropies in the Microwave Background"
+keywords = ['cosmology', 'CAMB', 'CMB']
+readme = "docs/README_pypi.rst"
+license = "LicenseRef-LGPLv3-arxiv"
+license-files = ["LICENCE.txt"]
+dynamic = ["version"]
+requires-python = ">=3.10.0"
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Operating System :: OS Independent",
+    "Environment :: Console",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Astronomy",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "numpy>=1.22", "scipy>=1.0", "sympy>=1.0", "packaging>=24.2"
+]
+
+[project.optional-dependencies]
+docs = ["sphinx>=4.0", "sphinx_rtd_theme>=1.0", "sphinxcontrib-jquery", "sphinx_markdown_builder", "jupytext"]
+dev = ["ruff>=0.11.0", "pre-commit>=3.0.0"]
+
+[project.scripts]
+isitgr = "isitgr._command_line:run_command_line"
+
+[project.urls]
+Homepage = "https://camb.info"
+Documentation = "https://camb.readthedocs.io"
+Source = "https://github.com/cmbant/camb"
+Tracker = "https://github.com/cmbant/camb/issues"
+Licensing = "https://github.com/cmbant/camb/blob/master/LICENCE.txt"
+
+[tool.setuptools.dynamic]
+version = { attr = "isitgr.__version__" }
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
+[tool.ruff.lint.per-file-ignores]
+"isitgr/__init__.py" = ["F401", "E402"]
+"isitgr/emission_angle.py" = ["E741"]
+"fortran/tests/CAMB_test_files.py" = ["E731"]
+"**/*.ipynb" = ["F405", "E501", "F403", "E402"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+skip-magic-trailing-comma = false
+docstring-code-format = true
+
+[tool.flake8]
+select = [
+    "E713", "E704", "E703", "E714", "E741", "E10", "E11", "E20", "E22", "E23", "E25", "E27",
+    "E301", "E302", "E304", "E9", "F405", "F406", "F5", "F6", "F7", "F8", "W1", "W2", "W3", "W6"
+]

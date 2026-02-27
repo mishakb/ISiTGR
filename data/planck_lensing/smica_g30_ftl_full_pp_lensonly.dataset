@@ -1,2 +1,0 @@
-DEFAULT(smica_g30_ftl_full_pp.dataset)
-INCLUDE(fix_renormalization.ini)

@@ -305,3 +305,4 @@ Referencing ISiTGR
 We would ask that when using ISiTGR or a modified version of it, you cite: our papers (arXiv:1109.4583 and arXiv:1205.2422), this website; the original CAMB paper; the original CosmoMC paper; and the papers on original ISW-galaxy cross correlation likelihood by Ho et al and Hirata et al. When using any of the CFHTLenS weak lensing data sets, please cite our paper, the corresponding CFHTLens dataset paper (Heymans et al. or Kilbinger et al.), and follow the CFHTLenS publication guidlines given here.  Additionally please cite the use of any other datasets already included in the original version of CosmoMC.
 
 </details> 
+
