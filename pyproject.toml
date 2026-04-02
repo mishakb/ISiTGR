@@ -16,7 +16,9 @@ dynamic = ["version"]
 requires-python = ">=3.10.0"
 classifiers = [
     "Development Status :: 5 - Production/Stable",
-    "Operating System :: OS Independent",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
     "Environment :: Console",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Astronomy",
@@ -38,11 +40,17 @@ dev = ["ruff>=0.11.0", "pre-commit>=3.0.0"]
 isitgr = "isitgr._command_line:run_command_line"
 
 [project.urls]
-Homepage = "https://camb.info"
+Homepage = "https://github.com/mishakb/ISiTGR"
 Documentation = "https://camb.readthedocs.io"
-Source = "https://github.com/cmbant/camb"
-Tracker = "https://github.com/cmbant/camb/issues"
-Licensing = "https://github.com/cmbant/camb/blob/master/LICENCE.txt"
+Source = "https://github.com/mishakb/ISiTGR"
+Tracker = "https://github.com/mishakb/ISiTGR/issues"
+Licensing = "https://github.com/mishakb/ISiTGR/blob/master/LICENCE.txt"
+
+[tool.cibuildwheel]
+# Defaults aligned with .github/workflows/build_wheels.yml (per-runner MACOSX_DEPLOYMENT_TARGET overrides in CI)
+build = "cp310-* cp311-* cp312-* cp313-* cp314-*"
+skip = "pp* *-win32 *-manylinux_i686 *musllinux*"
+build-verbosity = 1
 
 [tool.setuptools.dynamic]
 version = { attr = "isitgr.__version__" }
