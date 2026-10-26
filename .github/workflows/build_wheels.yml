@@ -1,11 +1,18 @@
 name: Wheels
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   build_wheels:
     name: Build wheels on ${{ matrix.os }}
-    if: ${{ startsWith(github.ref, 'refs/tags/') || contains(github.event.head_commit.message, '[pypi]') }}
+    if: >-
+      github.event_name == 'pull_request' ||
+      github.event_name == 'workflow_dispatch' ||
+      startsWith(github.ref, 'refs/tags/') ||
+      contains(github.event.head_commit.message, '[pypi]')
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -20,11 +27,27 @@ jobs:
             windows-latest,
           ]
     steps:
-      - run: ln -s $(which gfortran-12) /usr/local/bin/gfortran
+      - run: ln -sf "$(which gfortran-12)" /usr/local/bin/gfortran
         if: startsWith(matrix.os, 'ubuntu')
 
-      - run: ln -s $(which gfortran-14) /usr/local/bin/gfortran
+      - name: Set up gfortran (macOS)
         if: startsWith(matrix.os, 'macos')
+        run: |
+          set -eux
+          mkdir -p /usr/local/bin
+          for v in 15 14 13; do
+            if command -v "gfortran-$v" >/dev/null 2>&1; then
+              ln -sf "$(command -v "gfortran-$v")" /usr/local/bin/gfortran
+              break
+            fi
+          done
+          if ! command -v gfortran >/dev/null 2>&1; then
+            brew install gcc
+            GFORT="$(brew --prefix gcc)/bin/gfortran"
+            if [ -x "$GFORT" ]; then
+              ln -sf "$GFORT" /usr/local/bin/gfortran
+            fi
+          fi
 
       - run: gfortran --version
 
@@ -42,27 +65,18 @@ jobs:
       - name: Build macos-13 wheels
         if: matrix.os == 'macos-13' || matrix.os == 'macos-13-xlarge'
         env:
-          MACOSX_DEPLOYMENT_TARGET: 13
-          CIBW_BUILD: cp311-*
-          CIBW_SKIP: pp*
+          MACOSX_DEPLOYMENT_TARGET: "13"
+          CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-* cp314-*"
+          CIBW_SKIP: "pp*"
           CIBW_BUILD_VERBOSITY: 1
         run: python -m cibuildwheel --output-dir wheelhouse
 
-      - name: Build macos-15 wheels
-        if: matrix.os == 'macos-15' || matrix.os == 'macos-15-large'
-        env:
-          MACOSX_DEPLOYMENT_TARGET: 15
-          CIBW_BUILD: cp311-*
-          CIBW_SKIP: pp*
-          CIBW_BUILD_VERBOSITY: 1
-        run: python -m cibuildwheel --output-dir wheelhouse
-
-      - name: Build wheels
+      - name: Build wheels (macOS 14+, Linux, Windows)
         if: matrix.os == 'macos-14' || startsWith(matrix.os, 'ubuntu') || matrix.os == 'windows-latest'
         env:
-          MACOSX_DEPLOYMENT_TARGET: 14
-          CIBW_BUILD: cp311-*
-          CIBW_SKIP: pp* *-win32 *-manylinux_i686 *musllinux*
+          MACOSX_DEPLOYMENT_TARGET: "14"
+          CIBW_BUILD: "cp310-* cp311-* cp312-* cp313-* cp314-*"
+          CIBW_SKIP: "pp* *-win32 *-manylinux_i686 *musllinux*"
           CIBW_BUILD_VERBOSITY: 1
         run: python -m cibuildwheel --output-dir wheelhouse
 
@@ -72,11 +86,67 @@ jobs:
           path: |
             wheelhouse/*.whl
 
+  verify_macos_wheel:
+    name: Verify macOS wheel (Mach-O + import)
+    needs: [build_wheels]
+    if: >-
+      always() && needs.build_wheels.result == 'success' &&
+      (github.event_name == 'pull_request' ||
+       github.event_name == 'workflow_dispatch' ||
+       github.event_name == 'push')
+    runs-on: macos-14
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: wheels-macos-14
+          path: wheelhouse/
+
+      - name: Assert Mach-O shared library and smoke import
+        shell: bash
+        run: |
+          set -eux
+          shopt -s nullglob
+          wheels=(wheelhouse/*.whl)
+          if [ ${#wheels[@]} -eq 0 ]; then
+            echo "No wheels found in artifact wheels-macos-14"
+            exit 1
+          fi
+          whl="${wheels[0]}"
+          echo "Using wheel: $whl"
+          unzip -l "$whl" | head -40
+          rm -rf /tmp/isitgr-whl && mkdir -p /tmp/isitgr-whl
+          unzip -q "$whl" -d /tmp/isitgr-whl
+          so="$(find /tmp/isitgr-whl -name 'isitgrlib.so' -print -quit)"
+          if [ -z "$so" ]; then
+            echo "isitgrlib.so not found inside wheel"
+            find /tmp/isitgr-whl -type f | head -50
+            exit 1
+          fi
+          file_out="$(file "$so")"
+          echo "$file_out"
+          case "$file_out" in
+            *ELF*) echo "Expected Mach-O for macOS wheel, got ELF"; exit 1 ;;
+          esac
+          case "$file_out" in
+            *Mach-O*) ;;
+            *) echo "Expected Mach-O in 'file' output"; exit 1 ;;
+          esac
+          python3 -m venv .venv-verify
+          # shellcheck disable=SC1091
+          source .venv-verify/bin/activate
+          python -m pip install -U pip
+          python -m pip install "$whl"
+          python -c "import isitgr; print('isitgr', getattr(isitgr, '__version__', '?'))"
+
   build-sdist-and-upload:
     runs-on: ubuntu-latest
-    needs: ["build_wheels"]
+    needs: [build_wheels]
     environment: wheels
-    if: github.repository_owner == 'cmbant'
+    # Trusted publishing: restrict to maintainers (adjust if PyPI OIDC uses another org)
+    if: >-
+      (github.repository_owner == 'mishakb' || github.repository_owner == 'cmbant') &&
+      (startsWith(github.ref, 'refs/tags/') ||
+       contains(github.event.head_commit.message, '[pypi]'))
     permissions:
       id-token: write
 
@@ -139,13 +209,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-14, ubuntu-20.04, ubuntu-24.04-arm, windows-latest]
+        os: [macos-14, ubuntu-22.04, ubuntu-24.04-arm, windows-latest]
 
     steps:
       - uses: actions/setup-python@v6
 
       - name: install
-        run: python -m pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ camb
+        run: python -m pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ isitgr
 
       - name: test
-        run: python -m unittest camb.tests.camb_test
+        run: python -c "import isitgr; print(isitgr.__version__)"
