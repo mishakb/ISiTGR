@@ -27,8 +27,25 @@ jobs:
             windows-latest,
           ]
     steps:
-      - run: ln -sf "$(which gfortran-12)" /usr/local/bin/gfortran
+      - name: Set up gfortran (Linux)
+        # Linux wheels are compiled inside manylinux containers with their own gfortran;
+        # this only provides a host gfortran. Runner images differ in which versions they ship.
         if: startsWith(matrix.os, 'ubuntu')
+        run: |
+          set -eux
+          sudo mkdir -p /usr/local/bin
+          if ! command -v gfortran >/dev/null 2>&1; then
+            for v in 15 14 13 12; do
+              if command -v "gfortran-$v" >/dev/null 2>&1; then
+                sudo ln -sf "$(command -v "gfortran-$v")" /usr/local/bin/gfortran
+                break
+              fi
+            done
+          fi
+          if ! command -v gfortran >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y gfortran
+          fi
 
       - name: Set up gfortran (macOS)
         if: startsWith(matrix.os, 'macos')
