@@ -20,6 +20,7 @@ Notes:
 
 from __future__ import annotations
 
+import types
 import os
 import sys
 import argparse
@@ -32,7 +33,7 @@ import matplotlib.pyplot as plt
 # -----------------------------------------------------------------------------
 # SECTION 0 — Import ISiTGR
 # -----------------------------------------------------------------------------
-def import_isitgr() -> "module":
+def import_isitgr() -> types.ModuleType:
     """
     Try to import ISiTGR in a way that works both for:
       - an installed package, and
