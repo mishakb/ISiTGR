@@ -19,15 +19,15 @@
         fails = fails+1
         print *, 'Error in FormatString: ', S
     end if
-    
+
     S2 = Join(',', S,'XP')
     if (S2 /= S//',XP') then
         fails = fails+1
         print *, 'Error in Join: ', S2
     end if
-    
+
     if (fails==0) print *, 'OK string tests'
-    
+
 
     end function
 
