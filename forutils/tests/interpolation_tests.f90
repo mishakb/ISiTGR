@@ -31,7 +31,7 @@
     real(sP), parameter:: testarrayval(3) = [7.3_sp, 9._sp,34.34643_sp]
     real(sp) :: outarray(3), funcarray(3)
     Type(TBinaryFile) :: FB
-    
+
     fails = 0
     allocate(x(100),f(100))
     do i=1, 100
@@ -77,7 +77,7 @@
         print *, 'derivative error'
         print *, Reg%Derivative(testval), Irreg%Derivative(testval),RegLog%Derivative(testval), funcderiv(testval)
     end if
-    
+
     do i=1,3
         funcarray(i) = func(testarrayval(i))
     end do
@@ -116,7 +116,7 @@
         print *, 'Load bin2 error'
     end if
     call File%Delete(temp_file)
-    
+
     end function RunInterpolationTests
 
     end module InterpolationTests

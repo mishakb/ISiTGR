@@ -4,7 +4,7 @@ ISiTGR demo script (Python) – only:
   1) (mu, eta) parameterization  [= "mueta"]  (CMB TT and lensing phi-phi)
   2) (mu, Sigma) parameterization [= "muSigma"] (CMB TT and TE)
   3) binning methods example
-  
+
 Usage:
   python isitgr_demo_mueta_musigma.py
   python isitgr_demo_mueta_musigma.py --only mueta
@@ -20,19 +20,20 @@ Notes:
 
 from __future__ import annotations
 
+import argparse
 import os
 import sys
-import argparse
 from pathlib import Path
+from types import ModuleType
 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 # -----------------------------------------------------------------------------
 # SECTION 0 — Import ISiTGR
 # -----------------------------------------------------------------------------
-def import_isitgr() -> "module":
+def import_isitgr() -> ModuleType:
     """
     Try to import ISiTGR in a way that works both for:
       - an installed package, and
@@ -52,6 +53,7 @@ def import_isitgr() -> "module":
 
     try:
         import isitgr  # type: ignore
+
         print(f"Using CAMB-ISiTGR {isitgr.__version__} at {Path(isitgr.__file__).resolve().parent}")
         return isitgr
     except Exception as exc:
@@ -84,23 +86,27 @@ def run_mueta(isitgr, save_dir: Path | None = None) -> None:
     pars_GR.set_for_lmax(2500, lens_potential_accuracy=0)
 
     # For MG models (mueta)
-    pars_MG1.set_cosmology(H0=70, ombh2=0.0226, omch2=0.112, mnu=0, omk=0, tau=0.09,
-                           MG_parameterization="mueta", E11=E11[0], E22=E22[0])
+    pars_MG1.set_cosmology(
+        H0=70, ombh2=0.0226, omch2=0.112, mnu=0, omk=0, tau=0.09, MG_parameterization="mueta", E11=E11[0], E22=E22[0]
+    )
     pars_MG1.InitPower.set_params(As=2.1e-9, ns=0.96, r=0)
     pars_MG1.set_for_lmax(2500, lens_potential_accuracy=0)
 
-    pars_MG2.set_cosmology(H0=70, ombh2=0.0226, omch2=0.112, mnu=0, omk=0, tau=0.09,
-                           MG_parameterization="mueta", E11=E11[1], E22=E22[1])
+    pars_MG2.set_cosmology(
+        H0=70, ombh2=0.0226, omch2=0.112, mnu=0, omk=0, tau=0.09, MG_parameterization="mueta", E11=E11[1], E22=E22[1]
+    )
     pars_MG2.InitPower.set_params(As=2.1e-9, ns=0.96, r=0)
     pars_MG2.set_for_lmax(2500, lens_potential_accuracy=0)
 
-    pars_MG3.set_cosmology(H0=70, ombh2=0.0226, omch2=0.112, mnu=0, omk=0, tau=0.09,
-                           MG_parameterization="mueta", E11=E11[2], E22=E22[2])
+    pars_MG3.set_cosmology(
+        H0=70, ombh2=0.0226, omch2=0.112, mnu=0, omk=0, tau=0.09, MG_parameterization="mueta", E11=E11[2], E22=E22[2]
+    )
     pars_MG3.InitPower.set_params(As=2.1e-9, ns=0.96, r=0)
     pars_MG3.set_for_lmax(2500, lens_potential_accuracy=0)
 
-    pars_MG4.set_cosmology(H0=70, ombh2=0.0226, omch2=0.112, mnu=0, omk=0, tau=0.09,
-                           MG_parameterization="mueta", E11=E11[3], E22=E22[3])
+    pars_MG4.set_cosmology(
+        H0=70, ombh2=0.0226, omch2=0.112, mnu=0, omk=0, tau=0.09, MG_parameterization="mueta", E11=E11[3], E22=E22[3]
+    )
     pars_MG4.InitPower.set_params(As=2.1e-9, ns=0.96, r=0)
     pars_MG4.set_for_lmax(2500, lens_potential_accuracy=0)
 
@@ -208,14 +214,32 @@ def run_musigma(isitgr, save_dir: Path | None = None) -> None:
     pars_GR.set_for_lmax(500, lens_potential_accuracy=0)
 
     # MG1 (muSigma)
-    pars_MG1.set_cosmology(H0=70, ombh2=0.0226, omch2=0.112, mnu=0, omk=0, tau=0.09,
-                           MG_parameterization="muSigma", mu0=mu0[0], Sigma0=Sigma0[0])
+    pars_MG1.set_cosmology(
+        H0=70,
+        ombh2=0.0226,
+        omch2=0.112,
+        mnu=0,
+        omk=0,
+        tau=0.09,
+        MG_parameterization="muSigma",
+        mu0=mu0[0],
+        Sigma0=Sigma0[0],
+    )
     pars_MG1.InitPower.set_params(As=2.1e-9, ns=0.96, r=0)
     pars_MG1.set_for_lmax(500, lens_potential_accuracy=0)
 
     # MG2 (muSigma)
-    pars_MG2.set_cosmology(H0=70, ombh2=0.0226, omch2=0.112, mnu=0, omk=0, tau=0.09,
-                           MG_parameterization="muSigma", mu0=mu0[1], Sigma0=Sigma0[1])
+    pars_MG2.set_cosmology(
+        H0=70,
+        ombh2=0.0226,
+        omch2=0.112,
+        mnu=0,
+        omk=0,
+        tau=0.09,
+        MG_parameterization="muSigma",
+        mu0=mu0[1],
+        Sigma0=Sigma0[1],
+    )
     pars_MG2.InitPower.set_params(As=2.1e-9, ns=0.96, r=0)
     pars_MG2.set_for_lmax(500, lens_potential_accuracy=0)
 
@@ -241,6 +265,7 @@ def run_musigma(isitgr, save_dir: Path | None = None) -> None:
     TEspectra_divided_by_ell = np.array(TEspectra) / ell_safe
 
     from matplotlib import gridspec
+
     fig = plt.figure(figsize=(10, 15))
     gs = gridspec.GridSpec(2, 1, height_ratios=[1, 1])
 
@@ -290,12 +315,24 @@ def run_musigma_redshift_binning_mu(isitgr, save_dir: Path | None = None) -> Non
     # -------------------------------------------------------------------------
     pars_MG1 = isitgr.CAMBparams()
     pars_MG1.set_cosmology(
-        H0=70, ombh2=0.0226, omch2=0.112, mnu=0, omk=0, tau=0.09,
+        H0=70,
+        ombh2=0.0226,
+        omch2=0.112,
+        mnu=0,
+        omk=0,
+        tau=0.09,
         MG_parameterization="muSigma",
-        z_TGR=2.0, z_tw=0.01,
+        z_TGR=2.0,
+        z_tw=0.01,
         redshift_bins=True,
-        mu1=1.4, mu2=1.3, mu3=1.2, mu4=1.1,
-        Sigma1=1.0, Sigma2=1.0, Sigma3=1.0, Sigma4=1.0,
+        mu1=1.4,
+        mu2=1.3,
+        mu3=1.2,
+        mu4=1.1,
+        Sigma1=1.0,
+        Sigma2=1.0,
+        Sigma3=1.0,
+        Sigma4=1.0,
     )
     pars_MG1.InitPower.set_params(As=2.1e-9, ns=0.96, r=0)
     pars_MG1.set_for_lmax(2500, lens_potential_accuracy=0)
@@ -304,12 +341,24 @@ def run_musigma_redshift_binning_mu(isitgr, save_dir: Path | None = None) -> Non
 
     pars_MG2 = isitgr.CAMBparams()
     pars_MG2.set_cosmology(
-        H0=70, ombh2=0.0226, omch2=0.112, mnu=0, omk=0, tau=0.09,
+        H0=70,
+        ombh2=0.0226,
+        omch2=0.112,
+        mnu=0,
+        omk=0,
+        tau=0.09,
         MG_parameterization="muSigma",
-        z_TGR=2.0, z_tw=0.05,
+        z_TGR=2.0,
+        z_tw=0.05,
         redshift_bins=True,
-        mu1=1.4, mu2=1.3, mu3=1.2, mu4=1.1,
-        Sigma1=1.0, Sigma2=1.0, Sigma3=1.0, Sigma4=1.0,
+        mu1=1.4,
+        mu2=1.3,
+        mu3=1.2,
+        mu4=1.1,
+        Sigma1=1.0,
+        Sigma2=1.0,
+        Sigma3=1.0,
+        Sigma4=1.0,
     )
     pars_MG2.InitPower.set_params(As=2.1e-9, ns=0.96, r=0)
     pars_MG2.set_for_lmax(2500, lens_potential_accuracy=0)
@@ -318,12 +367,24 @@ def run_musigma_redshift_binning_mu(isitgr, save_dir: Path | None = None) -> Non
 
     pars_MG3 = isitgr.CAMBparams()
     pars_MG3.set_cosmology(
-        H0=70, ombh2=0.0226, omch2=0.112, mnu=0, omk=0, tau=0.09,
+        H0=70,
+        ombh2=0.0226,
+        omch2=0.112,
+        mnu=0,
+        omk=0,
+        tau=0.09,
         MG_parameterization="muSigma",
-        z_TGR=2.0, z_tw=0.15,
+        z_TGR=2.0,
+        z_tw=0.15,
         redshift_bins=True,
-        mu1=1.4, mu2=1.3, mu3=1.2, mu4=1.1,
-        Sigma1=1.0, Sigma2=1.0, Sigma3=1.0, Sigma4=1.0,
+        mu1=1.4,
+        mu2=1.3,
+        mu3=1.2,
+        mu4=1.1,
+        Sigma1=1.0,
+        Sigma2=1.0,
+        Sigma3=1.0,
+        Sigma4=1.0,
     )
     pars_MG3.InitPower.set_params(As=2.1e-9, ns=0.96, r=0)
     pars_MG3.set_for_lmax(2500, lens_potential_accuracy=0)
@@ -352,6 +413,7 @@ def run_musigma_redshift_binning_mu(isitgr, save_dir: Path | None = None) -> Non
         print(f"[musigma-binning] saved: {out}")
 
     plt.show()
+
 
 # -----------------------------------------------------------------------------
 # SECTION 4 — CLI

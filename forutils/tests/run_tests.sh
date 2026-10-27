@@ -35,4 +35,3 @@ echo ''
 echo 'Testing Release build..'
 
 ./tester_Release
-
