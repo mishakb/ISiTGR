@@ -387,7 +387,7 @@ class CAMBparams(F2003Class):
         ("min_l_logl_sampling", c_int, "Minimum L to use log sampling for L"),
         ("SourceWindows", AllocatableObjectArray(SourceWindow)),
         ("CustomSources", CustomSources),
-        #> ISiTGR MOD START: Adding MG parameters.
+        # > ISiTGR MOD START: Adding MG parameters.
         ("E11", c_double, "MG parameter for (mu,eta) parametrization"),
         ("E22", c_double, "MG parameter for (mu,eta) parametrization"),
         ("c1", c_double, "MG parameter for scale-dependence"),
@@ -413,14 +413,22 @@ class CAMBparams(F2003Class):
         ("k_c", c_double, "parameter that separates scale-bins"),
         ("k_tw", c_double, "transition width between k bins"),
         ("k_TGR", c_double, "scale below which we recover GR at very large scales"),
-        ("k_S", c_double, "scale above which we force bins to go back to GR (notice scale cuts are supposed to be already applied in the data)"),
+        (
+            "k_S",
+            c_double,
+            "scale above which we force bins to go back to GR (notice scale cuts are supposed to be already applied in the data)",
+        ),
         ("ISiTGR_mueta", c_bool, "flag to use (mu,eta) parametrization for functional form"),
         ("ISiTGR_muSigma", c_bool, "flag to use (mu,Sigma) parametrization for functional form"),
         ("ISiTGR_BIN_mueta", c_bool, "flag to use (mu,eta) parametrization for binning method"),
         ("ISiTGR_BIN_muSigma", c_bool, "flag to use (mu,Sigma) parametrization for binning method"),
-        ("ISiTGR_BIN_scale_bins", c_bool, "flag to bin only in redshift. If false, then binning is built in both redshift and scale"),
-        ("GR", c_int, "GR switch on/off")
-        #< ISiTGR MOD END
+        (
+            "ISiTGR_BIN_scale_bins",
+            c_bool,
+            "flag to bin only in redshift. If false, then binning is built in both redshift and scale",
+        ),
+        ("GR", c_int, "GR switch on/off"),
+        # < ISiTGR MOD END
     ]
 
     H0: float
@@ -634,7 +642,7 @@ class CAMBparams(F2003Class):
         except ValueError:
             raise CAMBParamRangeError("No solution for H0 inside of theta_H0_range")
 
-    #> ISiTGR MOD START: Adding new settings to set_cosmology
+    # > ISiTGR MOD START: Adding new settings to set_cosmology
     def set_cosmology(
         self,
         H0: float | None = None,
@@ -657,32 +665,32 @@ class CAMBparams(F2003Class):
         bbn_predictor: None | str | bbn.BBNPredictor = None,
         theta_H0_range=(10, 100),
         setter_H0=None,
-        MG_parameterization="muSigma", 
-        E11=0.0, 
-        E22=0.0, 
-        c1=1.0, 
-        c2=1.0, 
+        MG_parameterization="muSigma",
+        E11=0.0,
+        E22=0.0,
+        c1=1.0,
+        c2=1.0,
         lambda_k=0.0,
-        mu0=0.0, 
-        Sigma0=0.0, 
-        mu1=1.0, 
-        mu2=1.0, 
-        mu3=1.0, 
-        mu4=1.0, 
-        eta1=1.0, 
-        eta2=1.0, 
+        mu0=0.0,
+        Sigma0=0.0,
+        mu1=1.0,
+        mu2=1.0,
+        mu3=1.0,
+        mu4=1.0,
+        eta1=1.0,
+        eta2=1.0,
         eta3=1.0,
-        eta4=1.0, 
-        Sigma1=1.0, 
-        Sigma2=1.0, 
-        Sigma3=1.0, 
+        eta4=1.0,
+        Sigma1=1.0,
+        Sigma2=1.0,
+        Sigma3=1.0,
         Sigma4=1.0,
-        z_div=1.0, 
-        z_TGR=2.0, 
-        z_tw=0.05, 
-        k_c=0.01, 
-        k_tw=0.001, 
-        k_TGR=0.001, 
+        z_div=1.0,
+        z_TGR=2.0,
+        z_tw=0.05,
+        k_c=0.01,
+        k_tw=0.001,
+        k_TGR=0.001,
         k_S=0.5,
         redshift_bins=None,
         scale_bins=None,
@@ -775,79 +783,79 @@ class CAMBparams(F2003Class):
         :param Sigma3: MG parameter for binning method, using (mu,Sigma) parametrization.
         :param Sigma4: MG parameter for binning method, using (mu,Sigma) parametrization.
         """
-     #< ISiTGR MOD END
+        # < ISiTGR MOD END
 
-		#> ISiTGR MOD START: Flags for ISiTGR python wrapper to work with different parameterizations
-#		**************************************** ISiTGR Modifications **************************************************
-#       Flags to work with the different MG functional parameterizations. The parameterizations that ISiTGR can handle
-#		for functional form of MG parameters are:
-#		i) Planck model with E11 and E22: In the mueta parameterization
-#		ii) DES model based on mu0 and Sigma0: In the muSigma parameterization
-#		iii) Binning method in redshift: Valid in both mueta or muSigma representations
-#		iv) Binning method in redshift and scale: Valid in both mueta or muSigma representations
-#		**************************************** ISiTGR Modifications **************************************************
-		#(mu,eta)
+        # > ISiTGR MOD START: Flags for ISiTGR python wrapper to work with different parameterizations
+        # **************************************** ISiTGR Modifications **************************************************
+        #       Flags to work with the different MG functional parameterizations. The parameterizations that ISiTGR can handle
+        # for functional form of MG parameters are:
+        # i) Planck model with E11 and E22: In the mueta parameterization
+        # ii) DES model based on mu0 and Sigma0: In the muSigma parameterization
+        # iii) Binning method in redshift: Valid in both mueta or muSigma representations
+        # iv) Binning method in redshift and scale: Valid in both mueta or muSigma representations
+        # **************************************** ISiTGR Modifications **************************************************
+        # (mu,eta)
         if MG_parameterization == "mueta":
             self.GR = int(0)
             if redshift_bins is True:
                 self.ISiTGR_BIN_mueta = True
-                self.mu1=mu1
-                self.mu2=mu2
-                self.mu3=mu3
-                self.mu4=mu4
-                self.eta1=eta1
-                self.eta2=eta2
-                self.eta3=eta3
-                self.eta4=eta4
-                self.z_div=z_div
-                self.z_TGR=z_TGR
-                self.z_tw=z_tw
+                self.mu1 = mu1
+                self.mu2 = mu2
+                self.mu3 = mu3
+                self.mu4 = mu4
+                self.eta1 = eta1
+                self.eta2 = eta2
+                self.eta3 = eta3
+                self.eta4 = eta4
+                self.z_div = z_div
+                self.z_TGR = z_TGR
+                self.z_tw = z_tw
                 if scale_bins is True:
                     self.ISiTGR_BIN_scale_bins = True
-                    self.k_c=k_c
-                    self.k_TGR=k_TGR
-                    self.k_S=k_S
-                    self.k_tw=k_tw
+                    self.k_c = k_c
+                    self.k_TGR = k_TGR
+                    self.k_S = k_S
+                    self.k_tw = k_tw
             else:
                 self.ISiTGR_mueta = True
-                self.E11=E11
-                self.E22=E22
-                self.c1=c1
-                self.c2=c2
-                self.lambda_k=lambda_k
-        #(mu,Sigma)
+                self.E11 = E11
+                self.E22 = E22
+                self.c1 = c1
+                self.c2 = c2
+                self.lambda_k = lambda_k
+        # (mu,Sigma)
         elif MG_parameterization == "muSigma":
             self.GR = int(0)
             if redshift_bins is True:
                 self.ISiTGR_BIN_muSigma = True
-                self.mu1=mu1
-                self.mu2=mu2
-                self.mu3=mu3
-                self.mu4=mu4
-                self.Sigma1=Sigma1
-                self.Sigma2=Sigma2
-                self.Sigma3=Sigma3
-                self.Sigma4=Sigma4
-                self.z_div=z_div
-                self.z_TGR=z_TGR
-                self.z_tw=z_tw
+                self.mu1 = mu1
+                self.mu2 = mu2
+                self.mu3 = mu3
+                self.mu4 = mu4
+                self.Sigma1 = Sigma1
+                self.Sigma2 = Sigma2
+                self.Sigma3 = Sigma3
+                self.Sigma4 = Sigma4
+                self.z_div = z_div
+                self.z_TGR = z_TGR
+                self.z_tw = z_tw
                 if scale_bins is True:
                     self.ISiTGR_BIN_scale_bins = True
-                    self.k_c=k_c
-                    self.k_TGR=k_TGR
-                    self.k_S=k_S
-                    self.k_tw=k_tw
+                    self.k_c = k_c
+                    self.k_TGR = k_TGR
+                    self.k_S = k_S
+                    self.k_tw = k_tw
             else:
                 self.ISiTGR_muSigma = True
-                self.mu0=mu0
-                self.Sigma0=Sigma0
-                self.c1=c1
-                self.c2=c2
-                self.lambda_k=lambda_k
-		# No other parameterization is accepted
+                self.mu0 = mu0
+                self.Sigma0 = Sigma0
+                self.c1 = c1
+                self.c2 = c2
+                self.lambda_k = lambda_k
+        # No other parameterization is accepted
         else:
-            raise CAMBError('Select a valid parameterization: mueta or muSigma')
-		#< ISiTGR MOD END
+            raise CAMBError("Select a valid parameterization: mueta or muSigma")
+        # < ISiTGR MOD END
 
         if YHe is None:
             # use BBN prediction
