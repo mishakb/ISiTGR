@@ -19,7 +19,7 @@ jobs:
       env:
         - GCC_VERSION="trunk"
         - HUB="cmbant/docker-gcc-build:devel"
- 
+
 services:
   - docker
 
@@ -29,7 +29,6 @@ before_install:
 
 install:
   - chmod +x tests/run_tests.sh
-     
+
 script:
   - docker run -v $(pwd):/forutils -t $HUB /bin/bash -c /forutils/tests/run_tests.sh
-

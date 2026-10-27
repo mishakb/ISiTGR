@@ -1827,16 +1827,16 @@ class CAMBdata(F2003Class):
         """
         return self.f_CosmomcTheta()
 
-    #> ISiTGR MOD START: Get MG functions
+    # > ISiTGR MOD START: Get MG functions
     def adotoa(self, z):
         """
         Get a adotoa for a given z value
         """
-        a=1/(1+z)
+        a = 1 / (1 + z)
         adotoa = get_adotoa(byref(self), byref(c_double(a)))
         return adotoa
 
-    def mu_MG(self,params,z,k):
+    def mu_MG(self, params, z, k):
         r"""
         Get a grid of values for :math:`\mu(a,k)`
 
@@ -1844,13 +1844,22 @@ class CAMBdata(F2003Class):
         :param params: optional :class:`~.model.CAMBparams` instance to use
         :return: array of rs/DV, H, DA, F_AP for each redshift as 2D array
         """
-        a = 1/(1+z)
-        mu = [get_mu(byref(self),byref(params),byref(c_double(k[j])),byref(c_double(a[i])),
-        byref(c_double(self.adotoa(z[i])))) for i in range(len(a)) for j in range(len(k))]
+        a = 1 / (1 + z)
+        mu = [
+            get_mu(
+                byref(self),
+                byref(params),
+                byref(c_double(k[j])),
+                byref(c_double(a[i])),
+                byref(c_double(self.adotoa(z[i]))),
+            )
+            for i in range(len(a))
+            for j in range(len(k))
+        ]
         mu = np.reshape(mu, (len(a), len(k)))
         return mu
 
-    def eta_MG(self,params,z,k):
+    def eta_MG(self, params, z, k):
         r"""
         Get a grid of values for :math:`\eta(a,k)`
 
@@ -1859,15 +1868,24 @@ class CAMBdata(F2003Class):
         :return: array of rs/DV, H, DA, F_AP for each redshift as 2D array
         """
         if params.ISiTGR_BIN_mueta is True or params.ISiTGR_mueta is True:
-            a = 1/(1+z)
-            eta = [get_eta(byref(self),byref(params),byref(c_double(k[j])),byref(c_double(a[i])),
-            byref(c_double(self.adotoa(z[i])))) for i in range(len(a)) for j in range(len(k))]
+            a = 1 / (1 + z)
+            eta = [
+                get_eta(
+                    byref(self),
+                    byref(params),
+                    byref(c_double(k[j])),
+                    byref(c_double(a[i])),
+                    byref(c_double(self.adotoa(z[i]))),
+                )
+                for i in range(len(a))
+                for j in range(len(k))
+            ]
             eta = np.reshape(eta, (len(a), len(k)))
         else:
-            eta = 2*self.Sigma_MG(params,z,k)/self.mu_MG(params,z,k) - 1
+            eta = 2 * self.Sigma_MG(params, z, k) / self.mu_MG(params, z, k) - 1
         return eta
 
-    def Sigma_MG(self,params,z,k):
+    def Sigma_MG(self, params, z, k):
         r"""
         Get a grid of values for :math:`\Sigma(a,k)`
 
@@ -1876,14 +1894,24 @@ class CAMBdata(F2003Class):
         :return: array of rs/DV, H, DA, F_AP for each redshift as 2D array
         """
         if params.ISiTGR_BIN_muSigma is True or params.ISiTGR_muSigma is True:
-            a = 1/(1+z)
-            Sigma = [get_Sigma(byref(self),byref(params),byref(c_double(k[j])),byref(c_double(a[i])),
-            byref(c_double(self.adotoa(z[i])))) for i in range(len(a)) for j in range(len(k))]
+            a = 1 / (1 + z)
+            Sigma = [
+                get_Sigma(
+                    byref(self),
+                    byref(params),
+                    byref(c_double(k[j])),
+                    byref(c_double(a[i])),
+                    byref(c_double(self.adotoa(z[i]))),
+                )
+                for i in range(len(a))
+                for j in range(len(k))
+            ]
             Sigma = np.reshape(Sigma, (len(a), len(k)))
         else:
-            Sigma = self.mu_MG(params,z,k)*(self.eta_MG(params,z,k)+1)/2
+            Sigma = self.mu_MG(params, z, k) * (self.eta_MG(params, z, k) + 1) / 2
         return Sigma
-    #< ISiTGR MOD END
+
+    # < ISiTGR MOD END
 
 
 CAMBdata_gettransfers = camblib.__handles_MOD_cambdata_gettransfers
@@ -1975,7 +2003,7 @@ CAMB_BackgroundThermalEvolution.argtypes = [POINTER(CAMBdata), int_arg, numpy_1d
 CAMB_GetBackgroundOutputs = camblib.__handles_MOD_camb_getbackgroundoutputs
 CAMB_GetBackgroundOutputs.argtypes = [POINTER(CAMBdata), numpy_1d, int_arg]
 
-#> ISiTGR MOD START: CGQ to get MG functions and dtauda
+# > ISiTGR MOD START: CGQ to get MG functions and dtauda
 get_adotoa = camblib.__handles_MOD_get_adotoa
 get_adotoa.restype = c_double
 get_adotoa.argtypes = [POINTER(CAMBdata), d_arg]
@@ -1991,4 +2019,4 @@ get_eta.argtypes = [POINTER(CAMBdata), POINTER(model.CAMBparams), d_arg, d_arg, 
 get_Sigma = camblib.__handles_MOD_get_sigma
 get_Sigma.restype = c_double
 get_Sigma.argtypes = [POINTER(CAMBdata), POINTER(model.CAMBparams), d_arg, d_arg, d_arg]
-#< ISiTGR MOD END
+# < ISiTGR MOD END

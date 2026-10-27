@@ -1,20 +1,20 @@
 [![N|Solid](https://www.utdallas.edu/~jdossett/images/banner_bkgd_isitgr3.jpg)](https://www.utdallas.edu/~jdossett/images/banner_bkgd_isitgr3.jpg)
 
-# ISiTGR Version 3.1 released in February 2020 
+# ISiTGR Version 3.1 released in February 2020
 #### (a python wrapper for ISiTGR version of CAMB has also been released -- see instructions further below)
-We introduce a new version of **I**ntegrated **S**oftware **i**n **T**esting **G**eneral **R**elativity (ISiTGR) which is a patch to the software [CAMB](https://github.com/cmbant/CAMB) and [CosmoMC](https://github.com/cmbant/CosmoMC). ISiTGR is intended to test deviations from GR at cosmological scales using available cosmological data sets. While doing so, it allows for various extensions to the standard flat LCDM model. In this new release, we have a combined support for the following:  
+We introduce a new version of **I**ntegrated **S**oftware **i**n **T**esting **G**eneral **R**elativity (ISiTGR) which is a patch to the software [CAMB](https://github.com/cmbant/CAMB) and [CosmoMC](https://github.com/cmbant/CosmoMC). ISiTGR is intended to test deviations from GR at cosmological scales using available cosmological data sets. While doing so, it allows for various extensions to the standard flat LCDM model. In this new release, we have a combined support for the following:
 
-* Dynamical dark energy parametrizations with a constant or time-dependent equation of state; 
+* Dynamical dark energy parametrizations with a constant or time-dependent equation of state;
 
 * A consistent implementation of anisotropic shear to model massive neutrinos throughout the full formalism;
 
-* Multiple commonly used parameterizations of modified growth (MG) parameters; 
+* Multiple commonly used parameterizations of modified growth (MG) parameters;
 
-* Functional, binned and hybrid time- and scale-dependencies for all MG parameters (expanded from previous version); 
+* Functional, binned and hybrid time- and scale-dependencies for all MG parameters (expanded from previous version);
 
-* Spatially flat or curved backgrounds (present in previous version as well). 
+* Spatially flat or curved backgrounds (present in previous version as well).
 
-The description of the formalism and its implementation in the CMB code, the Integrated Sachs-Wolfe (ISW) effect, and the 3x2 point statistics as well as examples of application to current data sets, can be found in the latest paper on the arXiv. A more technical description of the implementation can be found in the documentation provided in this repository. 
+The description of the formalism and its implementation in the CMB code, the Integrated Sachs-Wolfe (ISW) effect, and the 3x2 point statistics as well as examples of application to current data sets, can be found in the latest paper on the arXiv. A more technical description of the implementation can be found in the documentation provided in this repository.
 
 Additionally, **this new version of ISiTGR is accompanied with a python wrapper**. The python wrapper extends the original CAMB's python wrapper to work with the different MG parameterizations provided in ISiTGR, allowing the user to obtain the power spectra and transfer functions including phenomenological modified gravity parameters.
 
@@ -41,7 +41,7 @@ $ cd camb/fortran
 Select your compilers by editing the Makefile files inside the camb/fortran folder.
 $ make
 ```
-if there are no errors during compilation you should see a new executable file called camb, then you can test if the code is working by executing 
+if there are no errors during compilation you should see a new executable file called camb, then you can test if the code is working by executing
 ```sh
 $ ./camb ../inifiles/params_MG.ini
 ```
@@ -51,7 +51,7 @@ if no error is shown during the test then the code should be ready to go. Output
 
 The ISiTGR patch allows to run CAMB and CosmoMC for MG different models. The next flowchart shows the different parameterizations and methods that ISiTGR is able to work with:
 ![Parametrizations](https://i.imgur.com/PlaqjAv.png)
-The user can take advantage of the ISiTGR capabilities after compiling the code by modifying the corresponding .ini files. The next flowchart shows the different .ini files that you need to modify in case you want to use the functional form or the binning methods for either CAMB (only use the files inside red circles) or CosmoMC (green circles for functional form and blue circles for binning methods). You can find further instructions inside each of this files. 
+The user can take advantage of the ISiTGR capabilities after compiling the code by modifying the corresponding .ini files. The next flowchart shows the different .ini files that you need to modify in case you want to use the functional form or the binning methods for either CAMB (only use the files inside red circles) or CosmoMC (green circles for functional form and blue circles for binning methods). You can find further instructions inside each of this files.
 ![Implementation](https://imagizer.imageshack.com/img921/710/TDBMMJ.png)
 It is important for the user to remember that the current version of ISiTGR is aimed to work with flat and non-flat models. Moreover, ISiTGR not only implements the contributions of massive neutrinos consistently, but also works with different equations of state for dark energy. The above mentioned is implemented for both functional form and binning methods.
 
@@ -59,11 +59,11 @@ If the you want to test the functional form of ISiTGR, you can to run
 ```
 ./cosmomc test_ISiTGR.ini
 ```
-for a quick local run. Otherwise, if the you want to use binning methods, instead you should run 
+for a quick local run. Otherwise, if the you want to use binning methods, instead you should run
 ```
 ./cosmomc test_ISiTGR_BIN.ini
 ```
- While ISiTGR-CAMB can be run locally to produce the spectra, using ISiTGR for MCMC sampling is recommended to be done on a cluster. We provide an example job script file inside the scripts folder that is designed to be run on a cluster with SLURM by just executing 
+ While ISiTGR-CAMB can be run locally to produce the spectra, using ISiTGR for MCMC sampling is recommended to be done on a cluster. We provide an example job script file inside the scripts folder that is designed to be run on a cluster with SLURM by just executing
  ```
 sbatch scripts/run_ISiTGR.sh
 ```
@@ -71,7 +71,7 @@ Additionally, more instructions about the settings for the job can be found insi
 
 In the next table we show some plots to illustrate some features of the ISiTGR patch for CosmoMC:
 
-Binning Methods |  MG + Curvature  |  Planck 2018 data 
+Binning Methods |  MG + Curvature  |  Planck 2018 data
 :-------------------------:|:------------------------:|:---------------------:
 ![](https://imagizer.imageshack.com/img921/4875/UF2JJq.png)  |  ![](https://imagizer.imageshack.com/img922/3460/BnmcTM.png)  |![](https://imagizer.imageshack.com/img922/4962/o1LWlk.png)  |
 
@@ -86,7 +86,7 @@ If you are working in a conda environment, then once you add conda-forge to your
 ```
 $ conda install isitgr
 ```
-See also https://isitgr.readthedocs.io/en/latest/ for documentation and an [example notebook](https://isitgr.readthedocs.io/en/latest/ISiTGRdemo.html) for python-ISiTGR. 
+See also https://isitgr.readthedocs.io/en/latest/ for documentation and an [example notebook](https://isitgr.readthedocs.io/en/latest/ISiTGRdemo.html) for python-ISiTGR.
 
 In the next table we show some plots to illustrate the different power spectrums that can be produced using the ISiTGR python wrapper:
 
@@ -100,19 +100,19 @@ Soon!
 
 ## Referencing ISiTGR
 
-We would ask that when using ISiTGR or a modified version of it, you please cite these 2 papers: 
+We would ask that when using ISiTGR or a modified version of it, you please cite these 2 papers:
 * **ISiTGR: Testing deviations from GR at cosmological scales including dynamical dark energy, massive neutrinos, functional or binned parametrizations, and spatial curvature**: https://arxiv.org/abs/1908.00290  (current ISiTGR version)
 by: Cristhian Garcia-Quintero, Mustapha Ishak, Logan Fox and Jason Dossett.
 
 * **Testing General Relativity at Cosmological Scales: Implementation and Parameter Correlations**: https://arxiv.org/abs/1109.4583
 by: Jason Dossett, Mustapha Ishak and Jacob Moldenhauer
- 
+
 as well as the original CAMB paper; the original CosmoMC paper; Additionally please cite the use of any other datasets already included in the original version of CosmoMC.
 
-If you use curved models: 
+If you use curved models:
 
 * **Spatial curvature and cosmological tests of general relativity**: https://arxiv.org/abs/1205.2422
-by: Jason Dossett and Mustapha Ishak 
+by: Jason Dossett and Mustapha Ishak
 
 ## Acknowledgments
 
@@ -129,19 +129,19 @@ If you have comments, questions, or feedback, please feel free to contact to the
 
 -------------------------------------------------------------
 # ISiTGR Version 3.01 released in September 2019
-We introduce a new version of **I**ntegrated **S**oftware **i**n **T**esting **G**eneral **R**elativity (ISiTGR) which is a patch to the software CAMB and CosmoMC. ISiTGR is intended to test deviations from GR at cosmological scales using available cosmological data sets. While doing so, it allows for various extensions to the standard flat LCDM model. In this new release, we have a combined support for the following:  
+We introduce a new version of **I**ntegrated **S**oftware **i**n **T**esting **G**eneral **R**elativity (ISiTGR) which is a patch to the software CAMB and CosmoMC. ISiTGR is intended to test deviations from GR at cosmological scales using available cosmological data sets. While doing so, it allows for various extensions to the standard flat LCDM model. In this new release, we have a combined support for the following:
 
-* Dynamical dark energy parametrizations with a constant or time-dependent equation of state; 
+* Dynamical dark energy parametrizations with a constant or time-dependent equation of state;
 
 * A consistent implementation of anisotropic shear to model massive neutrinos throughout the full formalism;
 
-* Multiple commonly used parameterizations of modified growth (MG) parameters; 
+* Multiple commonly used parameterizations of modified growth (MG) parameters;
 
-* Functional, binned and hybrid time- and scale-dependencies for all MG parameters (expanded from previous version); 
+* Functional, binned and hybrid time- and scale-dependencies for all MG parameters (expanded from previous version);
 
-* Spatially flat or curved backgrounds (present in previous version as well). 
+* Spatially flat or curved backgrounds (present in previous version as well).
 
-The description of the formalism and its implementation in the CMB code, the Integrated Sachs-Wolfe (ISW) effect, and the 3x2 point statistics as well as examples of application to current data sets, can be found in the latest paper on the arXiv. A more technical description of the implementation can be found in the documentation provided in this repository. 
+The description of the formalism and its implementation in the CMB code, the Integrated Sachs-Wolfe (ISW) effect, and the 3x2 point statistics as well as examples of application to current data sets, can be found in the latest paper on the arXiv. A more technical description of the implementation can be found in the documentation provided in this repository.
 
 ## Installation
 The corresponding version of ISiTGR was built based on the CosmoMC July 2018 version. To install the GitHub version of ISiTGR you can run the following steps in your terminal :
@@ -158,13 +158,13 @@ if there are no errors during compilation, then you should be ready to use ISiTG
 ## How to run ISiTGR
 The ISiTGR patch allows to run CAMB and CosmoMC for MG different models. The next flowchart shows the different parameterizations and methods that ISiTGR is able to work with:
 ![Parametrizations](https://drive.google.com/uc?export=view&id=1tgbA9weuGTCAc5qjdnCWkkCgvNu5JVCx)
-The user can take advantage of the ISiTGR capabilities after compiling the code by modifying the corresponding .ini files. The next flowchart shows the different .ini files that you need to modify in case you want to use the functional form or the binning methods for either CAMB or CosmoMC (you can find further instructions inside each of this files). 
+The user can take advantage of the ISiTGR capabilities after compiling the code by modifying the corresponding .ini files. The next flowchart shows the different .ini files that you need to modify in case you want to use the functional form or the binning methods for either CAMB or CosmoMC (you can find further instructions inside each of this files).
 ![Implementation](https://drive.google.com/uc?export=view&id=108szPz_VvQQI9anga74-jcSSUgwmavx1)
-It is important for the user to remember that the current version of ISiTGR is aimed to work with flat and non-flat models. Moreover, ISiTGR not only implements the contributions of massive neutrinos consistently, but also works with different equations of state for dark energy. The above mentioned is implemented for both functional form and binning methods. If the user wants to run the functional form of ISiTGR, the user needs to run `./cosmo test_ISiTGR.ini`. Otherwise, if the user wants to use the binning methods, then one should run `./cosmo test_ISiTGR_BIN`. 
+It is important for the user to remember that the current version of ISiTGR is aimed to work with flat and non-flat models. Moreover, ISiTGR not only implements the contributions of massive neutrinos consistently, but also works with different equations of state for dark energy. The above mentioned is implemented for both functional form and binning methods. If the user wants to run the functional form of ISiTGR, the user needs to run `./cosmo test_ISiTGR.ini`. Otherwise, if the user wants to use the binning methods, then one should run `./cosmo test_ISiTGR_BIN`.
 
 In the next table we show some plots to illustrate some features of the ISiTGR patch for CosmoMC:
 
-Binning Methods |  MG + Curvature  |  MG + dark energy + neutrinos 
+Binning Methods |  MG + Curvature  |  MG + dark energy + neutrinos
 :-------------------------:|:------------------------:|:---------------------:
 ![](https://drive.google.com/uc?export=view&id=1deSsgLoSpMYaA6l5Z9-7PTggY1yDgz_O)  |  ![](https://drive.google.com/uc?export=view&id=10BKqA6dDem9rDB1-VnwR1Gcwi0Bu688Y)  |![](https://drive.google.com/uc?export=view&id=1vQxtX3uX73LyL0TgWchsy1uo2FmOkRBY)  |
 
@@ -304,5 +304,4 @@ These files are loosely based upon the files contained in the original COSMOS we
 Referencing ISiTGR
 We would ask that when using ISiTGR or a modified version of it, you cite: our papers (arXiv:1109.4583 and arXiv:1205.2422), this website; the original CAMB paper; the original CosmoMC paper; and the papers on original ISW-galaxy cross correlation likelihood by Ho et al and Hirata et al. When using any of the CFHTLenS weak lensing data sets, please cite our paper, the corresponding CFHTLens dataset paper (Heymans et al. or Kilbinger et al.), and follow the CFHTLenS publication guidlines given here.  Additionally please cite the use of any other datasets already included in the original version of CosmoMC.
 
-</details> 
-
+</details>

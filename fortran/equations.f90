@@ -2194,7 +2194,7 @@
         ISiTGR_mu = mu_MG
     end if
     end function ISiTGR_mu
-    
+
     function ISiTGR_mu_dot(State,k,a,adotoa,Hdot)
     use constants
     use results
@@ -2205,7 +2205,7 @@
     real(dl) :: mudot_MG, mu_MG, mu_MG_undamped, mudot_MG_undamped, mu_MG_pivot, mudot_MG_pivot
     real(dl) :: F_k, Fdot_k
     real(dl) :: s1_k, s2_k, s1_k_dot, s2_k_dot, omegav, omegam_t, omegak_t, gamma, gammastar, gammastarstar, term1, term2, term3 !star denotes derivative with respect to natural logarithm of the scale factor (so no adotoa=(da/dtau)/a is present)
-    
+
     !binning method expression
     if((CP%ISiTGR_BIN_mueta) .or. (CP%ISiTGR_BIN_muSigma)) then
         if (CP%ISiTGR_BIN_scale_bins) then
@@ -2238,9 +2238,9 @@
         ISiTGR_mu_dot = mudot_MG
     end if
     end function ISiTGR_mu_dot
-        
+
     !---------------------------------------------------------------------
-    
+
     function ISiTGR_eta(State,k,a,adotoa)
     use constants
     use classes
@@ -2249,7 +2249,7 @@
     real(dl) ISiTGR_eta
     real(dl) :: s1_k, s2_k
     real(dl) :: eta_MG
-    
+
     !binning method expression
     if(CP%ISiTGR_BIN_mueta) then
         if (CP%ISiTGR_BIN_scale_bins) then
@@ -2270,9 +2270,9 @@
         eta_MG = 1.d0 + CP%E22 * OmegaDE(State,a,adotoa) * s1_k
         ISiTGR_eta = eta_MG
     end if
-    
+
     end function ISiTGR_eta
-    
+
     function ISiTGR_eta_dot(State,k,a,adotoa,Hdot)
     use constants
     use classes
@@ -2281,7 +2281,7 @@
     real(dl) ISiTGR_eta_dot
     real(dl) :: etadot_MG
     real(dl) :: s1_k, s2_k, s1_k_dot, s2_k_dot, term1, term2, term3, eta_MG
-    
+
     !binning method expression
     if(CP%ISiTGR_BIN_mueta) then
           if (CP%ISiTGR_BIN_scale_bins) then
@@ -2305,9 +2305,9 @@
     end if
 
     end function ISiTGR_eta_dot
-    
+
     !---------------------------------------------------------------------
-    
+
     function ISiTGR_Sigma(State,k,a,adotoa)
     use constants
     use results
@@ -2317,9 +2317,9 @@
     real(dl) ISiTGR_Sigma
     real(dl) :: Sigma_MG
     real(dl) :: s1_k, s2_k, omegav
-    
+
     omegav = State%Omega_de ! Omega_de is total dark energy density today
-    
+
     !binning method expression
     if(CP%ISiTGR_BIN_muSigma) then
         if (CP%ISiTGR_BIN_scale_bins) then
@@ -2340,9 +2340,9 @@
         Sigma_MG = 1.d0 + CP%Sigma0 * OmegaDE(State,a,adotoa)/omegav * s1_k
         ISiTGR_Sigma = Sigma_MG
     end if
-    
+
     end function ISiTGR_Sigma
-    
+
     function ISiTGR_Sigma_dot(State,k,a,adotoa,Hdot)
     use constants
     use results
@@ -2352,7 +2352,7 @@
     real(dl) ISiTGR_Sigma_dot
     real(dl) :: Sigmadot_MG
     real(dl) :: s1_k, s2_k, s1_k_dot, s2_k_dot, omegav
-    
+
     omegav = State%Omega_de ! Omega_de is total dark energy density today
 
     !binning method expression
@@ -2377,9 +2377,9 @@
         Sigmadot_MG = CP%Sigma0*(OmegaDEdot(State,a,adotoa,Hdot)/omegav*s1_k + OmegaDE(State,a,adotoa)/omegav*s1_k_dot)
         ISiTGR_Sigma_dot= Sigmadot_MG
     end if
-        
+
     end function ISiTGR_Sigma_dot
-    
+
     subroutine ISiTGR_k_windows(k, W1, W2, W3, W4)
       real(dl), intent(in)  :: k
       real(dl), intent(out) :: W1, W2, W3, W4
@@ -2469,7 +2469,7 @@
       ISiTGR_Sigma_Z2 = 1.d0 * W1 + CP%Sigma3 * W2 + CP%Sigma4 * W3 + 1.d0 * W4
     end function ISiTGR_Sigma_Z2
     !################### Dark Energy parameterization of ISiTGR - modeling Omega_Dark_Energy #####################
-    
+
     ! CGQ patch for Dark Energy
     function OmegaDE(State, a, adotoa)
     use constants
@@ -2478,25 +2478,25 @@
     class(CAMBdata), intent(in) :: State
     real(dl), intent(in) :: a, adotoa
     real(dl) :: OmegaDE, omegav, w_0, w_a
-    
+
     omegav = State%Omega_de ! Omega_de is total dark energy density today
     call CP%DarkEnergy%Effective_w_wa(w_0, w_a)
     OmegaDE = omegav * ((CP%h0*1000.d0/c)/(adotoa/a))**2.d0 * a**(-3.d0*(1.d0+w_0+w_a)) * exp(3.d0*w_a*(a-1.d0))
-    
+
     end function OmegaDE
-    
+
     !derivative of Omega_Dark_Energy
     function OmegaDEdot(State,a, adotoa, Hdot)
     use classes
     class(CAMBdata), intent(in) :: State
     real(dl), intent(in) :: a, adotoa, Hdot
     real(dl) :: OmegaDEdot, w_0, w_a
-    
+
     call CP%DarkEnergy%Effective_w_wa(w_0, w_a)
-    
+
     OmegaDEdot = -OmegaDE(State,a,adotoa) * ( 2.d0 * (Hdot - adotoa**2.d0)/adotoa + &
     3.d0 * (1.d0+w_0) * adotoa + 3.d0 * w_a * adotoa * (1.d0-a) )
-    
+
     end function OmegaDEdot
     ! CGQ End of patch for Dark Energy
 
@@ -2509,11 +2509,11 @@
         real(dl) :: OmegaMatter, OmegaMatterToday
 
         OmegaMatterToday = (CP%ombh2+CP%omch2+CP%omnuh2) / (CP%H0/100)**2 ! baryons + dark-matter + massive neutrinos (we test late-time modifications, neutrinos are non-relativistic)
-        OmegaMatter = OmegaMatterToday*a**(-3.d0)/(OmegaMatterToday*a**(-3.d0) + CP%omk*a**(-2.d0) + State%Omega_de) !OmegaMatterToday * ((CP%H0*1000.d0/c)/(adotoa/a))**2.d0 * a**(-3.d0) 
+        OmegaMatter = OmegaMatterToday*a**(-3.d0)/(OmegaMatterToday*a**(-3.d0) + CP%omk*a**(-2.d0) + State%Omega_de) !OmegaMatterToday * ((CP%H0*1000.d0/c)/(adotoa/a))**2.d0 * a**(-3.d0)
 
-    
+
     end function OmegaMatter
-    
+
     function OmegaCurvature(State, a, adotoa)
         use constants
         use classes
@@ -2521,10 +2521,10 @@
         real(dl), intent(in) :: a, adotoa
         real(dl) :: OmegaCurvature, OmegaCurvatureToday, OmegaMatterToday
 
-        OmegaCurvatureToday = CP%omk 
+        OmegaCurvatureToday = CP%omk
         OmegaMatterToday = (CP%ombh2+CP%omch2+CP%omnuh2) / (CP%H0/100)**2 ! baryons + dark-matter + massive neutrinos (we test late-time modifications, neutrinos are non-relativistic)
-        OmegaCurvature = OmegaCurvatureToday*a**(-2.d0)/(OmegaMatterToday*a**(-3.d0) + CP%omk*a**(-2.d0) + State%Omega_de) !* ((CP%H0*1000.d0/c)/(adotoa/a))**2.d0 * a**(-2.d0) 
-    
+        OmegaCurvature = OmegaCurvatureToday*a**(-2.d0)/(OmegaMatterToday*a**(-3.d0) + CP%omk*a**(-2.d0) + State%Omega_de) !* ((CP%H0*1000.d0/c)/(adotoa/a))**2.d0 * a**(-2.d0)
+
     end function OmegaCurvature
     ! CGQ End of patch for Universe Matter Content time-evolution
     !################### Modified Gravity Functions of ISiTGR Parameters #####################
@@ -2735,72 +2735,72 @@
         dgpi_3wplus2 = 0.d0
         dgpi_3wplus1plusbetak = 0.d0
             if (CP%ISiTGR_mueta .or. CP%ISiTGR_BIN_mueta) then
-    
+
                 !mu-eta parameterization
                 TGR_mu = ISiTGR_mu(State,k,a,adotoa)
                 TGR_mudot = ISiTGR_mu_dot(State,k,a,adotoa,Hdot)
                 TGR_eta = ISiTGR_eta(State,k,a,adotoa)
                 TGR_etadot = ISiTGR_eta_dot(State,k,a,adotoa,Hdot)
-    
+
                 !here we get the contributions for massive neutrinos to dgpi and dgpi_3wplus2
                 if (CP%Num_Nu_Massive /= 0) then
                     call MassiveNuVarsOut(EV, ay, ayprime, a, adotoa, dgpi=dgpi, dgpi_3wplus1=dgpi_3wplus1, dgpi_3wplus2=dgpi_3wplus2, &
                     dgpi_3wplus1plusbetak=dgpi_3wplus1plusbetak)
                 end if
-    
+
                 !adding contributions from photons and massless neutrinos
                 dgpi = dgpi + grhor_t*pir + grhog_t*pig
                 dgpi_3wplus1 = dgpi_3wplus1 + 2.d0*(grhor_t*pir+grhog_t*pig) !!Note that (3w_rad+1)=(1+1)=2
                 dgpi_3wplus2 = dgpi_3wplus2 + 3.d0*(grhor_t*pir+grhog_t*pig) !!Note that (3w_rad+2)=(1+2)=3
                 dgpi_3wplus1plusbetak = dgpi_3wplus1plusbetak + (2.d0+betak)*(grhor_t*pir+grhog_t*pig) !!Note that (3w_rad+1+betak)=2+betak
-    
+
                 !!getting the newtonian potentials for MG
                 TGR_Psi = -0.5d0*TGR_mu*(betak*TGR_rhoDelta+2.d0*dgpi)/k2
                 TGR_Phi = (TGR_mu/k2)*dgpi+TGR_eta*TGR_Psi
-    
+
                 !Computing sigma_camb, just called sigma here
                 sigma = etak/adotoa - k*TGR_Phi/adotoa
-    
+
             else if (CP%ISiTGR_muSigma .or. CP%ISiTGR_BIN_muSigma) then
                 !mu-Sigma parameterization
                     TGR_mu = ISiTGR_mu(State,k,a,adotoa)
                 TGR_mudot = ISiTGR_mu_dot(State,k,a,adotoa,Hdot)
                 TGR_Sigma = ISiTGR_Sigma(State,k,a,adotoa)
                 TGR_Sigmadot = ISiTGR_Sigma_dot(State,k,a,adotoa,Hdot)
-    
+
                 !here we get the contributions for massive neutrinos to dgpi and dgpi_w
                 if (CP%Num_Nu_Massive /= 0) then
                     call MassiveNuVarsOut(EV, ay, ayprime, a, adotoa, dgpi=dgpi, dgpi_3wplus1=dgpi_3wplus1)
                 end if
-    
+
                 !adding contributions from photons and massless neutrinos
                 dgpi = dgpi + grhor_t*pir + grhog_t*pig
                 dgpi_3wplus1 = dgpi_3wplus1 + 2.d0*(grhor_t*pir+grhog_t*pig) !!Note that (3w_rad+1)=(1+1)=2
-    
+
                 !!getting the newtonian potentials for MG
                 TGR_Psi = -0.5d0*TGR_mu*(betak*TGR_rhoDelta+2.d0*dgpi)/k2
                 TGR_Phi = -TGR_Sigma*(betak*TGR_rhoDelta+dgpi)/k2-TGR_Psi
-    
+
                 !Computing sigma_camb
                 sigma = etak/adotoa - k*TGR_Phi/adotoa
-    
+
             else
                 call GlobalError('Select a valid MG parameterization, (mu,eta) or (mu,Sigma)')
             end if
-            
+
         ! 2) Get sigmadot and Weyl potential
             ! a) sigmadot calculation
             if (CP%ISiTGR_mueta .or. CP%ISiTGR_muSigma .or. CP%ISiTGR_BIN_mueta .or. CP%ISiTGR_BIN_muSigma) then
-    
+
                 !Computing derivative of sigma_camb, just called sigmadot. Here, we use alpha=(sigma_camb/k)
                 sigmadot = k*TGR_Psi - adotoa*sigma
             else
                 call GlobalError('Select a valid MG parameterization, (mu,eta) or (mu,Sigma)')
             end if
-            
+
             ! b) Weyl potential calculation
             phi = (TGR_Psi+TGR_Phi)/2._dl
-    
+
         ! 3) get contributions of massless neutrinos, photons, and massive neutrinos to pidot_sum
         !Computing pidot_sum by calling early some parts of the derivs subroutine, to get pidot in terms of sigma
             pidot_sum = 0.d0
@@ -2817,7 +2817,7 @@
             end if
             !here we add contribution by massless neutrinos
             pidot_sum = pidot_sum + grhor_t*pirdot
-    
+
         !contribution by photons -------------------------------------------------------------------
             if (EV%no_phot_multpoles) then
                 pigdot=0.d0
@@ -2912,43 +2912,43 @@
                 !Computing etakdot
                 !w_masslessnu=1/3, w_massivenu=0
                 TGR_f_mueta = k2 + 1.5d0*betak*TGR_mu*TGR_eta*((grhoc_t+grhob_t)+(grhor_t+grhog_t)*4.d0/3.d0+(grhonu_t+gpres_nu))!& + (grhov_t+gpresv_t))
-    
+
                 TGR_f_1 =  1.d0+3.d0*(adotoa**2.d0-Hdot)/k2
-    
+
                 etakdot = k/(2.d0*TGR_f_mueta)*(k*TGR_mu*TGR_eta*betak*TGR_f_1*dgq + betak*TGR_rhoDelta*(adotoa*TGR_mu*(TGR_eta-1.d0) - &
                     TGR_mudot*TGR_eta-TGR_mu*TGR_etadot) + 2.d0*TGR_mu*(1.d0-TGR_eta)*pidot_sum + k*sigma*(-2.d0*(adotoa**2.d0-Hdot) &
                     +TGR_mu*TGR_eta*betak*((grhoc_t+grhob_t)+(grhor_t+grhog_t)*4.d0/3.d0+(grhonu_t+gpres_nu))) - 2.d0*dgpi &
                     *(TGR_mu*TGR_etadot+TGR_mudot*(TGR_eta-1.d0)) - 2.d0*adotoa*TGR_mu*dgpi_3wplus2 + 2.d0 * adotoa * TGR_mu * TGR_eta * &
                     dgpi_3wplus1plusbetak)
-    
+
                 ayprime(ix_etak) = etakdot
-    
+
                 !Computing z_camb
                 z = sigma - 3.d0*etakdot/k2
-    
+
                 TGR_Phidot = (etakdot - adotoa*sigmadot - Hdot*sigma)/k
-    
+
             else if (CP%ISiTGR_muSigma .or. CP%ISiTGR_BIN_muSigma) then
                 !Computing etakdot
                 TGR_f_muSigma = k2 + 1.5d0*betak*(2.d0*TGR_Sigma-TGR_mu)*((grhoc_t+grhob_t)+(grhor_t+grhog_t)*4.d0/3.d0+(grhonu_t+gpres_nu))
-    
+
                 TGR_f_1 =  1.d0+3.d0*(adotoa**2.d0-Hdot)/k2
-    
+
                 etakdot = k/(2.d0*TGR_f_muSigma)*(k*betak*(2.d0*TGR_Sigma-TGR_mu)*TGR_f_1*dgq + 2.d0*(TGR_mu-TGR_Sigma)*pidot_sum &
                         + TGR_rhoDelta*betak*((TGR_mudot-2.d0*TGR_Sigmadot)+2.d0*adotoa*(TGR_Sigma-TGR_mu)) + 2.d0*dgpi*(TGR_mudot &
                         -TGR_Sigmadot + adotoa*betak*(2.d0*TGR_Sigma-TGR_mu) - adotoa*TGR_mu) + k*sigma*(-2.d0*(adotoa**2.d0-Hdot) + betak* &
                         (2.d0*TGR_Sigma-TGR_mu)*((grhoc_t+grhob_t)+(grhor_t+grhog_t)*4.d0/3.d0+(grhonu_t+gpres_nu))) &
                         + 2.d0*adotoa*(TGR_Sigma-TGR_mu)*dgpi_3wplus1)
-    
+
                 ayprime(ix_etak) = etakdot
                 !Computing z
                 z = sigma - 3.d0*etakdot/k2
-    
+
                 TGR_Phidot = (etakdot - adotoa*sigmadot - Hdot*sigma)/k
-    
+
             else
                 call GlobalError('Select a valid MG parameterization, (mu,eta) or (mu,Sigma)')
-            end if    
+            end if
 
     else
 

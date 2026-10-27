@@ -36,13 +36,13 @@ Array1D: TypeAlias = Sequence[np.number | float | int] | NDArray[np.number]
 NumberOrArray1D: TypeAlias = float | Array1D
 
 BASEDIR = osp.abspath(osp.dirname(__file__))
-#> ISiTGR MOD START: Passing isitgrlib.
+# > ISiTGR MOD START: Passing isitgrlib.
 if platform.system() == "Windows":
-    DLLNAME = 'isitgrdll.dll'
+    DLLNAME = "isitgrdll.dll"
 
 else:
-    DLLNAME = 'isitgrlib.so'
-#> ISiTGR MOD END: Passing isitgrlib.
+    DLLNAME = "isitgrlib.so"
+# > ISiTGR MOD END: Passing isitgrlib.
 CAMBL = osp.join(BASEDIR, DLLNAME)
 
 gfortran = True

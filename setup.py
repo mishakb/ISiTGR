@@ -14,7 +14,7 @@ from wheel.bdist_wheel import bdist_wheel as _bdist_wheel
 file_dir = os.path.abspath(os.path.dirname(__file__))
 os.chdir(file_dir)
 
-#> ISiTGR MOD START
+# > ISiTGR MOD START
 sys.path.insert(0, os.path.join(file_dir, "isitgr"))
 _compile: Any = __import__("_compilers")
 
@@ -22,7 +22,8 @@ if _compile.is_windows:
     DLLNAME = "isitgrdll.dll"
 else:
     DLLNAME = "isitgrlib.so"
-#> ISiTGR MOD END
+# > ISiTGR MOD END
+
 
 def get_forutils():
     fpath = os.getenv("FORUTILSPATH")
@@ -96,9 +97,9 @@ def clean_dir(path, rmdir=False):
 def make_library(cluster=False):
     os.chdir(os.path.join(file_dir, "fortran"))
     pycamb_path = ".."
-    #> ISiTGR MOD START
+    # > ISiTGR MOD START
     lib_file = os.path.join(pycamb_path, "isitgr", DLLNAME)
-    #> ISiTGR MOD END
+    # > ISiTGR MOD END
     if _compile.is_windows or not _compile.check_ifort():
         ok, gfortran_version = _compile.check_gfortran(msg=True)
         if ok and "8.2.0" in gfortran_version:
@@ -165,12 +166,12 @@ def make_library(cluster=False):
         if need_compile or not os.path.exists(lib_file):
             if os.path.exists(lib_file):
                 # raise an exception if the file in use and cannot be deleted
-                #> ISiTGR MOD START
+                # > ISiTGR MOD START
                 try:
                     os.remove(lib_file)
                 except OSError:
                     raise OSError("dll file in use. Stop python codes and notebook kernels that are using isitgr.")
-                #> ISiTGR MOD END
+                # > ISiTGR MOD END
             print("Compiling sources...")
             cmd = COMPILER + " " + FFLAGS + " " + " ".join(ofiles) + f" -o {lib_file} -J{tmpdir}"
             print(cmd)
@@ -186,7 +187,7 @@ def make_library(cluster=False):
             )
         get_forutils()
         print("Compiling source...")
-        #> ISiTGR MOD START
+        # > ISiTGR MOD START
         if (
             subprocess.call(
                 "make python PYCAMB_OUTPUT_DIR=%s/isitgr/ CLUSTER_SAFE=%d"
@@ -199,17 +200,17 @@ def make_library(cluster=False):
         # make only copies the library when it relinks; always install the one it just built,
         # so a stale or foreign isitgrlib.so (e.g. from an sdist) is never left in place
         shutil.copy(os.path.join("Releaselib", DLLNAME), lib_file)
-        #> ISiTGR MOD END
+        # > ISiTGR MOD END
         subprocess.call("chmod 755 %s" % lib_file, shell=True)
 
-    #> ISiTGR MOD START
+    # > ISiTGR MOD START
     if not os.path.isfile(os.path.join(pycamb_path, "isitgr", DLLNAME)):
         sys.exit("Compilation failed")
-    #> ISiTGR MOD END
+    # > ISiTGR MOD END
     tem_file = "HighLExtrapTemplate_lenspotentialCls.dat"
-    #> ISiTGR MOD START
+    # > ISiTGR MOD START
     tem = os.path.join(pycamb_path, "isitgr", tem_file)
-    #> ISiTGR MOD END
+    # > ISiTGR MOD END
     if not os.path.exists(tem) or os.path.getmtime(tem) < os.path.getmtime(tem_file):
         shutil.copy(tem_file, tem)
 
@@ -291,7 +292,7 @@ class BuildExtCommand(build_ext):
 
 
 if __name__ == "__main__":
-    #> ISiTGR MOD START
+    # > ISiTGR MOD START
     setup(
         name=os.getenv("ISITGR_PACKAGE_NAME", "isitgr"),
         zip_safe=False,
@@ -322,4 +323,4 @@ if __name__ == "__main__":
             ]
         },
     )
-    #> ISiTGR MOD END
+    # > ISiTGR MOD END
