@@ -187,11 +187,18 @@ def make_library(cluster=False):
         get_forutils()
         print("Compiling source...")
         #> ISiTGR MOD START
-        subprocess.call(
-            "make python PYCAMB_OUTPUT_DIR=%s/isitgr/ CLUSTER_SAFE=%d"
-            % (pycamb_path, int(cluster if not os.getenv("GITHUB_ACTIONS") else 1)),
-            shell=True,
-        )
+        if (
+            subprocess.call(
+                "make python PYCAMB_OUTPUT_DIR=%s/isitgr/ CLUSTER_SAFE=%d"
+                % (pycamb_path, int(cluster if not os.getenv("GITHUB_ACTIONS") else 1)),
+                shell=True,
+            )
+            != 0
+        ):
+            sys.exit("Compilation failed")
+        # make only copies the library when it relinks; always install the one it just built,
+        # so a stale or foreign isitgrlib.so (e.g. from an sdist) is never left in place
+        shutil.copy(os.path.join("Releaselib", DLLNAME), lib_file)
         #> ISiTGR MOD END
         subprocess.call("chmod 755 %s" % lib_file, shell=True)
 
